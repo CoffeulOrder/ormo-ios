@@ -23,6 +23,9 @@ struct VerificationCodeView: View {
         .onAppear {
             isCodeFieldFocused = true
         }
+        .onChange(of: viewModel.inputGeneration) {
+            isCodeFieldFocused = true
+        }
     }
 
     private var hiddenCodeField: some View {
@@ -39,6 +42,7 @@ struct VerificationCodeView: View {
         .opacity(0)
         .frame(width: 1, height: 1)
         .allowsHitTesting(false)
+        .id(viewModel.inputGeneration)
     }
 
     private var topNavigationBar: some View {
@@ -90,12 +94,23 @@ struct VerificationCodeView: View {
     }
 
     private var codeBoxes: some View {
+        VStack(alignment: .leading, spacing: 10) { // Figma 원본값이 10px (spacing 토큰 중 일치 항목 없음)
+            codeBoxesRow
+
+            if viewModel.isInvalid {
+                errorFooter
+            }
+        }
+        .padding(Spacing.spacing20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var codeBoxesRow: some View {
         HStack(spacing: 7) {
             ForEach(0..<VerificationCodeViewModel.codeLength, id: \.self) { index in
                 codeBox(at: index)
             }
         }
-        .padding(Spacing.spacing20)
         .frame(maxWidth: .infinity)
         .keyframeAnimator(initialValue: CGFloat.zero, trigger: viewModel.shakeTrigger) { content, offset in
             content.offset(x: offset)
@@ -118,6 +133,17 @@ struct VerificationCodeView: View {
         let digit = index < characters.count ? String(characters[index]) : nil
         let isFocused = index == characters.count && !viewModel.isExpired
 
+        let borderColor: Color = if isFocused {
+            Colors.fillBrand
+        } else if viewModel.isInvalid {
+            Colors.borderDanger
+        } else if digit == nil {
+            Colors.borderDefault
+        } else {
+            Colors.fieldBorder
+        }
+        let lineWidth: CGFloat = isFocused || viewModel.isInvalid ? 2 : 1
+
         return Text(digit ?? "")
             .font(Typography.displaySmSemibold)
             .foregroundStyle(Colors.textPrimary)
@@ -126,16 +152,26 @@ struct VerificationCodeView: View {
             .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
             .overlay(
                 RoundedRectangle(cornerRadius: Radius.lg)
-                    .stroke(
-                        isFocused ? Colors.fillBrand : (digit == nil ? Colors.borderDefault : Colors.fieldBorder),
-                        lineWidth: isFocused ? 2 : 1
-                    )
+                    .stroke(borderColor, lineWidth: lineWidth)
             )
     }
 
+    private var errorFooter: some View {
+        HStack(spacing: Spacing.spacing4) {
+            Image(.errorIcon)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 16, height: 16)
+
+            Text("인증번호를 다시 확인해주세요")
+                .font(Typography.bodySmRegular)
+                .foregroundStyle(Colors.textDanger)
+        }
+    }
+
     private var mailNotReceivedLink: some View {
-        Button(action: viewModel.mailNotReceivedTapped) {
-            Text("메일이 안 오나요?")
+        Button(action: viewModel.isInvalid ? viewModel.resendTapped : viewModel.mailNotReceivedTapped) {
+            Text(viewModel.isInvalid ? "인증번호 다시 받기" : "메일이 안 오나요?")
                 .font(Typography.bodyMdRegular)
                 .foregroundStyle(Colors.textBrand)
                 .underline()
