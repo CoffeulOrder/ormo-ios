@@ -1,8 +1,8 @@
 {
   "default-configuration": "Release",
   "configurations": [
-    "Debug",
-    "Release",
+    { "name": "Debug", "file": "Config/Debug.xcconfig" },
+    { "name": "Release", "file": "Config/Release.xcconfig" },
   ],
   "localizations": {
     "development": "en",
@@ -11,7 +11,30 @@
     ],
   },
   "files": [
-    { "kind": "folder", "path": "ORMO", "target-membership": [ "ORMO" ] },
+    {
+      "kind": "group",
+      "path": "Config",
+      "children": [
+        { "path": "Base.xcconfig" },
+        { "path": "Debug.xcconfig" },
+        { "path": "Release.xcconfig" },
+        { "path": "Secrets.xcconfig.example" },
+      ],
+    }, {
+      "kind": "folder",
+      "path": "ORMO",
+      "target-membership": [
+        "ORMO",
+      ],
+      "membership-exceptions": [
+        {
+          "target": "ORMO",
+          "exclusions": [
+            "Info.plist",
+          ],
+        },
+      ],
+    },
     { "kind": "folder", "path": "ORMOTests", "target-membership": [ "ORMOTests" ] },
     { "kind": "folder", "path": "ORMOUITests", "target-membership": [ "ORMOUITests" ] },
     {
@@ -43,6 +66,7 @@
         "DEVELOPMENT_TEAM": "",
         "ENABLE_PREVIEWS": "YES",
         "GENERATE_INFOPLIST_FILE": "YES",
+        "INFOPLIST_FILE": "ORMO/Info.plist",
         "INFOPLIST_KEY_CFBundleDisplayName": "ORMO",
         "INFOPLIST_KEY_LSApplicationCategoryType": "public.app-category.food-and-drink",
         "INFOPLIST_KEY_UIApplicationSceneManifest_Generation": "YES",

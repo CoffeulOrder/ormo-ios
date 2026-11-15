@@ -1,0 +1,4 @@
+#include "Base.xcconfig"
+#include? "Secrets.xcconfig"
+API_BASE_URL = https:/$()/dev-api.ormo.example
+USE_MOCK = YES
