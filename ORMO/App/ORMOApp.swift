@@ -15,7 +15,7 @@ struct ORMOApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootTabView()
         }
     }
 }
