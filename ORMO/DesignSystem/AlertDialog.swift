@@ -52,6 +52,7 @@ struct AlertDialog: View {
         .frame(width: 320)
         .background(Colors.backgroundFloated)
         .clipShape(RoundedRectangle(cornerRadius: Radius.xxl))
+        .compositingGroup()
         .shadow(color: Colors.shadowMedium, radius: 16, x: 0, y: 8)
     }
 }
