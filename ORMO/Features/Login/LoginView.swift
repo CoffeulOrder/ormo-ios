@@ -146,7 +146,7 @@ struct LoginView: View {
             .font(Typography.displayXsSemibold)
             .foregroundStyle(Colors.textPrimary)
             .padding(.horizontal, Spacing.spacing20)
-            .padding(.vertical, Spacing.spacing20)
+            .padding(.vertical, 10) // Figma 원본값이 10px (spacing 토큰 중 일치 항목 없음)
             .frame(maxWidth: .infinity, alignment: .leading)
             .opacity(isTitleVisible ? 1 : 0)
             .offset(y: isTitleVisible ? 0 : 10)

@@ -17,4 +17,6 @@ enum Colors {
     static let backgroundDim = Color(.backgroundDim)
     static let textStrong = Color(.textStrong)
     static let shadowMedium = Color(.shadowMedium)
+    static let borderDefault = Color(.borderDefault)
+    static let textBrand = Color(.textBrand)
 }

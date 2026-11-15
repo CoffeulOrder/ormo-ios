@@ -5,6 +5,7 @@ struct SignUpEmailView: View {
     @State private var viewModel = SignUpEmailViewModel()
     @State private var isTitleVisible = false
     @State private var isBottomCTAVisible = false
+    @State private var isVerificationCodePresented = false
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -30,6 +31,9 @@ struct SignUpEmailView: View {
             .ignoresSafeArea(edges: .bottom)
         }
         .navigationBarHidden(true)
+        .navigationDestination(isPresented: $isVerificationCodePresented) {
+            VerificationCodeView()
+        }
         .task {
             await viewModel.loadSchoolEmailDomainsIfNeeded()
         }
@@ -67,7 +71,7 @@ struct SignUpEmailView: View {
             .font(Typography.displayXsSemibold)
             .foregroundStyle(Colors.textPrimary)
             .padding(.horizontal, Spacing.spacing20)
-            .padding(.vertical, Spacing.spacing20)
+            .padding(.vertical, 10) // Figma 원본값이 10px (spacing 토큰 중 일치 항목 없음)
             .frame(maxWidth: .infinity, alignment: .leading)
             .opacity(isTitleVisible ? 1 : 0)
             .offset(y: isTitleVisible ? 0 : 10)
@@ -124,7 +128,7 @@ struct SignUpEmailView: View {
             )
             .frame(height: Spacing.spacing40)
 
-            Button(action: viewModel.requestVerificationCodeTapped) {
+            Button(action: { isVerificationCodePresented = true }) {
                 Text("인증코드 받기")
                     .font(Typography.bodyLgSemibold)
                     .foregroundStyle(Colors.textOnFill)

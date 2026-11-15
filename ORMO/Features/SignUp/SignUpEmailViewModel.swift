@@ -31,8 +31,4 @@ final class SignUpEmailViewModel {
         selectedSchoolEmailDomain = domain
         isSchoolEmailDomainSheetVisible = false
     }
-
-    func requestVerificationCodeTapped() {
-        // TODO: 0.2.2 인증코드 입력 화면으로 이동 (인증코드 발송 API 연동 필요)
-    }
 }
