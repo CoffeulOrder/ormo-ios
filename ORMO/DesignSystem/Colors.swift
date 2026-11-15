@@ -8,4 +8,6 @@ enum Colors {
     static let textOnFill = Color(.textOnFill)
     static let fillBrand = Color(.fillBrand)
     static let fieldBorder = Color(.fieldBorder)
+    static let textDanger = Color(.textDanger)
+    static let borderDanger = Color(.borderDanger)
 }

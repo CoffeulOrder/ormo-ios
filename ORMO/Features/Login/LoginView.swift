@@ -72,32 +72,58 @@ struct LoginView: View {
                 .font(Typography.bodySmSemibold)
                 .foregroundStyle(Colors.textSecondary)
 
-            Button(action: viewModel.selectSchoolEmailTapped) {
-                HStack(spacing: Spacing.spacing8) {
-                    Text(viewModel.selectedSchoolEmail ?? "ORMO")
-                        .font(Typography.bodyMdRegular)
-                        .foregroundStyle(Colors.textQuaternary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+            HStack(spacing: Spacing.spacing8) {
+                TextField(
+                    "",
+                    text: $viewModel.emailLocalPart,
+                    prompt: Text("ORMO").foregroundStyle(Colors.textQuaternary)
+                )
+                .foregroundStyle(Colors.textPrimary)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .keyboardType(.emailAddress)
 
-                    Text("@eulji.ac.kr")
-                        .font(Typography.bodyMdRegular)
-                        .foregroundStyle(Colors.textQuaternary)
+                Text("@\(viewModel.schoolEmailDomain)")
+                    .foregroundStyle(Colors.textQuaternary)
 
+                Button(action: viewModel.selectSchoolEmailTapped) {
                     Image(.chevronDown)
                         .resizable()
                         .scaledToFit()
                         .frame(width: 24, height: 24)
                 }
-                .padding(.horizontal, Spacing.spacing16)
-                .frame(height: 56)
-                .overlay(
-                    RoundedRectangle(cornerRadius: Radius.lg)
-                        .stroke(Colors.fieldBorder, lineWidth: 1)
-                )
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
+            .font(Typography.bodyMdRegular)
+            .padding(.horizontal, Spacing.spacing16)
+            .frame(height: 56)
+            .overlay(
+                RoundedRectangle(cornerRadius: Radius.lg)
+                    .stroke(
+                        viewModel.emailErrorMessage == nil ? Colors.fieldBorder : Colors.borderDanger,
+                        lineWidth: viewModel.emailErrorMessage == nil ? 1 : 2
+                    )
+            )
+            .keyframeAnimator(initialValue: CGFloat.zero, trigger: viewModel.emailShakeTrigger) { content, offset in
+                content.offset(x: offset)
+            } keyframes: { _ in
+                KeyframeTrack {
+                    CubicKeyframe(-8, duration: 0.06)
+                    CubicKeyframe(7, duration: 0.06)
+                    CubicKeyframe(-5, duration: 0.06)
+                    CubicKeyframe(3, duration: 0.06)
+                    CubicKeyframe(0, duration: 0.06)
+                }
+            }
+
+            if let emailErrorMessage = viewModel.emailErrorMessage {
+                errorFooter(emailErrorMessage)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        .onChange(of: viewModel.emailLocalPart) {
+            viewModel.emailErrorMessage = nil
+        }
     }
 
     private var passwordField: some View {
@@ -116,10 +142,44 @@ struct LoginView: View {
             .frame(height: 56)
             .overlay(
                 RoundedRectangle(cornerRadius: Radius.lg)
-                    .stroke(Colors.fieldBorder, lineWidth: 1)
+                    .stroke(
+                        viewModel.passwordErrorMessage == nil ? Colors.fieldBorder : Colors.borderDanger,
+                        lineWidth: viewModel.passwordErrorMessage == nil ? 1 : 2
+                    )
             )
+            .keyframeAnimator(initialValue: CGFloat.zero, trigger: viewModel.passwordShakeTrigger) { content, offset in
+                content.offset(x: offset)
+            } keyframes: { _ in
+                KeyframeTrack {
+                    CubicKeyframe(-8, duration: 0.06)
+                    CubicKeyframe(7, duration: 0.06)
+                    CubicKeyframe(-5, duration: 0.06)
+                    CubicKeyframe(3, duration: 0.06)
+                    CubicKeyframe(0, duration: 0.06)
+                }
+            }
+
+            if let passwordErrorMessage = viewModel.passwordErrorMessage {
+                errorFooter(passwordErrorMessage)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        .onChange(of: viewModel.password) {
+            viewModel.passwordErrorMessage = nil
+        }
+    }
+
+    private func errorFooter(_ message: String) -> some View {
+        HStack(spacing: Spacing.spacing4) {
+            Image(.errorIcon)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 16, height: 16)
+
+            Text(message)
+                .font(Typography.bodySmRegular)
+                .foregroundStyle(Colors.textDanger)
+        }
     }
 
     private var bottomCTA: some View {
