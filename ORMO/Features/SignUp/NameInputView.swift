@@ -79,11 +79,31 @@ struct NameInputView: View {
             .frame(height: 56)
             .overlay(
                 RoundedRectangle(cornerRadius: Radius.lg)
-                    .stroke(Colors.fieldBorder, lineWidth: 1)
+                    .stroke(
+                        viewModel.hasInvalidCharacters ? Colors.borderDanger : Colors.fieldBorder,
+                        lineWidth: viewModel.hasInvalidCharacters ? 2 : 1
+                    )
             )
+
+            if viewModel.hasInvalidCharacters {
+                errorFooter
+            }
         }
         .padding(Spacing.spacing20)
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var errorFooter: some View {
+        HStack(spacing: Spacing.spacing4) {
+            Image(.errorIcon)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 16, height: 16)
+
+            Text("띄어쓰기로 시작하거나 특수문자는 쓸 수 없어요")
+                .font(Typography.bodySmRegular)
+                .foregroundStyle(Colors.textDanger)
+        }
     }
 
     private var bottomCTA: some View {
