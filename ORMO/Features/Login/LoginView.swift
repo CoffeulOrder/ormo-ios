@@ -9,15 +9,23 @@ struct LoginView: View {
     @State private var dimOpacity: Double = 0
     @State private var dialogScale: CGFloat = 0.94
     @State private var dialogOpacity: Double = 0
-    @State private var isSignUpPresented = false
+    @State private var signUpRouter = SignUpRouter()
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $signUpRouter.path) {
             content
-                .navigationDestination(isPresented: $isSignUpPresented) {
-                    SignUpEmailView()
+                .navigationDestination(for: SignUpRoute.self) { route in
+                    switch route {
+                    case .email:
+                        SignUpEmailView()
+                    case .verificationCode:
+                        VerificationCodeView()
+                    case .nameInput:
+                        NameInputView()
+                    }
                 }
         }
+        .environment(signUpRouter)
     }
 
     private var content: some View {
@@ -313,7 +321,7 @@ struct LoginView: View {
                         .font(Typography.bodyMdMedium)
                         .foregroundStyle(Colors.textTertiary)
 
-                    Button(action: { isSignUpPresented = true }) {
+                    Button(action: { signUpRouter.push(.email) }) {
                         Text("회원가입")
                             .font(Typography.bodyMdMedium)
                             .foregroundStyle(Colors.textTertiary)

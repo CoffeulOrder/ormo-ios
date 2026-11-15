@@ -2,6 +2,7 @@ import SwiftUI
 
 struct VerificationCodeView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(SignUpRouter.self) private var router
     @State private var viewModel = VerificationCodeViewModel()
     @FocusState private var isCodeFieldFocused: Bool
 
@@ -25,6 +26,12 @@ struct VerificationCodeView: View {
         }
         .onChange(of: viewModel.inputGeneration) {
             isCodeFieldFocused = true
+        }
+        .onChange(of: viewModel.isVerified) {
+            if viewModel.isVerified {
+                router.push(.nameInput)
+                viewModel.isVerified = false
+            }
         }
     }
 
@@ -179,4 +186,5 @@ struct VerificationCodeView: View {
 
 #Preview {
     VerificationCodeView()
+        .environment(SignUpRouter())
 }

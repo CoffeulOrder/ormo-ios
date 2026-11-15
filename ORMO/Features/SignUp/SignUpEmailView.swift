@@ -2,10 +2,10 @@ import SwiftUI
 
 struct SignUpEmailView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(SignUpRouter.self) private var router
     @State private var viewModel = SignUpEmailViewModel()
     @State private var isTitleVisible = false
     @State private var isBottomCTAVisible = false
-    @State private var isVerificationCodePresented = false
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -31,9 +31,6 @@ struct SignUpEmailView: View {
             .ignoresSafeArea(edges: .bottom)
         }
         .navigationBarHidden(true)
-        .navigationDestination(isPresented: $isVerificationCodePresented) {
-            VerificationCodeView()
-        }
         .task {
             await viewModel.loadSchoolEmailDomainsIfNeeded()
         }
@@ -128,7 +125,7 @@ struct SignUpEmailView: View {
             )
             .frame(height: Spacing.spacing40)
 
-            Button(action: { isVerificationCodePresented = true }) {
+            Button(action: { router.push(.verificationCode) }) {
                 Text("인증코드 받기")
                     .font(Typography.bodyLgSemibold)
                     .foregroundStyle(Colors.textOnFill)
@@ -149,4 +146,5 @@ struct SignUpEmailView: View {
 
 #Preview {
     SignUpEmailView()
+        .environment(SignUpRouter())
 }

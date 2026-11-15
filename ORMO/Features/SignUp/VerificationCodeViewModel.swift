@@ -12,6 +12,7 @@ final class VerificationCodeViewModel {
     var isExpired: Bool { remainingSeconds <= 0 }
     var isInvalid = false
     var shakeTrigger: Int = 0
+    var isVerified = false
     // 코드를 외부에서(재발송 등) 강제로 비울 때, 숨겨진 TextField가 iOS 내부 편집 버퍼를
     // 그대로 들고 있어 다음 입력에 이전 값이 섞이는 문제가 있어 뷰 쪽에서 .id()로
     // TextField를 강제로 다시 만들도록 이 값을 올린다.
@@ -64,7 +65,7 @@ final class VerificationCodeViewModel {
             let isValid = await repository.verify(code: code)
             if isValid {
                 countdownTask?.cancel()
-                // TODO: 0.2.3 이름 입력으로 자동 이동
+                isVerified = true
             } else {
                 isInvalid = true
                 shakeTrigger += 1
