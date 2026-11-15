@@ -69,25 +69,9 @@ struct VerificationCodeView: View {
                 .font(Typography.displayXsSemibold)
                 .foregroundStyle(Colors.textPrimary)
 
-            if viewModel.isExpired {
-                HStack(spacing: Spacing.spacing4) {
-                    Text("시간이 지났어요")
-                        .font(Typography.bodyMdMedium)
-                        .foregroundStyle(Colors.textSecondary)
-
-                    Button(action: viewModel.resendTapped) {
-                        Text("다시 받기")
-                            .font(Typography.bodyMdMedium)
-                            .foregroundStyle(Colors.textBrand)
-                            .underline()
-                    }
-                    .buttonStyle(.plain)
-                }
-            } else {
-                Text("남은 시간 \(viewModel.remainingTimeText)")
-                    .font(Typography.bodyMdMedium)
-                    .foregroundStyle(Colors.textSecondary)
-            }
+            Text(viewModel.isExpired ? "시간이 지났어요" : "남은 시간 \(viewModel.remainingTimeText)")
+                .font(Typography.bodyMdMedium)
+                .foregroundStyle(Colors.textSecondary)
         }
         .padding(.horizontal, Spacing.spacing20)
         .padding(.vertical, 10) // Figma 원본값이 10px (spacing 토큰 중 일치 항목 없음)
@@ -170,8 +154,21 @@ struct VerificationCodeView: View {
     }
 
     private var mailNotReceivedLink: some View {
-        Button(action: viewModel.isInvalid ? viewModel.resendTapped : viewModel.mailNotReceivedTapped) {
-            Text(viewModel.isInvalid ? "인증번호 다시 받기" : "메일이 안 오나요?")
+        let label: String
+        let action: () -> Void
+        if viewModel.isExpired {
+            label = "다시 받기"
+            action = viewModel.resendTapped
+        } else if viewModel.isInvalid {
+            label = "인증번호 다시 받기"
+            action = viewModel.resendTapped
+        } else {
+            label = "메일이 안 오나요?"
+            action = viewModel.mailNotReceivedTapped
+        }
+
+        return Button(action: action) {
+            Text(label)
                 .font(Typography.bodyMdRegular)
                 .foregroundStyle(Colors.textBrand)
                 .underline()
