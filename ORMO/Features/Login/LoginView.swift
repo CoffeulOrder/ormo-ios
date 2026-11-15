@@ -9,8 +9,18 @@ struct LoginView: View {
     @State private var dimOpacity: Double = 0
     @State private var dialogScale: CGFloat = 0.94
     @State private var dialogOpacity: Double = 0
+    @State private var isSignUpPresented = false
 
     var body: some View {
+        NavigationStack {
+            content
+                .navigationDestination(isPresented: $isSignUpPresented) {
+                    SignUpEmailView()
+                }
+        }
+    }
+
+    private var content: some View {
         ZStack(alignment: .top) {
             VStack(spacing: 0) {
                 topNavigationBar
@@ -103,6 +113,7 @@ struct LoginView: View {
                 }
             }
         }
+        .navigationBarHidden(true)
     }
 
     private var snackbar: some View {
@@ -290,13 +301,30 @@ struct LoginView: View {
                 .disabled(viewModel.isLockedOut)
                 .padding(.horizontal, Spacing.spacing20)
 
-                Button(action: viewModel.forgotPasswordOrSignUpTapped) {
-                    Text(viewModel.isLockedOut ? "비밀번호 재설정하기 | 회원가입" : "비밀번호 찾기 | 회원가입")
+                HStack(spacing: Spacing.spacing4) {
+                    Button(action: viewModel.forgotPasswordTapped) {
+                        Text(viewModel.isLockedOut ? "비밀번호 재설정하기" : "비밀번호 찾기")
+                            .font(Typography.bodyMdMedium)
+                            .foregroundStyle(Colors.textTertiary)
+                    }
+                    .buttonStyle(.plain)
+
+                    Text("|")
                         .font(Typography.bodyMdMedium)
-                        .foregroundStyle(viewModel.isLockedOut ? Colors.textTertiary : Colors.textPrimary)
+                        .foregroundStyle(Colors.textTertiary)
+
+                    Button(action: { isSignUpPresented = true }) {
+                        Text("회원가입")
+                            .font(Typography.bodyMdMedium)
+                            .foregroundStyle(Colors.textTertiary)
+                    }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
+                .padding(.horizontal, Spacing.spacing16)
+                .frame(height: 40)
                 .padding(.top, Spacing.spacing8)
+                .padding(.horizontal, Spacing.spacing24)
+                .frame(maxWidth: .infinity)
             }
             .padding(.bottom, Spacing.spacing32)
             .background(Colors.backgroundDefault)

@@ -101,8 +101,8 @@ final class LoginViewModel {
         }
     }
 
-    func forgotPasswordOrSignUpTapped() {
-        // TODO: 재설정하기 → 0.3.1(재설정 시 잠금 즉시 해제), 회원가입 → 0.2.1
+    func forgotPasswordTapped() {
+        // TODO: 0.3.1 비밀번호 재설정 화면으로 이동 (재설정하면 잠금 즉시 해제)
     }
 
     func dismissRestrictedAccountDialog() {
