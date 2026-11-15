@@ -54,7 +54,7 @@ struct LoginView: View {
                 )
                 .scaleEffect(dialogScale)
                 .opacity(dialogOpacity)
-                .drawingGroup()
+                .compositingGroup()
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .allowsHitTesting(viewModel.isRestrictedAccountDialogVisible)
