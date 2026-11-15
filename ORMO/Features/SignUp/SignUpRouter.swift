@@ -4,6 +4,7 @@ enum SignUpRoute: Hashable {
     case email
     case verificationCode
     case nameInput
+    case passwordSetup
 }
 
 @Observable

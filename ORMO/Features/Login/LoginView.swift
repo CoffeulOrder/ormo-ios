@@ -22,6 +22,8 @@ struct LoginView: View {
                         VerificationCodeView()
                     case .nameInput:
                         NameInputView()
+                    case .passwordSetup:
+                        PasswordSetupView()
                     }
                 }
         }
