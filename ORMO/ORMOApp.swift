@@ -9,6 +9,10 @@ import SwiftUI
 
 @main
 struct ORMOApp: App {
+//    init() {
+//        print("API:", AppConfig.apiBaseURL, "mock:", AppConfig.useMock)
+//    }
+
     var body: some Scene {
         WindowGroup {
             ContentView()
