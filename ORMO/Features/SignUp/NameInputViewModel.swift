@@ -23,9 +23,4 @@ final class NameInputViewModel {
     func nameChanged(to newValue: String) {
         name = String(newValue.prefix(Self.maxLength))
     }
-
-    func nextTapped() {
-        guard isValid else { return }
-        // TODO: 0.2.4 비밀번호 설정으로 이동
-    }
 }

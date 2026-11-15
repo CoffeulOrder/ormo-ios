@@ -72,9 +72,7 @@ struct NameInputView: View {
             .font(Typography.bodyMdRegular)
             .foregroundStyle(Colors.textPrimary)
             .submitLabel(.next)
-            .onSubmit {
-                viewModel.nextTapped()
-            }
+            .onSubmit(goToPasswordSetup)
             .padding(.horizontal, Spacing.spacing16)
             .frame(height: 56)
             .overlay(
@@ -115,7 +113,7 @@ struct NameInputView: View {
             )
             .frame(height: Spacing.spacing40)
 
-            Button(action: viewModel.nextTapped) {
+            Button(action: goToPasswordSetup) {
                 Text("다음")
                     .font(Typography.bodyLgSemibold)
                     .foregroundStyle(viewModel.isValid ? Colors.textOnFill : Colors.textQuaternary)
@@ -132,6 +130,11 @@ struct NameInputView: View {
         }
         .opacity(isBottomCTAVisible ? 1 : 0)
         .offset(y: isBottomCTAVisible ? 0 : 32)
+    }
+
+    private func goToPasswordSetup() {
+        guard viewModel.isValid else { return }
+        router.push(.passwordSetup)
     }
 }
 
