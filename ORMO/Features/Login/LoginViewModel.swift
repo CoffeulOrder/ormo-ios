@@ -5,10 +5,13 @@ final class LoginViewModel {
     private static let maxFailedAttempts = 5
     private static let lockoutDurationSeconds = 15 * 60
 
-    let schoolEmailDomain = "eulji.ac.kr"
-
     var emailLocalPart: String = ""
     var password: String = ""
+
+    var schoolEmailDomains: [String] = []
+    var selectedSchoolEmailDomain: String = ""
+    var isSchoolEmailDomainSheetVisible = false
+    var hasMultipleSchoolEmailDomains: Bool { schoolEmailDomains.count > 1 }
 
     var emailErrorMessage: String?
     var passwordErrorMessage: String?
@@ -28,15 +31,33 @@ final class LoginViewModel {
 
     private var failedAttemptCount = 0
     private let authRepository: AuthRepository
+    private let schoolEmailDomainRepository: SchoolEmailDomainRepository
     private var countdownTask: Task<Void, Never>?
     private var snackbarTask: Task<Void, Never>?
 
-    init(authRepository: AuthRepository = MockAuthRepository()) {
+    init(
+        authRepository: AuthRepository = MockAuthRepository(),
+        schoolEmailDomainRepository: SchoolEmailDomainRepository = MockSchoolEmailDomainRepository()
+    ) {
         self.authRepository = authRepository
+        self.schoolEmailDomainRepository = schoolEmailDomainRepository
+    }
+
+    func loadSchoolEmailDomainsIfNeeded() async {
+        guard schoolEmailDomains.isEmpty else { return }
+        guard let domains = try? await schoolEmailDomainRepository.fetchDomains(), !domains.isEmpty else { return }
+        schoolEmailDomains = domains
+        selectedSchoolEmailDomain = domains[0]
     }
 
     func selectSchoolEmailTapped() {
-        // TODO: 0.1.4 학교 메일 주소 선택 화면으로 이동
+        guard hasMultipleSchoolEmailDomains else { return }
+        isSchoolEmailDomainSheetVisible = true
+    }
+
+    func selectSchoolEmailDomain(_ domain: String) {
+        selectedSchoolEmailDomain = domain
+        isSchoolEmailDomainSheetVisible = false
     }
 
     func loginTapped() {
@@ -45,7 +66,7 @@ final class LoginViewModel {
         Task {
             do {
                 try await authRepository.login(
-                    email: "\(emailLocalPart)@\(schoolEmailDomain)",
+                    email: "\(emailLocalPart)@\(selectedSchoolEmailDomain)",
                     password: password
                 )
                 emailErrorMessage = nil

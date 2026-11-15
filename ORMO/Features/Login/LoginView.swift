@@ -48,6 +48,18 @@ struct LoginView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .allowsHitTesting(viewModel.isRestrictedAccountDialogVisible)
+
+            BottomSheetContainer(isPresented: $viewModel.isSchoolEmailDomainSheetVisible) {
+                SchoolEmailDomainSheet(
+                    domains: viewModel.schoolEmailDomains,
+                    selectedDomain: viewModel.selectedSchoolEmailDomain,
+                    onSelect: viewModel.selectSchoolEmailDomain
+                )
+            }
+            .ignoresSafeArea(edges: .bottom)
+        }
+        .task {
+            await viewModel.loadSchoolEmailDomainsIfNeeded()
         }
         .onAppear {
             // Figma smart-animate 타이밍: Title 0~17.5%(350ms), Bottom CTA 6~26%(지연 120ms, 400ms), ease-out
@@ -154,16 +166,18 @@ struct LoginView: View {
                 .autocorrectionDisabled()
                 .keyboardType(.emailAddress)
 
-                Text("@\(viewModel.schoolEmailDomain)")
+                Text("@\(viewModel.selectedSchoolEmailDomain)")
                     .foregroundStyle(Colors.textQuaternary)
 
-                Button(action: viewModel.selectSchoolEmailTapped) {
-                    Image(.chevronDown)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 24, height: 24)
+                if viewModel.hasMultipleSchoolEmailDomains {
+                    Button(action: viewModel.selectSchoolEmailTapped) {
+                        Image(.chevronDown)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 24, height: 24)
+                    }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
             }
             .font(Typography.bodyMdRegular)
             .padding(.horizontal, Spacing.spacing16)
