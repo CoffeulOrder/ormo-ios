@@ -44,6 +44,7 @@ struct LoginView: View {
                 )
                 .scaleEffect(dialogScale)
                 .opacity(dialogOpacity)
+                .drawingGroup()
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .allowsHitTesting(viewModel.isRestrictedAccountDialogVisible)
@@ -72,10 +73,11 @@ struct LoginView: View {
         }
         .onChange(of: viewModel.isRestrictedAccountDialogVisible) {
             if viewModel.isRestrictedAccountDialogVisible {
+                // Figma smart-animate 타이밍: Dim 0~10%(200ms), Dialog 2.5~15%(지연 50ms, scale 250ms·opacity 200ms), cubic-bezier(0.45, 1.45, 0.8, 1)
                 withAnimation(.easeOut(duration: 0.2)) {
                     dimOpacity = 1
                 }
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.65).delay(0.05)) {
+                withAnimation(.timingCurve(0.45, 1.45, 0.8, 1, duration: 0.25).delay(0.05)) {
                     dialogScale = 1
                 }
                 withAnimation(.easeOut(duration: 0.2).delay(0.05)) {
