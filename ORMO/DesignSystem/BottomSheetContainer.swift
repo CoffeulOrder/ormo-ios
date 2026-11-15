@@ -2,6 +2,7 @@ import SwiftUI
 
 struct BottomSheetContainer<Content: View>: View {
     @Binding var isPresented: Bool
+    var bottomPadding: CGFloat = Spacing.spacing16
     @ViewBuilder var content: () -> Content
 
     @State private var dimOpacity: Double = 0
@@ -47,7 +48,7 @@ struct BottomSheetContainer<Content: View>: View {
             content()
         }
         .padding(.top, Spacing.spacing12)
-        .padding(.bottom, Spacing.spacing16)
+        .padding(.bottom, bottomPadding)
         .frame(maxWidth: .infinity)
         .background(Colors.backgroundFloated)
         .clipShape(
