@@ -18,6 +18,7 @@ final class LoginViewModel {
     var lockoutRemainingSeconds: Int = 0
     var isLockedOut: Bool { lockoutRemainingSeconds > 0 }
     var isSnackbarVisible = false
+    var isRestrictedAccountDialogVisible = false
 
     var lockoutCountdownText: String {
         let minutes = lockoutRemainingSeconds / 60
@@ -52,6 +53,11 @@ final class LoginViewModel {
                 failedAttemptCount = 0
                 // TODO: 1.1.1 매장 선택으로 이동
             } catch let failure as LoginFailure {
+                if failure.isAccountRestricted {
+                    isRestrictedAccountDialogVisible = true
+                    return
+                }
+
                 if failure.isEmailInvalid {
                     emailErrorMessage = "이메일을 다시 확인해 주세요"
                     emailShakeTrigger += 1
@@ -76,6 +82,15 @@ final class LoginViewModel {
 
     func forgotPasswordOrSignUpTapped() {
         // TODO: 재설정하기 → 0.3.1(재설정 시 잠금 즉시 해제), 회원가입 → 0.2.1
+    }
+
+    func dismissRestrictedAccountDialog() {
+        isRestrictedAccountDialogVisible = false
+    }
+
+    func contactSupportTapped() {
+        // TODO: 고객센터 문의 채널 연결 (카카오 채널·메일 중 확인 필요)
+        isRestrictedAccountDialogVisible = false
     }
 
     private func startLockout() {

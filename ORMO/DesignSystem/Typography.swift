@@ -4,6 +4,7 @@ import SwiftUI
 // Pretendard 추가 시 .system(size:weight:) 대신 .custom("Pretendard-...", size:)으로 교체한다.
 enum Typography {
     static let displayXsSemibold = Font.system(size: 24, weight: .semibold)
+    static let bodyXlBold = Font.system(size: 20, weight: .bold)
     static let bodyLgSemibold = Font.system(size: 18, weight: .semibold)
     static let bodyMdRegular = Font.system(size: 16, weight: .regular)
     static let bodyMdMedium = Font.system(size: 16, weight: .medium)

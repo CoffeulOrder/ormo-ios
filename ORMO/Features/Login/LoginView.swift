@@ -6,6 +6,9 @@ struct LoginView: View {
     @State private var isBottomCTAVisible = false
     @State private var snackbarOffset: CGFloat = 24
     @State private var snackbarOpacity: Double = 0
+    @State private var dimOpacity: Double = 0
+    @State private var dialogScale: CGFloat = 0.94
+    @State private var dialogOpacity: Double = 0
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -25,6 +28,25 @@ struct LoginView: View {
                 .padding(.top, Spacing.spacing8)
                 .offset(y: snackbarOffset)
                 .opacity(snackbarOpacity)
+
+            ZStack {
+                Colors.backgroundDim
+                    .ignoresSafeArea()
+                    .opacity(dimOpacity)
+
+                AlertDialog(
+                    title: "이용이 제한된 계정이에요",
+                    message: "궁금한 점은 고객센터로 문의해 주세요",
+                    secondaryTitle: "닫기",
+                    primaryTitle: "문의하기",
+                    secondaryAction: viewModel.dismissRestrictedAccountDialog,
+                    primaryAction: viewModel.contactSupportTapped
+                )
+                .scaleEffect(dialogScale)
+                .opacity(dialogOpacity)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .allowsHitTesting(viewModel.isRestrictedAccountDialogVisible)
         }
         .onAppear {
             // Figma smart-animate 타이밍: Title 0~17.5%(350ms), Bottom CTA 6~26%(지연 120ms, 400ms), ease-out
@@ -45,6 +67,25 @@ struct LoginView: View {
                 withAnimation(.easeOut(duration: 0.25)) {
                     snackbarOffset = 24
                     snackbarOpacity = 0
+                }
+            }
+        }
+        .onChange(of: viewModel.isRestrictedAccountDialogVisible) {
+            if viewModel.isRestrictedAccountDialogVisible {
+                withAnimation(.easeOut(duration: 0.2)) {
+                    dimOpacity = 1
+                }
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.65).delay(0.05)) {
+                    dialogScale = 1
+                }
+                withAnimation(.easeOut(duration: 0.2).delay(0.05)) {
+                    dialogOpacity = 1
+                }
+            } else {
+                withAnimation(.easeOut(duration: 0.2)) {
+                    dimOpacity = 0
+                    dialogScale = 0.94
+                    dialogOpacity = 0
                 }
             }
         }

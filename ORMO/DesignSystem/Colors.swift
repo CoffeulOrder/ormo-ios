@@ -13,4 +13,8 @@ enum Colors {
     static let textTertiary = Color(.textTertiary)
     static let fillNeutral = Color(.fillNeutral)
     static let fillNeutralWeak = Color(.fillNeutralWeak)
+    static let backgroundFloated = Color(.backgroundFloated)
+    static let backgroundDim = Color(.backgroundDim)
+    static let textStrong = Color(.textStrong)
+    static let shadowMedium = Color(.shadowMedium)
 }
