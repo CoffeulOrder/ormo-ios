@@ -23,9 +23,4 @@ final class PasswordSetupViewModel {
     var isValid: Bool {
         isPasswordValid && !passwordConfirmation.isEmpty && passwordConfirmation == password
     }
-
-    func confirmTapped() {
-        guard isValid else { return }
-        // TODO: 0.2.5 약관 동의 바텀시트 표시
-    }
 }

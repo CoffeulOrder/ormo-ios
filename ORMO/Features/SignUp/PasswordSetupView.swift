@@ -3,21 +3,30 @@ import SwiftUI
 struct PasswordSetupView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel = PasswordSetupViewModel()
+    @State private var termsViewModel = TermsAgreementViewModel()
+    @State private var isTermsSheetVisible = false
     @State private var isTitleVisible = false
     @State private var isBottomCTAVisible = false
 
     var body: some View {
-        VStack(spacing: 0) {
-            topNavigationBar
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    titleView
-                    fieldsView
+        ZStack(alignment: .top) {
+            VStack(spacing: 0) {
+                topNavigationBar
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 0) {
+                        titleView
+                        fieldsView
+                    }
                 }
+                bottomCTA
             }
-            bottomCTA
+            .background(Colors.backgroundDefault.ignoresSafeArea())
+
+            BottomSheetContainer(isPresented: $isTermsSheetVisible, bottomPadding: Spacing.spacing32) {
+                TermsAgreementSheet(viewModel: termsViewModel)
+            }
+            .ignoresSafeArea(edges: .bottom)
         }
-        .background(Colors.backgroundDefault.ignoresSafeArea())
         .navigationBarHidden(true)
         .onAppear {
             // Figma smart-animate 타이밍: Title 0~17.5%(350ms), Bottom CTA 6~26%(지연 120ms, 400ms), ease-out
@@ -170,7 +179,7 @@ struct PasswordSetupView: View {
             )
             .frame(height: Spacing.spacing40)
 
-            Button(action: viewModel.confirmTapped) {
+            Button(action: { isTermsSheetVisible = true }) {
                 Text("확인")
                     .font(Typography.bodyLgSemibold)
                     .foregroundStyle(viewModel.isValid ? Colors.textOnFill : Colors.textQuaternary)
