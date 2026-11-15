@@ -1,5 +1,5 @@
 //
-//  ContentView.swift
+//  RootTabView.swift
 //  ORMO
 //
 //  Created by 성민 on 11/15/26.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct ContentView: View {
+struct RootTabView: View {
     var body: some View {
         VStack {
             Image(systemName: "globe")
@@ -20,5 +20,5 @@ struct ContentView: View {
 }
 
 #Preview {
-    ContentView()
+    RootTabView()
 }
