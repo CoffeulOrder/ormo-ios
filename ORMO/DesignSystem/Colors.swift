@@ -10,4 +10,7 @@ enum Colors {
     static let fieldBorder = Color(.fieldBorder)
     static let textDanger = Color(.textDanger)
     static let borderDanger = Color(.borderDanger)
+    static let textTertiary = Color(.textTertiary)
+    static let fillNeutral = Color(.fillNeutral)
+    static let fillNeutralWeak = Color(.fillNeutralWeak)
 }

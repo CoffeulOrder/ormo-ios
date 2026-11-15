@@ -4,20 +4,28 @@ struct LoginView: View {
     @State private var viewModel = LoginViewModel()
     @State private var isTitleVisible = false
     @State private var isBottomCTAVisible = false
-    var onBack: () -> Void = {}
+    @State private var snackbarOffset: CGFloat = 24
+    @State private var snackbarOpacity: Double = 0
 
     var body: some View {
-        VStack(spacing: 0) {
-            topNavigationBar
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    titleView
-                    fieldsView
+        ZStack(alignment: .top) {
+            VStack(spacing: 0) {
+                topNavigationBar
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 0) {
+                        titleView
+                        fieldsView
+                    }
                 }
+                bottomCTA
             }
-            bottomCTA
+            .background(Colors.backgroundDefault.ignoresSafeArea())
+
+            snackbar
+                .padding(.top, Spacing.spacing8)
+                .offset(y: snackbarOffset)
+                .opacity(snackbarOpacity)
         }
-        .background(Colors.backgroundDefault.ignoresSafeArea())
         .onAppear {
             // Figma smart-animate 타이밍: Title 0~17.5%(350ms), Bottom CTA 6~26%(지연 120ms, 400ms), ease-out
             withAnimation(.easeOut(duration: 0.35)) {
@@ -27,24 +35,44 @@ struct LoginView: View {
                 isBottomCTAVisible = true
             }
         }
+        .onChange(of: viewModel.isSnackbarVisible) {
+            if viewModel.isSnackbarVisible {
+                withAnimation(.easeOut(duration: 0.3).delay(0.1)) {
+                    snackbarOffset = 0
+                    snackbarOpacity = 1
+                }
+            } else {
+                withAnimation(.easeOut(duration: 0.25)) {
+                    snackbarOffset = 24
+                    snackbarOpacity = 0
+                }
+            }
+        }
     }
 
-    private var topNavigationBar: some View {
-        HStack(spacing: 0) {
-            Button(action: onBack) {
-                Image(.arrowBackIos)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 24, height: 24)
-                    .frame(width: 40, height: 40)
-            }
-            .buttonStyle(.plain)
+    private var snackbar: some View {
+        HStack(spacing: Spacing.spacing12) {
+            Image(.alertIconLarge)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 24, height: 24)
 
-            Spacer()
+            Text("비밀번호를 5회 틀렸어요")
+                .font(Typography.bodyMdSemibold)
+                .foregroundStyle(Colors.textOnFill)
         }
-        .padding(.horizontal, Spacing.spacing8)
-        .frame(height: 56)
-        .background(Colors.backgroundDefault)
+        .padding(.leading, Spacing.spacing16)
+        .padding(.trailing, Spacing.spacing20)
+        .padding(.vertical, Spacing.spacing12)
+        .background(Colors.fillNeutral)
+        .clipShape(Capsule())
+    }
+
+    // 디자이너 확인 결과 뒤로가기 버튼은 실수로 들어간 요소라 제거했다. 상단 여백 유지를 위해 빈 바만 남긴다.
+    private var topNavigationBar: some View {
+        Color.clear
+            .frame(height: 56)
+            .background(Colors.backgroundDefault)
     }
 
     private var titleView: some View {
@@ -193,21 +221,22 @@ struct LoginView: View {
 
             VStack(spacing: 0) {
                 Button(action: viewModel.loginTapped) {
-                    Text("로그인")
+                    Text(viewModel.isLockedOut ? viewModel.lockoutCountdownText : "로그인")
                         .font(Typography.bodyLgSemibold)
-                        .foregroundStyle(Colors.textOnFill)
+                        .foregroundStyle(viewModel.isLockedOut ? Colors.textQuaternary : Colors.textOnFill)
                         .frame(maxWidth: .infinity)
                         .frame(height: 56)
-                        .background(Colors.fillBrand)
+                        .background(viewModel.isLockedOut ? Colors.fillNeutralWeak : Colors.fillBrand)
                         .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
                 }
                 .buttonStyle(.plain)
+                .disabled(viewModel.isLockedOut)
                 .padding(.horizontal, Spacing.spacing20)
 
                 Button(action: viewModel.forgotPasswordOrSignUpTapped) {
-                    Text("비밀번호 찾기 | 회원가입")
+                    Text(viewModel.isLockedOut ? "비밀번호 재설정하기 | 회원가입" : "비밀번호 찾기 | 회원가입")
                         .font(Typography.bodyMdMedium)
-                        .foregroundStyle(Colors.textPrimary)
+                        .foregroundStyle(viewModel.isLockedOut ? Colors.textTertiary : Colors.textPrimary)
                 }
                 .buttonStyle(.plain)
                 .padding(.top, Spacing.spacing8)
