@@ -2,6 +2,7 @@ import SwiftUI
 
 struct PasswordSetupView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(SignUpRouter.self) private var router
     @State private var viewModel = PasswordSetupViewModel()
     @State private var termsViewModel = TermsAgreementViewModel()
     @State private var isTermsSheetVisible = false
@@ -35,6 +36,13 @@ struct PasswordSetupView: View {
             }
             withAnimation(.easeOut(duration: 0.4).delay(0.12)) {
                 isBottomCTAVisible = true
+            }
+        }
+        .onChange(of: termsViewModel.isCompleted) {
+            if termsViewModel.isCompleted {
+                isTermsSheetVisible = false
+                router.push(.completion)
+                termsViewModel.isCompleted = false
             }
         }
     }
@@ -201,4 +209,5 @@ struct PasswordSetupView: View {
 
 #Preview {
     PasswordSetupView()
+        .environment(SignUpRouter())
 }

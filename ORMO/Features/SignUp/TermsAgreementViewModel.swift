@@ -15,6 +15,7 @@ final class TermsAgreementViewModel {
 
     var isAllAgreed: Bool { items.allSatisfy(\.isAgreed) }
     var canSubmit: Bool { items.allSatisfy(\.isAgreed) }
+    var isCompleted = false
 
     func toggleAll() {
         let newValue = !isAllAgreed
@@ -30,6 +31,6 @@ final class TermsAgreementViewModel {
 
     func submitTapped() {
         guard canSubmit else { return }
-        // TODO: 0.2.6 가입 완료 · 축하 모션으로 이동
+        isCompleted = true
     }
 }
