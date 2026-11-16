@@ -2,6 +2,7 @@ import SwiftUI
 
 struct PasswordResetEmailView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(SignUpRouter.self) private var router
     @State private var viewModel = PasswordResetEmailViewModel()
     @State private var isTitleVisible = false
     @State private var isBottomCTAVisible = false
@@ -143,11 +144,12 @@ struct PasswordResetEmailView: View {
     }
 
     private func requestVerificationCode() {
-        // TODO: 0.2.2와 같은 인증코드 화면으로 이동 → 0.3.2 새 비밀번호 설정
         // 가입하지 않은 메일이어도 같은 안내를 보여줘야 한다(계정 노출 방지).
+        router.path.append(PasswordResetRoute.verificationCode)
     }
 }
 
 #Preview {
     PasswordResetEmailView()
+        .environment(SignUpRouter())
 }

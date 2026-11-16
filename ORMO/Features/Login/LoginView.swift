@@ -21,7 +21,7 @@ struct LoginView: View {
                     case .email:
                         SignUpEmailView()
                     case .verificationCode:
-                        VerificationCodeView()
+                        VerificationCodeView(onVerified: { signUpRouter.push(.nameInput) })
                     case .nameInput:
                         NameInputView()
                     case .passwordSetup:
@@ -34,6 +34,10 @@ struct LoginView: View {
                     switch route {
                     case .emailInput:
                         PasswordResetEmailView()
+                    case .verificationCode:
+                        VerificationCodeView(onVerified: {
+                            // TODO: 0.3.2 새 비밀번호 설정으로 이동
+                        })
                     }
                 }
         }
