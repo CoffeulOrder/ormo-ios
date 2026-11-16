@@ -30,6 +30,12 @@ struct LoginView: View {
                         SignUpCompletionView(name: signUpRouter.userName, onFinished: onSignUpCompleted)
                     }
                 }
+                .navigationDestination(for: PasswordResetRoute.self) { route in
+                    switch route {
+                    case .emailInput:
+                        PasswordResetEmailView()
+                    }
+                }
         }
         .environment(signUpRouter)
     }
@@ -125,6 +131,12 @@ struct LoginView: View {
                     dialogScale = 0.94
                     dialogOpacity = 0
                 }
+            }
+        }
+        .onChange(of: viewModel.isPasswordResetRequested) {
+            if viewModel.isPasswordResetRequested {
+                signUpRouter.path.append(PasswordResetRoute.emailInput)
+                viewModel.isPasswordResetRequested = false
             }
         }
         .navigationBarHidden(true)

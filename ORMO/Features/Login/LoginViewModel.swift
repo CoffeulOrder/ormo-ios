@@ -22,6 +22,7 @@ final class LoginViewModel {
     var isLockedOut: Bool { lockoutRemainingSeconds > 0 }
     var isSnackbarVisible = false
     var isRestrictedAccountDialogVisible = false
+    var isPasswordResetRequested = false
 
     var lockoutCountdownText: String {
         let minutes = lockoutRemainingSeconds / 60
@@ -102,7 +103,8 @@ final class LoginViewModel {
     }
 
     func forgotPasswordTapped() {
-        // TODO: 0.3.1 비밀번호 재설정 화면으로 이동 (재설정하면 잠금 즉시 해제)
+        // TODO: 재설정 완료(0.3.3) 후 전달받는 콜백으로 잠금 즉시 해제
+        isPasswordResetRequested = true
     }
 
     func dismissRestrictedAccountDialog() {
