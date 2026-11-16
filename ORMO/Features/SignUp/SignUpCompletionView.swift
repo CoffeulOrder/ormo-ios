@@ -5,62 +5,219 @@ private let confettiBlue200 = Color(red: Double(0x91) / 255, green: Double(0xC6)
 private let confettiBlue300 = Color(red: Double(0x67) / 255, green: Double(0xAF) / 255, blue: Double(0xFE) / 255)
 private let confettiBlue700 = Color(red: Double(0x00) / 255, green: Double(0x6B) / 255, blue: Double(0xDF) / 255)
 
+// (value, duration): duration은 이전 구간 끝 시점부터 이 값에 도달하기까지 걸리는 시간(초)이다.
+private struct Seg {
+    let value: Double
+    let duration: Double
+}
+
 private struct ConfettiSpec {
     enum Kind { case drop, dot, pill }
     let kind: Kind
-    let x: CGFloat // 화면 너비 대비 비율
-    let y: CGFloat // 화면 높이 대비 비율
+    let restX: CGFloat // 착지 위치(화면 너비 대비 비율)
+    let restY: CGFloat // 착지 위치(화면 높이 대비 비율)
     let width: CGFloat
     let height: CGFloat
-    let rotation: Double
     let color: Color
+    let rotate: [Seg] // degrees
+    let scale: [Seg]
+    let translateX: [Seg] // px, 착지 위치 기준 상대 오프셋
+    let translateY: [Seg]
+    let opacity: [Seg]
 }
 
-// 좌표·크기·회전각은 Figma 노드(214:3923~214:3938)의 절대값을 375×812 기준 비율로 환산한 값이다.
+// Figma get_motion_context(노드 214:3923~214:3938)의 @keyframes 퍼센트·값을 2.2초 타임라인 기준 초 단위로 그대로 환산한 값이다.
+// 터지며 날아와(translate) 착지한 뒤 관성으로 더 흘러가다(두 번째 translate 구간) 서서히 사라진다(opacity).
 private let confettiSpecs: [ConfettiSpec] = [
-    ConfettiSpec(kind: .drop, x: 0.2438, y: 0.2850, width: 14.9, height: 14.9, rotation: -20, color: confettiBlue300),
-    ConfettiSpec(kind: .dot, x: 0.1470, y: 0.2342, width: 8.3, height: 8.3, rotation: 0, color: confettiBlue700),
-    ConfettiSpec(kind: .pill, x: 0.2644, y: 0.2162, width: 5, height: 13.1, rotation: 41, color: confettiBlue200),
-    ConfettiSpec(kind: .drop, x: 0.1789, y: 0.1766, width: 10.2, height: 12.9, rotation: 15, color: Colors.fillBrand),
-    ConfettiSpec(kind: .dot, x: 0.3029, y: 0.1732, width: 11.2, height: 11.2, rotation: 0, color: confettiBlue200),
-    ConfettiSpec(kind: .pill, x: 0.4043, y: 0.1845, width: 5, height: 13.7, rotation: -10, color: confettiBlue300),
-    ConfettiSpec(kind: .drop, x: 0.3868, y: 0.1336, width: 14.1, height: 15.0, rotation: -30, color: confettiBlue700),
-    ConfettiSpec(kind: .dot, x: 0.4796, y: 0.1587, width: 9.7, height: 9.7, rotation: 0, color: Colors.fillBrand),
-    ConfettiSpec(kind: .pill, x: 0.5822, y: 0.1095, width: 5, height: 13.8, rotation: 29, color: Colors.fillBrand),
-    ConfettiSpec(kind: .drop, x: 0.5843, y: 0.1467, width: 12.3, height: 14.2, rotation: 25, color: confettiBlue200),
-    ConfettiSpec(kind: .dot, x: 0.6275, y: 0.1913, width: 10.6, height: 10.6, rotation: 0, color: confettiBlue300),
-    ConfettiSpec(kind: .pill, x: 0.7033, y: 0.1489, width: 5, height: 13.9, rotation: -22, color: confettiBlue700),
-    ConfettiSpec(kind: .drop, x: 0.7236, y: 0.2023, width: 12.7, height: 14.4, rotation: -15, color: confettiBlue700),
-    ConfettiSpec(kind: .dot, x: 0.8649, y: 0.2037, width: 10.7, height: 10.7, rotation: 0, color: Colors.fillBrand),
-    ConfettiSpec(kind: .pill, x: 0.8114, y: 0.2290, width: 5, height: 13.9, rotation: 17, color: confettiBlue200),
-    ConfettiSpec(kind: .drop, x: 0.7677, y: 0.2740, width: 13.8, height: 14.9, rotation: 10, color: confettiBlue300)
+    ConfettiSpec(
+        kind: .drop, restX: 0.2438, restY: 0.285, width: 14.851, height: 14.851, color: confettiBlue300,
+        rotate: [Seg(value: 0.0, duration: 0.5), Seg(value: 120.0, duration: 1.6), Seg(value: 120.0, duration: 0.1)],
+        scale: [Seg(value: 0.2, duration: 0.5), Seg(value: 1.0, duration: 0.3), Seg(value: 1.0, duration: 1.4)],
+        translateX: [Seg(value: 99.0, duration: 0.5), Seg(value: 0.0, duration: 0.45), Seg(value: -8.0, duration: 1.15), Seg(value: -8.0, duration: 0.1)],
+        translateY: [Seg(value: 12.0, duration: 0.5), Seg(value: 0.0, duration: 0.45), Seg(value: 50.0, duration: 1.15), Seg(value: 50.0, duration: 0.1)],
+        opacity: [Seg(value: 0.0, duration: 0.5), Seg(value: 1.0, duration: 0.08), Seg(value: 1.0, duration: 0.92), Seg(value: 0.0, duration: 0.6), Seg(value: 0.0, duration: 0.1)]
+    ),
+    ConfettiSpec(
+        kind: .dot, restX: 0.147, restY: 0.2342, width: 8.274, height: 8.274, color: confettiBlue700,
+        rotate: [Seg(value: 0.0, duration: 0.525), Seg(value: -161.0, duration: 1.575), Seg(value: -161.0, duration: 0.1)],
+        scale: [Seg(value: 0.2, duration: 0.525), Seg(value: 1.0, duration: 0.3), Seg(value: 1.0, duration: 1.375)],
+        translateX: [Seg(value: 132.0, duration: 0.525), Seg(value: 0.0, duration: 0.45), Seg(value: 4.0, duration: 1.125), Seg(value: 4.0, duration: 0.1)],
+        translateY: [Seg(value: 52.0, duration: 0.525), Seg(value: 0.0, duration: 0.45), Seg(value: 63.0, duration: 1.125), Seg(value: 63.0, duration: 0.1)],
+        opacity: [Seg(value: 0.0, duration: 0.525), Seg(value: 1.0, duration: 0.08), Seg(value: 1.0, duration: 0.895), Seg(value: 0.0, duration: 0.6), Seg(value: 0.0, duration: 0.1)]
+    ),
+    ConfettiSpec(
+        kind: .pill, restX: 0.2644, restY: 0.2162, width: 12.302, height: 13.092, color: confettiBlue200,
+        rotate: [Seg(value: 0.0, duration: 0.55), Seg(value: 202.0, duration: 1.55), Seg(value: 202.0, duration: 0.1)],
+        scale: [Seg(value: 0.2, duration: 0.55), Seg(value: 1.0, duration: 0.3), Seg(value: 1.0, duration: 1.35)],
+        translateX: [Seg(value: 92.0, duration: 0.55), Seg(value: 0.0, duration: 0.45), Seg(value: -1.0, duration: 1.1), Seg(value: -1.0, duration: 0.1)],
+        translateY: [Seg(value: 67.0, duration: 0.55), Seg(value: 0.0, duration: 0.45), Seg(value: 76.0, duration: 1.1), Seg(value: 76.0, duration: 0.1)],
+        opacity: [Seg(value: 0.0, duration: 0.55), Seg(value: 1.0, duration: 0.08), Seg(value: 1.0, duration: 0.87), Seg(value: 0.0, duration: 0.6), Seg(value: 0.0, duration: 0.1)]
+    ),
+    ConfettiSpec(
+        kind: .drop, restX: 0.1789, restY: 0.1767, width: 10.194, height: 12.889, color: Colors.fillBrand,
+        rotate: [Seg(value: 0.0, duration: 0.575), Seg(value: -123.0, duration: 1.525), Seg(value: -123.0, duration: 0.1)],
+        scale: [Seg(value: 0.2, duration: 0.575), Seg(value: 1.0, duration: 0.3), Seg(value: 1.0, duration: 1.325)],
+        translateX: [Seg(value: 121.0, duration: 0.575), Seg(value: 0.0, duration: 0.45), Seg(value: -6.0, duration: 1.075), Seg(value: -6.0, duration: 0.1)],
+        translateY: [Seg(value: 99.0, duration: 0.575), Seg(value: 0.0, duration: 0.45), Seg(value: 59.0, duration: 1.075), Seg(value: 59.0, duration: 0.1)],
+        opacity: [Seg(value: 0.0, duration: 0.575), Seg(value: 1.0, duration: 0.08), Seg(value: 1.0, duration: 0.845), Seg(value: 0.0, duration: 0.6), Seg(value: 0.0, duration: 0.1)]
+    ),
+    ConfettiSpec(
+        kind: .dot, restX: 0.3029, restY: 0.1732, width: 11.204, height: 11.204, color: confettiBlue200,
+        rotate: [Seg(value: 0.0, duration: 0.5), Seg(value: 164.0, duration: 1.6), Seg(value: 164.0, duration: 0.1)],
+        scale: [Seg(value: 0.2, duration: 0.5), Seg(value: 1.0, duration: 0.3), Seg(value: 1.0, duration: 1.4)],
+        translateX: [Seg(value: 76.0, duration: 0.5), Seg(value: 0.0, duration: 0.45), Seg(value: 6.0, duration: 1.15), Seg(value: 6.0, duration: 0.1)],
+        translateY: [Seg(value: 103.0, duration: 0.5), Seg(value: 0.0, duration: 0.45), Seg(value: 72.0, duration: 1.15), Seg(value: 72.0, duration: 0.1)],
+        opacity: [Seg(value: 0.0, duration: 0.5), Seg(value: 1.0, duration: 0.08), Seg(value: 1.0, duration: 0.92), Seg(value: 0.0, duration: 0.6), Seg(value: 0.0, duration: 0.1)]
+    ),
+    ConfettiSpec(
+        kind: .pill, restX: 0.4042, restY: 0.1845, width: 7.181, height: 13.671, color: confettiBlue300,
+        rotate: [Seg(value: 0.0, duration: 0.525), Seg(value: -205.0, duration: 1.575), Seg(value: -205.0, duration: 0.1)],
+        scale: [Seg(value: 0.2, duration: 0.525), Seg(value: 1.0, duration: 0.3), Seg(value: 1.0, duration: 1.375)],
+        translateX: [Seg(value: 37.0, duration: 0.525), Seg(value: 0.0, duration: 0.45), Seg(value: 1.0, duration: 1.125), Seg(value: 1.0, duration: 0.1)],
+        translateY: [Seg(value: 93.0, duration: 0.525), Seg(value: 0.0, duration: 0.45), Seg(value: 55.0, duration: 1.125), Seg(value: 55.0, duration: 0.1)],
+        opacity: [Seg(value: 0.0, duration: 0.525), Seg(value: 1.0, duration: 0.08), Seg(value: 1.0, duration: 0.895), Seg(value: 0.0, duration: 0.6), Seg(value: 0.0, duration: 0.1)]
+    ),
+    ConfettiSpec(
+        kind: .drop, restX: 0.3868, restY: 0.1336, width: 14.081, height: 14.972, color: confettiBlue300,
+        rotate: [Seg(value: 0.0, duration: 0.55), Seg(value: 126.0, duration: 1.55), Seg(value: 126.0, duration: 0.1)],
+        scale: [Seg(value: 0.2, duration: 0.55), Seg(value: 1.0, duration: 0.3), Seg(value: 1.0, duration: 1.35)],
+        translateX: [Seg(value: 45.0, duration: 0.55), Seg(value: 0.0, duration: 0.45), Seg(value: -4.0, duration: 1.1), Seg(value: -4.0, duration: 0.1)],
+        translateY: [Seg(value: 135.0, duration: 0.55), Seg(value: 0.0, duration: 0.45), Seg(value: 68.0, duration: 1.1), Seg(value: 68.0, duration: 0.1)],
+        opacity: [Seg(value: 0.0, duration: 0.55), Seg(value: 1.0, duration: 0.08), Seg(value: 1.0, duration: 0.87), Seg(value: 0.0, duration: 0.6), Seg(value: 0.0, duration: 0.1)]
+    ),
+    ConfettiSpec(
+        kind: .dot, restX: 0.4796, restY: 0.1587, width: 9.698, height: 9.698, color: confettiBlue700,
+        rotate: [Seg(value: 0.0, duration: 0.575), Seg(value: -167.0, duration: 1.525), Seg(value: -167.0, duration: 0.1)],
+        scale: [Seg(value: 0.2, duration: 0.575), Seg(value: 1.0, duration: 0.3), Seg(value: 1.0, duration: 1.325)],
+        translateX: [Seg(value: 8.0, duration: 0.575), Seg(value: 0.0, duration: 0.45), Seg(value: 8.0, duration: 1.075), Seg(value: 8.0, duration: 0.1)],
+        translateY: [Seg(value: 114.0, duration: 0.575), Seg(value: 0.0, duration: 0.45), Seg(value: 51.0, duration: 1.075), Seg(value: 51.0, duration: 0.1)],
+        opacity: [Seg(value: 0.0, duration: 0.575), Seg(value: 1.0, duration: 0.08), Seg(value: 1.0, duration: 0.845), Seg(value: 0.0, duration: 0.6), Seg(value: 0.0, duration: 0.1)]
+    ),
+    ConfettiSpec(
+        kind: .pill, restX: 0.5822, restY: 0.1095, width: 10.676, height: 13.794, color: Colors.fillBrand,
+        rotate: [Seg(value: 0.0, duration: 0.5), Seg(value: 208.0, duration: 1.6), Seg(value: 208.0, duration: 0.1)],
+        scale: [Seg(value: 0.2, duration: 0.5), Seg(value: 1.0, duration: 0.3), Seg(value: 1.0, duration: 1.4)],
+        translateX: [Seg(value: -28.0, duration: 0.5), Seg(value: 0.0, duration: 0.45), Seg(value: 3.0, duration: 1.15), Seg(value: 3.0, duration: 0.1)],
+        translateY: [Seg(value: 154.0, duration: 0.5), Seg(value: 0.0, duration: 0.45), Seg(value: 64.0, duration: 1.15), Seg(value: 64.0, duration: 0.1)],
+        opacity: [Seg(value: 0.0, duration: 0.5), Seg(value: 1.0, duration: 0.08), Seg(value: 1.0, duration: 0.92), Seg(value: 0.0, duration: 0.6), Seg(value: 0.0, duration: 0.1)]
+    ),
+    ConfettiSpec(
+        kind: .drop, restX: 0.5843, restY: 0.1467, width: 12.26, height: 14.204, color: Colors.fillBrand,
+        rotate: [Seg(value: 0.0, duration: 0.525), Seg(value: -129.0, duration: 1.575), Seg(value: -129.0, duration: 0.1)],
+        scale: [Seg(value: 0.2, duration: 0.525), Seg(value: 1.0, duration: 0.3), Seg(value: 1.0, duration: 1.375)],
+        translateX: [Seg(value: -30.0, duration: 0.525), Seg(value: 0.0, duration: 0.45), Seg(value: -2.0, duration: 1.125), Seg(value: -2.0, duration: 0.1)],
+        translateY: [Seg(value: 124.0, duration: 0.525), Seg(value: 0.0, duration: 0.45), Seg(value: 77.0, duration: 1.125), Seg(value: 77.0, duration: 0.1)],
+        opacity: [Seg(value: 0.0, duration: 0.525), Seg(value: 1.0, duration: 0.08), Seg(value: 1.0, duration: 0.895), Seg(value: 0.0, duration: 0.6), Seg(value: 0.0, duration: 0.1)]
+    ),
+    ConfettiSpec(
+        kind: .dot, restX: 0.6275, restY: 0.1913, width: 10.631, height: 10.631, color: confettiBlue200,
+        rotate: [Seg(value: 0.0, duration: 0.55), Seg(value: 170.0, duration: 1.55), Seg(value: 170.0, duration: 0.1)],
+        scale: [Seg(value: 0.2, duration: 0.55), Seg(value: 1.0, duration: 0.3), Seg(value: 1.0, duration: 1.35)],
+        translateX: [Seg(value: -47.0, duration: 0.55), Seg(value: 0.0, duration: 0.45), Seg(value: -7.0, duration: 1.1), Seg(value: -7.0, duration: 0.1)],
+        translateY: [Seg(value: 88.0, duration: 0.55), Seg(value: 0.0, duration: 0.45), Seg(value: 60.0, duration: 1.1), Seg(value: 60.0, duration: 0.1)],
+        opacity: [Seg(value: 0.0, duration: 0.55), Seg(value: 1.0, duration: 0.08), Seg(value: 1.0, duration: 0.87), Seg(value: 0.0, duration: 0.6), Seg(value: 0.0, duration: 0.1)]
+    ),
+    ConfettiSpec(
+        kind: .pill, restX: 0.7033, restY: 0.149, width: 9.506, height: 13.926, color: confettiBlue700,
+        rotate: [Seg(value: 0.0, duration: 0.575), Seg(value: -211.0, duration: 1.525), Seg(value: -211.0, duration: 0.1)],
+        scale: [Seg(value: 0.2, duration: 0.575), Seg(value: 1.0, duration: 0.3), Seg(value: 1.0, duration: 1.325)],
+        translateX: [Seg(value: -74.0, duration: 0.575), Seg(value: 0.0, duration: 0.45), Seg(value: 5.0, duration: 1.075), Seg(value: 5.0, duration: 0.1)],
+        translateY: [Seg(value: 121.0, duration: 0.575), Seg(value: 0.0, duration: 0.45), Seg(value: 73.0, duration: 1.075), Seg(value: 73.0, duration: 0.1)],
+        opacity: [Seg(value: 0.0, duration: 0.575), Seg(value: 1.0, duration: 0.08), Seg(value: 1.0, duration: 0.845), Seg(value: 0.0, duration: 0.6), Seg(value: 0.0, duration: 0.1)]
+    ),
+    ConfettiSpec(
+        kind: .drop, restX: 0.7236, restY: 0.2022, width: 12.696, height: 14.438, color: confettiBlue300,
+        rotate: [Seg(value: 0.0, duration: 0.5), Seg(value: 132.0, duration: 1.6), Seg(value: 132.0, duration: 0.1)],
+        scale: [Seg(value: 0.2, duration: 0.5), Seg(value: 1.0, duration: 0.3), Seg(value: 1.0, duration: 1.4)],
+        translateX: [Seg(value: -82.0, duration: 0.5), Seg(value: 0.0, duration: 0.45), Seg(value: 0.0, duration: 1.25)],
+        translateY: [Seg(value: 79.0, duration: 0.5), Seg(value: 0.0, duration: 0.45), Seg(value: 56.0, duration: 1.15), Seg(value: 56.0, duration: 0.1)],
+        opacity: [Seg(value: 0.0, duration: 0.5), Seg(value: 1.0, duration: 0.08), Seg(value: 1.0, duration: 0.92), Seg(value: 0.0, duration: 0.6), Seg(value: 0.0, duration: 0.1)]
+    ),
+    ConfettiSpec(
+        kind: .dot, restX: 0.8649, restY: 0.2036, width: 10.697, height: 10.697, color: confettiBlue700,
+        rotate: [Seg(value: 0.0, duration: 0.525), Seg(value: -173.0, duration: 1.575), Seg(value: -173.0, duration: 0.1)],
+        scale: [Seg(value: 0.2, duration: 0.525), Seg(value: 1.0, duration: 0.3), Seg(value: 1.0, duration: 1.375)],
+        translateX: [Seg(value: -135.0, duration: 0.525), Seg(value: 0.0, duration: 0.45), Seg(value: -5.0, duration: 1.125), Seg(value: -5.0, duration: 0.1)],
+        translateY: [Seg(value: 78.0, duration: 0.525), Seg(value: 0.0, duration: 0.45), Seg(value: 69.0, duration: 1.125), Seg(value: 69.0, duration: 0.1)],
+        opacity: [Seg(value: 0.0, duration: 0.525), Seg(value: 1.0, duration: 0.08), Seg(value: 1.0, duration: 0.895), Seg(value: 0.0, duration: 0.6), Seg(value: 0.0, duration: 0.1)]
+    ),
+    ConfettiSpec(
+        kind: .pill, restX: 0.8114, restY: 0.229, width: 8.582, height: 13.894, color: confettiBlue200,
+        rotate: [Seg(value: 0.0, duration: 0.55), Seg(value: 214.0, duration: 1.55), Seg(value: 214.0, duration: 0.1)],
+        scale: [Seg(value: 0.2, duration: 0.55), Seg(value: 1.0, duration: 0.3), Seg(value: 1.0, duration: 1.35)],
+        translateX: [Seg(value: -115.0, duration: 0.55), Seg(value: 0.0, duration: 0.45), Seg(value: 7.0, duration: 1.1), Seg(value: 7.0, duration: 0.1)],
+        translateY: [Seg(value: 57.0, duration: 0.55), Seg(value: 0.0, duration: 0.45), Seg(value: 52.0, duration: 1.1), Seg(value: 52.0, duration: 0.1)],
+        opacity: [Seg(value: 0.0, duration: 0.55), Seg(value: 1.0, duration: 0.08), Seg(value: 1.0, duration: 0.87), Seg(value: 0.0, duration: 0.6), Seg(value: 0.0, duration: 0.1)]
+    ),
+    ConfettiSpec(
+        kind: .drop, restX: 0.7677, restY: 0.274, width: 13.791, height: 14.899, color: Colors.fillBrand,
+        rotate: [Seg(value: 0.0, duration: 0.575), Seg(value: -135.0, duration: 1.525), Seg(value: -135.0, duration: 0.1)],
+        scale: [Seg(value: 0.2, duration: 0.575), Seg(value: 1.0, duration: 0.3), Seg(value: 1.0, duration: 1.325)],
+        translateX: [Seg(value: -98.0, duration: 0.575), Seg(value: 0.0, duration: 0.45), Seg(value: 2.0, duration: 1.075), Seg(value: 2.0, duration: 0.1)],
+        translateY: [Seg(value: 21.0, duration: 0.575), Seg(value: 0.0, duration: 0.45), Seg(value: 65.0, duration: 1.075), Seg(value: 65.0, duration: 0.1)],
+        opacity: [Seg(value: 0.0, duration: 0.575), Seg(value: 1.0, duration: 0.08), Seg(value: 1.0, duration: 0.845), Seg(value: 0.0, duration: 0.6), Seg(value: 0.0, duration: 0.1)]
+    )
 ]
+
+private struct ConfettiAnimatedValues {
+    var scale: Double
+    var rotate: Double
+    var translateX: Double
+    var translateY: Double
+    var opacity: Double
+}
 
 private struct ConfettiPieceView: View {
     let spec: ConfettiSpec
-    let index: Int
+    @State private var trigger = false
 
-    @State private var opacity: Double = 0
-    @State private var scale: CGFloat = 0.2
-    @State private var riseOffset: CGFloat = -16
+    private var initialValue: ConfettiAnimatedValues {
+        ConfettiAnimatedValues(
+            scale: spec.scale.first?.value ?? 0.2,
+            rotate: 0,
+            translateX: spec.translateX.first?.value ?? 0,
+            translateY: spec.translateY.first?.value ?? 0,
+            opacity: 0
+        )
+    }
 
     var body: some View {
         content
-            .opacity(opacity)
-            .scaleEffect(scale)
-            .offset(y: riseOffset)
+            .keyframeAnimator(initialValue: initialValue, trigger: trigger) { content, value in
+                content
+                    .scaleEffect(value.scale)
+                    .rotationEffect(.degrees(value.rotate))
+                    .offset(x: value.translateX, y: value.translateY)
+                    .opacity(value.opacity)
+            } keyframes: { _ in
+                KeyframeTrack(\.scale) {
+                    for seg in spec.scale {
+                        CubicKeyframe(seg.value, duration: seg.duration)
+                    }
+                }
+                KeyframeTrack(\.rotate) {
+                    for seg in spec.rotate {
+                        CubicKeyframe(seg.value, duration: seg.duration)
+                    }
+                }
+                KeyframeTrack(\.translateX) {
+                    for seg in spec.translateX {
+                        CubicKeyframe(seg.value, duration: seg.duration)
+                    }
+                }
+                KeyframeTrack(\.translateY) {
+                    for seg in spec.translateY {
+                        CubicKeyframe(seg.value, duration: seg.duration)
+                    }
+                }
+                KeyframeTrack(\.opacity) {
+                    for seg in spec.opacity {
+                        CubicKeyframe(seg.value, duration: seg.duration)
+                    }
+                }
+            }
             .onAppear {
-                // Figma 2.2초 타임라인: 입자별로 살짝 엇갈려 터지고(burst), 1.5초 전후부터 사라진다.
-                let burstDelay = 0.45 + Double(index % 6) * 0.02
-                let fadeDelay = 1.45 + Double(index % 6) * 0.02
-                withAnimation(.easeOut(duration: 0.35).delay(burstDelay)) {
-                    opacity = 1
-                    scale = 1
-                    riseOffset = 0
-                }
-                withAnimation(.easeIn(duration: 0.6).delay(fadeDelay)) {
-                    opacity = 0
-                }
+                trigger.toggle()
             }
     }
 
@@ -74,7 +231,6 @@ private struct ConfettiPieceView: View {
                 .scaledToFit()
                 .frame(width: spec.width, height: spec.height)
                 .foregroundStyle(spec.color)
-                .rotationEffect(.degrees(spec.rotation))
         case .dot:
             Image(.confettiDot)
                 .renderingMode(.template)
@@ -85,8 +241,7 @@ private struct ConfettiPieceView: View {
         case .pill:
             Capsule()
                 .fill(spec.color)
-                .frame(width: spec.width, height: spec.height)
-                .rotationEffect(.degrees(spec.rotation))
+                .frame(width: 5, height: 13)
         }
     }
 }
@@ -128,9 +283,9 @@ struct SignUpCompletionView: View {
     var body: some View {
         GeometryReader { proxy in
             ZStack {
-                ForEach(Array(confettiSpecs.enumerated()), id: \.offset) { index, spec in
-                    ConfettiPieceView(spec: spec, index: index)
-                        .position(x: proxy.size.width * spec.x, y: proxy.size.height * spec.y)
+                ForEach(Array(confettiSpecs.enumerated()), id: \.offset) { _, spec in
+                    ConfettiPieceView(spec: spec)
+                        .position(x: proxy.size.width * spec.restX, y: proxy.size.height * spec.restY)
                 }
 
                 symbolView
