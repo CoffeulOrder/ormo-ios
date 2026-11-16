@@ -2,9 +2,9 @@ import SwiftUI
 
 struct VerificationCodeView: View {
     @Environment(\.dismiss) private var dismiss
-    @Environment(SignUpRouter.self) private var router
     @State private var viewModel = VerificationCodeViewModel()
     @FocusState private var isCodeFieldFocused: Bool
+    var onVerified: () -> Void = {}
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -29,7 +29,7 @@ struct VerificationCodeView: View {
         }
         .onChange(of: viewModel.isVerified) {
             if viewModel.isVerified {
-                router.push(.nameInput)
+                onVerified()
                 viewModel.isVerified = false
             }
         }
@@ -186,5 +186,4 @@ struct VerificationCodeView: View {
 
 #Preview {
     VerificationCodeView()
-        .environment(SignUpRouter())
 }
