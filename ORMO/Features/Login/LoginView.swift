@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct LoginView: View {
+    var onSignUpCompleted: () -> Void = {}
+
     @State private var viewModel = LoginViewModel()
     @State private var isTitleVisible = false
     @State private var isBottomCTAVisible = false
@@ -24,6 +26,8 @@ struct LoginView: View {
                         NameInputView()
                     case .passwordSetup:
                         PasswordSetupView()
+                    case .completion:
+                        SignUpCompletionView(name: signUpRouter.userName, onFinished: onSignUpCompleted)
                     }
                 }
         }

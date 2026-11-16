@@ -134,6 +134,7 @@ struct NameInputView: View {
 
     private func goToPasswordSetup() {
         guard viewModel.isValid else { return }
+        router.userName = viewModel.name
         router.push(.passwordSetup)
     }
 }
