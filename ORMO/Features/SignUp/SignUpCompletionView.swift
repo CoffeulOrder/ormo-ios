@@ -223,7 +223,7 @@ struct SignUpCompletionView: View {
     }
 
     private var titleView: some View {
-        Text("(\(viewModel.name))님!\nORMO로 어서와요!")
+        Text("\(viewModel.name)님!\nORMO로 어서와요!")
             .font(Typography.displayXsSemibold)
             .foregroundStyle(Colors.textPrimary)
             .multilineTextAlignment(.center)
