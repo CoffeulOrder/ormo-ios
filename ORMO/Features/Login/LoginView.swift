@@ -35,9 +35,9 @@ struct LoginView: View {
                     case .emailInput:
                         PasswordResetEmailView()
                     case .verificationCode:
-                        VerificationCodeView(onVerified: {
-                            // TODO: 0.3.2 새 비밀번호 설정으로 이동
-                        })
+                        VerificationCodeView(onVerified: { signUpRouter.path.append(PasswordResetRoute.newPassword) })
+                    case .newPassword:
+                        PasswordResetNewPasswordView()
                     }
                 }
         }
