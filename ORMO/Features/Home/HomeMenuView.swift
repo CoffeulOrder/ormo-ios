@@ -50,20 +50,33 @@ struct HomeMenuView: View {
     }
 
     private var content: some View {
-        VStack(spacing: 0) {
-            topBar
-            if viewModel.isLoaded && viewModel.hasNoMenu {
-                emptyMenuResultView
-            } else {
-                menuListContent
+        ZStack(alignment: .bottom) {
+            VStack(spacing: 0) {
+                topBar
+                if viewModel.isLoaded && viewModel.hasNoMenu {
+                    emptyMenuResultView
+                } else {
+                    menuListContent
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+
+            if let liveOrder = viewModel.liveOrder {
+                LiveOrderBarView(order: liveOrder, action: liveOrderTapped)
+                    .padding(.horizontal, Spacing.spacing16)
+                    .padding(.bottom, Spacing.spacing8)
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(Colors.backgroundDefault.ignoresSafeArea())
         .navigationBarHidden(true)
         .task {
             await viewModel.loadIfNeeded()
+            viewModel.observeLiveOrderIfNeeded()
         }
+    }
+
+    private func liveOrderTapped() {
+        // TODO: 4.3.x 주문 상세 화면으로 이동
     }
 
     private var emptyMenuResultView: some View {

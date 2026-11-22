@@ -16,14 +16,21 @@ final class HomeMenuViewModel {
     // 탭을 직접 눌렀을 때만 채워진다. 스크롤로 감지된 섹션 변경은 이 값을 건드리지 않아
     // 콘텐츠 스크롤과 탭 하이라이트 추적이 서로를 되돌리는 피드백 루프를 막는다.
     var scrollTarget: Section?
+    var liveOrder: LiveOrder?
 
     var hasNoMenu: Bool { recentOrders.isEmpty && categories.isEmpty }
 
     private var currentStoreId = "beomseokgwan"
     private let menuRepository: MenuRepository
+    private let liveOrderRepository: LiveOrderRepository
+    private var liveOrderObservationTask: Task<Void, Never>?
 
-    init(menuRepository: MenuRepository = MockMenuRepository()) {
+    init(
+        menuRepository: MenuRepository = MockMenuRepository(),
+        liveOrderRepository: LiveOrderRepository = MockLiveOrderRepository()
+    ) {
         self.menuRepository = menuRepository
+        self.liveOrderRepository = liveOrderRepository
     }
 
     var sections: [Section] {
@@ -72,5 +79,14 @@ final class HomeMenuViewModel {
     func updateSelectedSectionFromScroll(_ section: Section) {
         guard selectedSection != section else { return }
         selectedSection = section
+    }
+
+    func observeLiveOrderIfNeeded() {
+        guard liveOrderObservationTask == nil else { return }
+        liveOrderObservationTask = Task { [storeName] in
+            for await order in liveOrderRepository.observeLiveOrder(storeName: storeName) {
+                liveOrder = order
+            }
+        }
     }
 }

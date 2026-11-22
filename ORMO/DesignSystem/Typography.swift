@@ -16,5 +16,6 @@ enum Typography {
     static let bodySmMedium = Font.system(size: 14, weight: .medium)
     static let bodySmSemibold = Font.system(size: 14, weight: .semibold)
     static let bodyXsMedium = Font.system(size: 12, weight: .medium)
+    static let bodyXsSemibold = Font.system(size: 12, weight: .semibold)
     static let bodyXsBold = Font.system(size: 12, weight: .bold)
 }
