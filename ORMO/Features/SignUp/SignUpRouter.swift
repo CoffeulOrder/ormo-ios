@@ -3,8 +3,7 @@ import SwiftUI
 enum SignUpRoute: Hashable {
     case email
     case verificationCode
-    case nameInput
-    case passwordSetup
+    case profile
     case completion
 }
 
