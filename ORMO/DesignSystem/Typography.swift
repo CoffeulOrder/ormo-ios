@@ -5,6 +5,7 @@ import SwiftUI
 enum Typography {
     static let displayXsSemibold = Font.system(size: 24, weight: .semibold)
     static let bodyXlBold = Font.system(size: 20, weight: .bold)
+    static let bodyXlSemibold = Font.system(size: 20, weight: .semibold)
     static let displaySmSemibold = Font.system(size: 30, weight: .semibold)
     static let bodyLgSemibold = Font.system(size: 18, weight: .semibold)
     static let bodyLgBold = Font.system(size: 18, weight: .bold)
@@ -14,4 +15,6 @@ enum Typography {
     static let bodySmRegular = Font.system(size: 14, weight: .regular)
     static let bodySmMedium = Font.system(size: 14, weight: .medium)
     static let bodySmSemibold = Font.system(size: 14, weight: .semibold)
+    static let bodyXsMedium = Font.system(size: 12, weight: .medium)
+    static let bodyXsBold = Font.system(size: 12, weight: .bold)
 }

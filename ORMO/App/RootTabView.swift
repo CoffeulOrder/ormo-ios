@@ -9,13 +9,8 @@ import SwiftUI
 
 struct RootTabView: View {
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
-        }
-        .padding()
+        // 하단 탭(주문내역·내정보 등)이 아직 설계되지 않아 임시로 메뉴 홈만 보여준다.
+        HomeMenuView()
     }
 }
 

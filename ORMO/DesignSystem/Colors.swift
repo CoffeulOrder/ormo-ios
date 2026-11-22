@@ -20,4 +20,5 @@ enum Colors {
     static let borderDefault = Color(.borderDefault)
     static let textBrand = Color(.textBrand)
     static let fillSuccess = Color(.fillSuccess)
+    static let backgroundLower = Color(.backgroundLower)
 }
