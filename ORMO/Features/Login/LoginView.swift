@@ -24,11 +24,9 @@ struct LoginView: View {
                             signUpRouter.path = NavigationPath()
                         })
                     case .verificationCode:
-                        VerificationCodeView(onVerified: { signUpRouter.push(.nameInput) })
-                    case .nameInput:
-                        NameInputView()
-                    case .passwordSetup:
-                        PasswordSetupView()
+                        VerificationCodeView(onVerified: { signUpRouter.push(.profile) })
+                    case .profile:
+                        SignUpProfileView()
                     case .completion:
                         SignUpCompletionView(name: signUpRouter.userName, onFinished: onSignUpCompleted)
                     }
