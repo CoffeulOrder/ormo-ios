@@ -13,21 +13,71 @@ struct CartView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel: CartViewModel
     @State private var bottomCTAHeight: CGFloat = 0
+    @State private var dimOpacity: Double = 0
+    @State private var dialogScale: CGFloat = 0.94
+    @State private var dialogOpacity: Double = 0
 
-    init(cart: CartStore, store: Store?) {
+    let onOrderUnavailable: () -> Void
+
+    init(cart: CartStore, store: Store?, onOrderUnavailable: @escaping () -> Void = {}) {
         _viewModel = State(initialValue: CartViewModel(cart: cart, store: store))
+        self.onOrderUnavailable = onOrderUnavailable
     }
 
     var body: some View {
-        Group {
-            if viewModel.cart.isEmpty {
-                emptyStateContent
-            } else {
-                orderFormContent
+        ZStack {
+            Group {
+                if viewModel.cart.isEmpty {
+                    emptyStateContent
+                } else {
+                    orderFormContent
+                }
+            }
+
+            if let alert = viewModel.orderUnavailableAlert {
+                ZStack {
+                    Colors.backgroundDim
+                        .ignoresSafeArea()
+                        .opacity(dimOpacity)
+
+                    AlertDialog(
+                        title: alert.title,
+                        message: alert.message,
+                        primaryTitle: "확인",
+                        primaryAction: {
+                            viewModel.orderUnavailableAlert = nil
+                            onOrderUnavailable()
+                        }
+                    )
+                    .scaleEffect(dialogScale)
+                    .opacity(dialogOpacity)
+                    .compositingGroup()
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
         .background(Colors.backgroundDefault.ignoresSafeArea())
         .navigationBarHidden(true)
+        .onChange(of: viewModel.orderUnavailableAlert) {
+            if viewModel.orderUnavailableAlert != nil {
+                // Figma smart-animate 타이밍: Dim 0~10%(200ms), Dialog 2.5~15%(지연 50ms, scale 250ms·opacity 200ms)
+                withAnimation(.easeOut(duration: 0.2)) {
+                    dimOpacity = 1
+                }
+                withAnimation(.timingCurve(0.45, 1.45, 0.8, 1, duration: 0.25).delay(0.05)) {
+                    dialogScale = 1
+                }
+                withAnimation(.easeOut(duration: 0.2).delay(0.05)) {
+                    dialogOpacity = 1
+                }
+            } else {
+                withAnimation(.easeOut(duration: 0.2)) {
+                    dimOpacity = 0
+                    dialogScale = 0.94
+                    dialogOpacity = 0
+                }
+            }
+        }
     }
 
     private var emptyStateContent: some View {

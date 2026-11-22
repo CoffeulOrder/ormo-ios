@@ -61,4 +61,19 @@ struct MockCafeRepository: CafeRepository {
             )
         ]
     }
+
+    // storeId별 트리거: new-millennium → 오늘 영업 종료, bagaegwan → 잠깐 주문 중지,
+    // 그 외(beomseokgwan 포함 기본값) → 정상 접수.
+    func fetchOrderAcceptance(storeId: String) async throws -> OrderAcceptance {
+        try? await Task.sleep(for: .seconds(0.3))
+
+        switch storeId {
+        case "new-millennium":
+            return .closedForToday(reopensAtText: "내일 08:30")
+        case "bagaegwan":
+            return .paused(resumesAtText: "14:30")
+        default:
+            return .accepting
+        }
+    }
 }

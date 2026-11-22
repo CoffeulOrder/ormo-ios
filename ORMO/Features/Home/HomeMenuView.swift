@@ -52,7 +52,11 @@ struct HomeMenuView: View {
                             onOrderNow: { router.path.append(HomeRoute.cart) }
                         )
                     case .cart:
-                        CartView(cart: cart, store: viewModel.currentStore)
+                        CartView(
+                            cart: cart,
+                            store: viewModel.currentStore,
+                            onOrderUnavailable: { router.path = NavigationPath() }
+                        )
                     }
                 }
         }
