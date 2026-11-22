@@ -128,13 +128,14 @@ struct PasswordResetEmailView: View {
             Button(action: requestVerificationCode) {
                 Text("인증코드 받기")
                     .font(Typography.bodyLgSemibold)
-                    .foregroundStyle(Colors.textOnFill)
+                    .foregroundStyle(viewModel.isEmailValid ? Colors.textOnFill : Colors.textQuaternary)
                     .frame(maxWidth: .infinity)
                     .frame(height: 56)
-                    .background(Colors.fillBrand)
+                    .background(viewModel.isEmailValid ? Colors.fillBrand : Colors.fillNeutralWeak)
                     .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
             }
             .buttonStyle(.plain)
+            .disabled(!viewModel.isEmailValid)
             .padding(.horizontal, Spacing.spacing20)
             .padding(.bottom, Spacing.spacing32)
             .background(Colors.backgroundDefault)
