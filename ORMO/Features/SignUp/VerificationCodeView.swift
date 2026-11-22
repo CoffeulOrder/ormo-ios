@@ -49,6 +49,7 @@ struct VerificationCodeView: View {
         .opacity(0)
         .frame(width: 1, height: 1)
         .allowsHitTesting(false)
+        .disabled(viewModel.isLocked)
         .id(viewModel.inputGeneration)
     }
 
@@ -72,13 +73,13 @@ struct VerificationCodeView: View {
 
     private var sectionHeader: some View {
         VStack(alignment: .leading, spacing: Spacing.spacing20) {
-            Text("메일로 받은\n인증번호 6자리를 입력해주세요")
+            Text("메일로 받은\n인증코드 6자리를 입력해주세요")
                 .font(Typography.displayXsSemibold)
                 .foregroundStyle(Colors.textPrimary)
 
-            Text(viewModel.isExpired ? "시간이 지났어요" : "남은 시간 \(viewModel.remainingTimeText)")
+            Text(viewModel.isExpired ? "입력 시간이 만료됐어요" : "남은 시간 \(viewModel.remainingTimeText)")
                 .font(Typography.bodyMdMedium)
-                .foregroundStyle(Colors.textSecondary)
+                .foregroundStyle(viewModel.isExpired ? Colors.textDanger : Colors.textSecondary)
         }
         .padding(.horizontal, Spacing.spacing20)
         .padding(.vertical, 10) // Figma 원본값이 10px (spacing 토큰 중 일치 항목 없음)
@@ -115,6 +116,7 @@ struct VerificationCodeView: View {
             }
         }
         .onTapGesture {
+            guard !viewModel.isLocked else { return }
             isCodeFieldFocused = true
         }
     }
@@ -122,9 +124,11 @@ struct VerificationCodeView: View {
     private func codeBox(at index: Int) -> some View {
         let characters = Array(viewModel.code)
         let digit = index < characters.count ? String(characters[index]) : nil
-        let isFocused = index == characters.count && !viewModel.isExpired
+        let isFocused = index == characters.count && !viewModel.isLocked
 
-        let borderColor: Color = if isFocused {
+        let borderColor: Color = if viewModel.isLocked {
+            Colors.borderDefault
+        } else if isFocused {
             Colors.fillBrand
         } else if viewModel.isInvalid {
             Colors.borderDanger
@@ -133,13 +137,15 @@ struct VerificationCodeView: View {
         } else {
             Colors.fieldBorder
         }
-        let lineWidth: CGFloat = isFocused || viewModel.isInvalid ? 2 : 1
+        let lineWidth: CGFloat = !viewModel.isLocked && (isFocused || viewModel.isInvalid) ? 2 : 1
+        let textColor: Color = viewModel.isLocked ? Colors.textQuaternary : Colors.textPrimary
+        let backgroundColor: Color = viewModel.isLocked || (digit == nil && !isFocused) ? Colors.fillNeutralWeak : Colors.backgroundDefault
 
         return Text(digit ?? "")
             .font(Typography.displaySmSemibold)
-            .foregroundStyle(Colors.textPrimary)
+            .foregroundStyle(textColor)
             .frame(width: 50, height: 56)
-            .background(digit == nil && !isFocused ? Colors.fillNeutralWeak : Colors.backgroundDefault)
+            .background(backgroundColor)
             .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
             .overlay(
                 RoundedRectangle(cornerRadius: Radius.lg)
@@ -154,33 +160,36 @@ struct VerificationCodeView: View {
                 .scaledToFit()
                 .frame(width: 16, height: 16)
 
-            Text("인증번호를 다시 확인해주세요")
+            Text(viewModel.isExhausted ? "코드를 5번 잘못 입력해 사용이 제한됐어요" : "인증코드가 일치하지 않아요")
                 .font(Typography.bodySmRegular)
                 .foregroundStyle(Colors.textDanger)
         }
     }
 
+    @ViewBuilder
     private var mailNotReceivedLink: some View {
-        let label: String
-        let action: () -> Void
-        if viewModel.isExpired {
-            label = "다시 받기"
-            action = viewModel.resendTapped
-        } else if viewModel.isInvalid {
-            label = "인증번호 다시 받기"
-            action = viewModel.resendTapped
-        } else {
-            label = "메일이 안 오나요?"
-            action = viewModel.mailNotReceivedTapped
-        }
-
-        return Button(action: action) {
-            Text(label)
+        if viewModel.isResendCoolingDown {
+            Text("\(viewModel.resendCooldownText) 후에 다시 받을 수 있어요")
                 .font(Typography.bodyMdRegular)
-                .foregroundStyle(Colors.textBrand)
+                .foregroundStyle(Colors.textTertiary)
                 .underline()
+        } else if viewModel.isLocked {
+            Button(action: viewModel.resendTapped) {
+                Text("인증코드 다시 받기")
+                    .font(Typography.bodyMdRegular)
+                    .foregroundStyle(Colors.textBrand)
+                    .underline()
+            }
+            .buttonStyle(.plain)
+        } else {
+            Button(action: viewModel.mailNotReceivedTapped) {
+                Text("메일이 안 오나요?")
+                    .font(Typography.bodyMdRegular)
+                    .foregroundStyle(Colors.textBrand)
+                    .underline()
+            }
+            .buttonStyle(.plain)
         }
-        .buttonStyle(.plain)
     }
 }
 
