@@ -2,28 +2,81 @@ import Foundation
 
 @Observable
 final class PasswordResetNewPasswordViewModel {
-    static let minLength = 8
+    enum Step {
+        case password
+        case passwordConfirmation
+    }
 
-    var password: String = ""
+    static let passwordMinLength = 8
+
+    var step: Step = .password
+
+    let email: String
+    var password: String = "" {
+        didSet { isSameAsCurrentPassword = false }
+    }
     var passwordConfirmation: String = ""
     var isPasswordVisible = false
     var isPasswordConfirmationVisible = false
+    var isSameAsCurrentPassword = false
+    var isSubmitting = false
+    var isCompleted = false
 
-    var hasMinLength: Bool { password.count >= Self.minLength }
+    private let passwordResetRepository: PasswordResetRepository
+
+    init(email: String, passwordResetRepository: PasswordResetRepository = MockPasswordResetRepository()) {
+        self.email = email
+        self.passwordResetRepository = passwordResetRepository
+    }
+
+    var hasMinLength: Bool { password.count >= Self.passwordMinLength }
     var hasLetterAndDigit: Bool {
         password.contains { $0.isLetter } && password.contains { $0.isNumber }
     }
-    var isPasswordValid: Bool { hasMinLength && hasLetterAndDigit }
+    var isPasswordRulesSatisfied: Bool { hasMinLength && hasLetterAndDigit }
 
-    // 확인 칸이 다르면: 비밀번호가 서로 달라요
-    var isMismatched: Bool {
+    // 확인 칸이 다르면: 비밀번호가 일치하지 않아요
+    var isPasswordMismatched: Bool {
         !passwordConfirmation.isEmpty && passwordConfirmation != password
     }
+    var isPasswordConfirmationValid: Bool {
+        !passwordConfirmation.isEmpty && passwordConfirmation == password
+    }
 
-    // TODO: 지금 쓰는 비밀번호와 같으면 "지금 쓰는 비밀번호와 달라야 해요" 오류를 보여줘야 하는데,
-    // 이 값은 서버만 알 수 있어서(현재 비밀번호 해시) Remote Repository 연동 시 추가해야 한다.
+    var isCurrentStepValid: Bool {
+        switch step {
+        case .password: isPasswordRulesSatisfied && !isSameAsCurrentPassword && !isSubmitting
+        case .passwordConfirmation: isPasswordConfirmationValid && !isSubmitting
+        }
+    }
 
-    var isValid: Bool {
-        isPasswordValid && !passwordConfirmation.isEmpty && passwordConfirmation == password
+    // 지금 쓰는 비밀번호와 같은지는 서버만 알 수 있어서, 1단계에서 확인을 누르는 시점에 비동기로 확인한다.
+    func confirmPasswordTapped() async {
+        guard isPasswordRulesSatisfied, !isSubmitting else { return }
+        isSubmitting = true
+        defer { isSubmitting = false }
+
+        do {
+            try await passwordResetRepository.validateNewPassword(email: email, newPassword: password)
+            isSameAsCurrentPassword = false
+            step = .passwordConfirmation
+        } catch let failure as PasswordResetFailure where failure.isSameAsCurrentPassword {
+            isSameAsCurrentPassword = true
+        } catch {
+            // 그 외 오류는 현재 디자인에 정의되어 있지 않아 별도 처리하지 않는다.
+        }
+    }
+
+    func submitTapped() async {
+        guard isPasswordConfirmationValid, !isSubmitting else { return }
+        isSubmitting = true
+        defer { isSubmitting = false }
+
+        do {
+            try await passwordResetRepository.resetPassword(email: email, newPassword: password)
+            isCompleted = true
+        } catch {
+            // 그 외 오류는 현재 디자인에 정의되어 있지 않아 별도 처리하지 않는다.
+        }
     }
 }

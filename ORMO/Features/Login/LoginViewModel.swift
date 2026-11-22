@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 @Observable
 final class LoginViewModel {
@@ -21,6 +22,8 @@ final class LoginViewModel {
     var lockoutRemainingSeconds: Int = 0
     var isLockedOut: Bool { lockoutRemainingSeconds > 0 }
     var isSnackbarVisible = false
+    var snackbarMessage = "비밀번호를 5회 틀렸어요"
+    var snackbarIcon: ImageResource = .alertIconLarge
     var isRestrictedAccountDialogVisible = false
     var isPasswordResetRequested = false
 
@@ -103,8 +106,25 @@ final class LoginViewModel {
     }
 
     func forgotPasswordTapped() {
-        // TODO: 재설정 완료(0.3.3) 후 전달받는 콜백으로 잠금 즉시 해제
         isPasswordResetRequested = true
+    }
+
+    // 0.3.3 재설정 완료 화면에서 "로그인하기"를 탭하면 호출된다. 잠금을 풀고 이메일을 미리 채운 뒤 토스트를 보여준다.
+    func passwordResetCompleted(email: String) {
+        let parts = email.split(separator: "@", maxSplits: 1)
+        emailLocalPart = parts.first.map(String.init) ?? ""
+        if parts.count > 1 {
+            selectedSchoolEmailDomain = String(parts[1])
+        }
+        password = ""
+
+        failedAttemptCount = 0
+        lockoutRemainingSeconds = 0
+        countdownTask?.cancel()
+
+        snackbarMessage = "비밀번호를 변경했어요"
+        snackbarIcon = .toastSuccessIcon
+        showSnackbar()
     }
 
     func dismissRestrictedAccountDialog() {
@@ -118,6 +138,8 @@ final class LoginViewModel {
 
     private func startLockout() {
         lockoutRemainingSeconds = Self.lockoutDurationSeconds - 1
+        snackbarMessage = "비밀번호를 5회 틀렸어요"
+        snackbarIcon = .alertIconLarge
         showSnackbar()
 
         countdownTask?.cancel()

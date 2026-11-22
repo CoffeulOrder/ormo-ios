@@ -27,6 +27,8 @@ struct LoginView: View {
                         VerificationCodeView(onVerified: { signUpRouter.push(.profile) })
                     case .profile:
                         SignUpProfileView()
+                    case .termsFullText(let document):
+                        TermsFullTextView(document: document)
                     case .completion:
                         SignUpCompletionView(name: signUpRouter.userName, onFinished: onSignUpCompleted)
                     }
@@ -38,7 +40,12 @@ struct LoginView: View {
                     case .verificationCode:
                         VerificationCodeView(onVerified: { signUpRouter.path.append(PasswordResetRoute.newPassword) })
                     case .newPassword:
-                        PasswordResetNewPasswordView()
+                        PasswordResetNewPasswordView(email: signUpRouter.resetEmail)
+                    case .completion:
+                        PasswordResetCompletionView(onLoginTapped: {
+                            viewModel.passwordResetCompleted(email: signUpRouter.resetEmail)
+                            signUpRouter.path = NavigationPath()
+                        })
                     }
                 }
         }
@@ -149,12 +156,12 @@ struct LoginView: View {
 
     private var snackbar: some View {
         HStack(spacing: Spacing.spacing12) {
-            Image(.alertIconLarge)
+            Image(viewModel.snackbarIcon)
                 .resizable()
                 .scaledToFit()
                 .frame(width: 24, height: 24)
 
-            Text("비밀번호를 5회 틀렸어요")
+            Text(viewModel.snackbarMessage)
                 .font(Typography.bodyMdSemibold)
                 .foregroundStyle(Colors.textOnFill)
         }
