@@ -4,6 +4,7 @@ enum HomeRoute: Hashable {
     case storeSelection
     case storeInfo(Store)
     case search([MenuItem])
+    case menuOptions(MenuItem)
 }
 
 @Observable

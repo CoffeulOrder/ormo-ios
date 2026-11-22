@@ -24,6 +24,7 @@ struct HomeMenuView: View {
     @State private var sectionTopOffsets: [HomeMenuViewModel.Section: CGFloat] = [:]
     @State private var sectionFirstItemHeights: [HomeMenuViewModel.Section: CGFloat] = [:]
     @State private var router = HomeRouter()
+    @State private var cart = CartStore()
 
     init(viewModel: HomeMenuViewModel = HomeMenuViewModel()) {
         _viewModel = State(initialValue: viewModel)
@@ -43,6 +44,8 @@ struct HomeMenuView: View {
                         StoreInfoView(store: store)
                     case .search(let items):
                         MenuSearchView(allItems: items)
+                    case .menuOptions(let item):
+                        MenuOptionsView(item: item, cart: cart, onAddedToCart: { router.path.removeLast() })
                     }
                 }
         }
@@ -65,14 +68,77 @@ struct HomeMenuView: View {
                 LiveOrderBarView(order: liveOrder, action: liveOrderTapped)
                     .padding(.horizontal, Spacing.spacing16)
                     .padding(.bottom, Spacing.spacing8)
+            } else if !cart.isEmpty {
+                cartBar
+            }
+
+            if viewModel.isCartSnackbarVisible {
+                cartSnackbar
+                    .padding(.bottom, cart.isEmpty ? Spacing.spacing16 : 104)
+                    .transition(.opacity)
             }
         }
         .background(Colors.backgroundDefault.ignoresSafeArea())
         .navigationBarHidden(true)
+        .animation(.easeOut(duration: 0.2), value: viewModel.isCartSnackbarVisible)
         .task {
             await viewModel.loadIfNeeded()
-            viewModel.observeLiveOrderIfNeeded()
+            // 실제 주문이 접수된 뒤에만 떠야 한다. 결제·주문 접수 화면이 아직 없어
+            // observeLiveOrderIfNeeded()는 그 화면이 생기면 주문 완료 시점에 호출한다.
         }
+        .onChange(of: cart.justAddedMessage) {
+            guard let message = cart.justAddedMessage else { return }
+            viewModel.showCartAddedSnackbar(message)
+            cart.justAddedMessage = nil
+        }
+    }
+
+    private var cartBar: some View {
+        Button(action: cartBarTapped) {
+            HStack(spacing: Spacing.spacing8) {
+                Text("\(cart.totalPrice.formatted())원 보기")
+                    .font(Typography.bodyLgSemibold)
+                    .foregroundStyle(Colors.textOnFill)
+
+                Text("\(cart.totalQuantity)")
+                    .font(Typography.bodySmBold)
+                    .foregroundStyle(Colors.textBrand)
+                    .padding(.horizontal, Spacing.spacing8)
+                    .frame(minWidth: 24)
+                    .frame(height: 24)
+                    .background(Colors.backgroundDefault)
+                    .clipShape(Capsule())
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 56)
+            .background(Colors.fillBrand)
+            .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, Spacing.spacing16)
+        .padding(.bottom, Spacing.spacing8)
+    }
+
+    private var cartSnackbar: some View {
+        HStack(spacing: Spacing.spacing12) {
+            Image(.toastSuccessIcon)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 24, height: 24)
+
+            Text(viewModel.cartSnackbarMessage)
+                .font(Typography.bodyMdSemibold)
+                .foregroundStyle(Colors.textOnFill)
+        }
+        .padding(.leading, Spacing.spacing16)
+        .padding(.trailing, Spacing.spacing20)
+        .padding(.vertical, Spacing.spacing12)
+        .background(Colors.fillNeutral)
+        .clipShape(Capsule())
+    }
+
+    private func cartBarTapped() {
+        // TODO: 2.3.1 장바구니 · 주문서 화면으로 이동
     }
 
     private func liveOrderTapped() {
@@ -443,7 +509,7 @@ struct HomeMenuView: View {
     }
 
     private func menuItemTapped(_ item: MenuItem) {
-        // TODO: 2.2.1 옵션 선택 화면으로 이동
+        router.path.append(HomeRoute.menuOptions(item))
     }
 }
 

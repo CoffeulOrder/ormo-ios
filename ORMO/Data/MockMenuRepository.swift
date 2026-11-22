@@ -29,6 +29,79 @@ struct MockMenuRepository: MenuRepository {
         }
     }
 
+    func fetchItemDetail(itemId: String) async throws -> MenuItemDetail {
+        try? await Task.sleep(for: .seconds(0.3))
+
+        let allItems = recentOrders + categories.flatMap(\.items)
+        let item = allItems.first { $0.id == itemId } ?? MenuItem(
+            id: itemId,
+            name: "아메리카노",
+            price: 4000,
+            description: "산미가 적고 고소한 원두로 내린 기본 커피예요. 진하게 마시려면 샷을 추가해 보세요.",
+            badge: nil,
+            isSoldOut: false
+        )
+
+        return MenuItemDetail(item: item, optionGroups: optionGroups)
+    }
+
+    private var optionGroups: [MenuOptionGroup] {
+        [
+            MenuOptionGroup(
+                id: "temperature",
+                name: "HOT / ICE",
+                selectionType: .single,
+                isRequired: true,
+                defaultChoiceId: "ice",
+                maxSelectable: nil,
+                choices: [
+                    MenuOptionChoice(id: "hot", name: "HOT", priceDelta: 0),
+                    MenuOptionChoice(id: "ice", name: "ICE", priceDelta: 0)
+                ]
+            ),
+            MenuOptionGroup(
+                id: "bean",
+                name: "원두 선택",
+                selectionType: .single,
+                isRequired: true,
+                defaultChoiceId: "original",
+                maxSelectable: nil,
+                choices: [
+                    MenuOptionChoice(id: "original", name: "오리지널 원두", priceDelta: 0),
+                    MenuOptionChoice(id: "blend", name: "블렌드 원두", priceDelta: 0)
+                ]
+            ),
+            // 사이즈는 명세(307:4978)상 필수 그룹이지만, 추가금 없는 기본 선택지가 없어
+            // 기본값을 비워 두고 선택은 선택사항으로 둔다(안 골라도 [담기] 막지 않음).
+            MenuOptionGroup(
+                id: "size",
+                name: "사이즈",
+                selectionType: .single,
+                isRequired: true,
+                defaultChoiceId: nil,
+                maxSelectable: nil,
+                choices: [
+                    MenuOptionChoice(id: "sizeUp", name: "사이즈업", priceDelta: 900),
+                    MenuOptionChoice(id: "doubleSizeUp", name: "두 배 사이즈업", priceDelta: 1800)
+                ]
+            ),
+            MenuOptionGroup(
+                id: "shotSyrup",
+                name: "샷 / 시럽 추가",
+                selectionType: .multiple,
+                isRequired: false,
+                defaultChoiceId: nil,
+                maxSelectable: 2,
+                choices: [
+                    MenuOptionChoice(id: "light", name: "연하게", priceDelta: 0),
+                    MenuOptionChoice(id: "shot1", name: "1샷 추가", priceDelta: 900),
+                    MenuOptionChoice(id: "shot2", name: "2샷 추가", priceDelta: 1200),
+                    MenuOptionChoice(id: "syrup", name: "시럽 추가", priceDelta: 1600)
+                ]
+            )
+        ]
+    }
+
     private var americano: String { "깔끔하고 산뜻한 기본 커피예요" }
 
     private var recentOrders: [MenuItem] {
