@@ -13,6 +13,10 @@ final class MenuOptionsViewModel {
     var isSnackbarVisible = false
     var snackbarMessage = ""
     var didAddToCart = false
+    // 필수 옵션을 안 고르고 담기/바로 주문을 눌렀을 때, 그 그룹으로 스크롤하라는 신호.
+    // 같은 그룹을 연달아 가리켜도 매번 스크롤이 다시 일어나도록 groupId가 아니라 트리거 횟수로 관찰한다.
+    var scrollTargetGroupId: String?
+    var scrollTrigger = 0
 
     private let cart: CartStore
     private let menuRepository: MenuRepository
@@ -35,11 +39,13 @@ final class MenuOptionsViewModel {
     var totalPrice: Int { unitPrice * quantity }
 
     var isRequiredSelectionSatisfied: Bool {
-        // 필수 배지가 붙어도 기본 선택지(defaultChoiceId)가 없는 그룹(예: 사이즈)은
-        // "안 고름 = 기본 사이즈"가 유효한 상태라 [담기]를 막지 않는다.
-        optionGroups
-            .filter { $0.isRequired && $0.selectionType == .single && $0.defaultChoiceId != nil }
-            .allSatisfy { selectedSingleChoice[$0.id] != nil }
+        firstUnsatisfiedRequiredGroup == nil
+    }
+
+    private var firstUnsatisfiedRequiredGroup: MenuOptionGroup? {
+        optionGroups.first {
+            $0.isRequired && $0.selectionType == .single && selectedSingleChoice[$0.id] == nil
+        }
     }
 
     func load() async {
@@ -95,7 +101,7 @@ final class MenuOptionsViewModel {
     }
 
     func addToCart() {
-        guard isRequiredSelectionSatisfied else { return }
+        guard validateRequiredSelections() else { return }
         cart.add(
             CartLineItem(
                 id: UUID().uuidString,
@@ -107,6 +113,17 @@ final class MenuOptionsViewModel {
             )
         )
         didAddToCart = true
+    }
+
+    // 필수 옵션을 다 골랐는지 확인한다. 못 고른 그룹이 있으면 그 그룹으로 스크롤하라는
+    // 신호를 보내고 토스트를 띄운 뒤 false를 반환한다. 호출부(담기·바로 주문)는 그 뒤를 멈춰야 한다.
+    @discardableResult
+    func validateRequiredSelections() -> Bool {
+        guard let missingGroup = firstUnsatisfiedRequiredGroup else { return true }
+        scrollTargetGroupId = missingGroup.id
+        scrollTrigger += 1
+        showSnackbar("\(missingGroup.name) 옵션을 선택해 주세요")
+        return false
     }
 
     private var selectedOptionsPriceDelta: Int {

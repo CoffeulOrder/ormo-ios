@@ -20,12 +20,21 @@ struct MenuOptionsView: View {
         ZStack(alignment: .bottom) {
             VStack(spacing: 0) {
                 topNavigationBar
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 0) {
-                        headerSection
-                        thickDivider
-                        ForEach(viewModel.optionGroups) { group in
-                            optionGroupSection(group)
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 0) {
+                            headerSection
+                            thickDivider
+                            ForEach(viewModel.optionGroups) { group in
+                                optionGroupSection(group)
+                                    .id(group.id)
+                            }
+                        }
+                    }
+                    .onChange(of: viewModel.scrollTrigger) {
+                        guard let groupId = viewModel.scrollTargetGroupId else { return }
+                        withAnimation(.easeOut(duration: 0.3)) {
+                            proxy.scrollTo(groupId, anchor: .top)
                         }
                     }
                 }
@@ -268,25 +277,23 @@ struct MenuOptionsView: View {
                 Button(action: orderNowTapped) {
                     Text("바로 주문")
                         .font(Typography.bodyLgSemibold)
-                        .foregroundStyle(viewModel.isRequiredSelectionSatisfied ? Colors.textBrand : Colors.textQuaternary)
+                        .foregroundStyle(Colors.textBrand)
                         .frame(maxWidth: .infinity)
                         .frame(height: 56)
                         .background(Colors.fillBrandWeak)
                         .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
                 }
                 .buttonStyle(.plain)
-                .disabled(!viewModel.isRequiredSelectionSatisfied)
 
                 Button(action: { viewModel.addToCart() }) {
                     Text("\(viewModel.totalPrice.formatted())원 담기")
                         .font(Typography.bodyLgSemibold)
-                        .foregroundStyle(viewModel.isRequiredSelectionSatisfied ? Colors.textOnFill : Colors.textQuaternary)
+                        .foregroundStyle(Colors.textOnFill)
                         .frame(width: 200, height: 56)
-                        .background(viewModel.isRequiredSelectionSatisfied ? Colors.fillBrand : Colors.fillNeutralWeak)
+                        .background(Colors.fillBrand)
                         .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
                 }
                 .buttonStyle(.plain)
-                .disabled(!viewModel.isRequiredSelectionSatisfied)
             }
             .padding(.horizontal, Spacing.spacing20)
             .padding(.bottom, Spacing.spacing32)
@@ -305,6 +312,7 @@ struct MenuOptionsView: View {
     }
 
     private func orderNowTapped() {
+        guard viewModel.validateRequiredSelections() else { return }
         // TODO: 2.3.1 장바구니 · 주문서 화면으로 이동 (바로 주문)
     }
 }
