@@ -3,6 +3,7 @@ import Foundation
 @Observable
 final class PasswordResetEmailViewModel {
     var emailLocalPart: String = ""
+    var isEmailValid: Bool { !emailLocalPart.isEmpty }
 
     var schoolEmailDomains: [String] = []
     var selectedSchoolEmailDomain: String = ""
