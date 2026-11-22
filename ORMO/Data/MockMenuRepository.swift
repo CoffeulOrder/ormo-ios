@@ -71,8 +71,8 @@ struct MockMenuRepository: MenuRepository {
                     MenuOptionChoice(id: "blend", name: "블렌드 원두", priceDelta: 0)
                 ]
             ),
-            // 사이즈는 명세(307:4978)상 필수 그룹이지만, 추가금 없는 기본 선택지가 없어
-            // 기본값을 비워 두고 선택은 선택사항으로 둔다(안 골라도 [담기] 막지 않음).
+            // 사이즈는 명세(307:4978)상 필수 그룹이고 추가금 없는 기본 선택지가 없어
+            // 기본값 없이 시작한다. 안 고르고 담기/바로 주문을 누르면 이 그룹으로 스크롤하고 토스트를 띄운다.
             MenuOptionGroup(
                 id: "size",
                 name: "사이즈",
