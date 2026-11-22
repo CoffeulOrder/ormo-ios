@@ -23,8 +23,27 @@ struct HomeMenuView: View {
     @State private var viewModel = HomeMenuViewModel()
     @State private var sectionTopOffsets: [HomeMenuViewModel.Section: CGFloat] = [:]
     @State private var sectionFirstItemHeights: [HomeMenuViewModel.Section: CGFloat] = [:]
+    @State private var router = HomeRouter()
 
     var body: some View {
+        NavigationStack(path: $router.path) {
+            content
+                .navigationDestination(for: HomeRoute.self) { route in
+                    switch route {
+                    case .storeSelection:
+                        StoreSelectionView(onStoreConfirmed: { store in
+                            viewModel.storeName = store.name
+                            router.path = NavigationPath()
+                        })
+                    case .storeInfo(let store):
+                        StoreInfoView(store: store)
+                    }
+                }
+        }
+        .environment(router)
+    }
+
+    private var content: some View {
         VStack(spacing: 0) {
             topBar
             if !viewModel.sections.isEmpty {
@@ -335,7 +354,7 @@ struct HomeMenuView: View {
     }
 
     private func storeSelectionTapped() {
-        // TODO: 1.1.1 매장 선택 화면으로 이동
+        router.path.append(HomeRoute.storeSelection)
     }
 
     private func searchTapped() {
