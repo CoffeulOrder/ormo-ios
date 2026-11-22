@@ -19,7 +19,10 @@ struct LoginView: View {
                 .navigationDestination(for: SignUpRoute.self) { route in
                     switch route {
                     case .email:
-                        SignUpEmailView()
+                        SignUpEmailView(onNavigateToLogin: { emailLocalPart in
+                            viewModel.emailLocalPart = emailLocalPart
+                            signUpRouter.path = NavigationPath()
+                        })
                     case .verificationCode:
                         VerificationCodeView(onVerified: { signUpRouter.push(.nameInput) })
                     case .nameInput:

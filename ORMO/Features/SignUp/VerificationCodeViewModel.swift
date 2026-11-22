@@ -3,20 +3,27 @@ import Foundation
 @Observable
 final class VerificationCodeViewModel {
     static let codeLength = 6
-    // 인증코드 유효 시간: spec에 정확한 값이 없어 3분으로 둔 placeholder
-    private static let totalSeconds = 3 * 60
+    // 코드 유효 시간: Figma 목업의 "남은 시간 4:59" 기준 5분
+    private static let totalSeconds = 5 * 60
     private static let maxWrongAttempts = 5
+    private static let resendCooldownSeconds = 59
 
     var code: String = ""
     var remainingSeconds: Int = VerificationCodeViewModel.totalSeconds
     var isExpired: Bool { remainingSeconds <= 0 }
     var isInvalid = false
+    // 5번 틀려서 그 코드를 더 쓸 수 없는 상태
+    var isExhausted = false
+    // 만료되었거나 5번 틀려서 입력칸 자체가 꺼진 상태
+    var isLocked: Bool { isExpired || isExhausted }
     var shakeTrigger: Int = 0
     var isVerified = false
     // 코드를 외부에서(재발송 등) 강제로 비울 때, 숨겨진 TextField가 iOS 내부 편집 버퍼를
     // 그대로 들고 있어 다음 입력에 이전 값이 섞이는 문제가 있어 뷰 쪽에서 .id()로
     // TextField를 강제로 다시 만들도록 이 값을 올린다.
     var inputGeneration = 0
+    var resendCooldownRemainingSeconds = 0
+    var isResendCoolingDown: Bool { resendCooldownRemainingSeconds > 0 }
 
     var remainingTimeText: String {
         let minutes = remainingSeconds / 60
@@ -24,16 +31,23 @@ final class VerificationCodeViewModel {
         return String(format: "%02d:%02d", minutes, seconds)
     }
 
+    var resendCooldownText: String {
+        "0:\(String(format: "%02d", resendCooldownRemainingSeconds))"
+    }
+
     private var wrongAttemptCount = 0
     private let repository: VerificationCodeRepository
     private var countdownTask: Task<Void, Never>?
+    private var resendCooldownTask: Task<Void, Never>?
 
     init(repository: VerificationCodeRepository = MockVerificationCodeRepository()) {
         self.repository = repository
         startCountdown()
+        startResendCooldown()
     }
 
     func codeChanged(to newValue: String) {
+        guard !isLocked else { return }
         let filtered = String(newValue.filter(\.isNumber).prefix(Self.codeLength))
         if filtered != code {
             isInvalid = false
@@ -48,9 +62,11 @@ final class VerificationCodeViewModel {
         wrongAttemptCount = 0
         code = ""
         isInvalid = false
+        isExhausted = false
         inputGeneration += 1
         remainingSeconds = Self.totalSeconds
         startCountdown()
+        startResendCooldown()
         // TODO: 인증코드 재발송 API 연동
     }
 
@@ -59,7 +75,7 @@ final class VerificationCodeViewModel {
     }
 
     private func verify() {
-        guard !isExpired else { return }
+        guard !isLocked else { return }
 
         Task {
             let isValid = await repository.verify(code: code)
@@ -71,7 +87,8 @@ final class VerificationCodeViewModel {
                 shakeTrigger += 1
                 wrongAttemptCount += 1
                 if wrongAttemptCount >= Self.maxWrongAttempts {
-                    invalidateCode()
+                    isExhausted = true
+                    countdownTask?.cancel()
                 }
             }
         }
@@ -88,10 +105,15 @@ final class VerificationCodeViewModel {
         }
     }
 
-    private func invalidateCode() {
-        countdownTask?.cancel()
-        remainingSeconds = 0
-        code = ""
-        inputGeneration += 1
+    private func startResendCooldown() {
+        resendCooldownTask?.cancel()
+        resendCooldownRemainingSeconds = Self.resendCooldownSeconds
+        resendCooldownTask = Task {
+            while resendCooldownRemainingSeconds > 0 {
+                try? await Task.sleep(for: .seconds(1))
+                guard !Task.isCancelled else { return }
+                resendCooldownRemainingSeconds -= 1
+            }
+        }
     }
 }

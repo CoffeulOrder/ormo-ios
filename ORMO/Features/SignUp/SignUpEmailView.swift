@@ -6,6 +6,7 @@ struct SignUpEmailView: View {
     @State private var viewModel = SignUpEmailViewModel()
     @State private var isTitleVisible = false
     @State private var isBottomCTAVisible = false
+    var onNavigateToLogin: (String) -> Void = { _ in }
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -42,6 +43,9 @@ struct SignUpEmailView: View {
             withAnimation(.easeOut(duration: 0.4).delay(0.12)) {
                 isBottomCTAVisible = true
             }
+        }
+        .onChange(of: viewModel.emailLocalPart) {
+            viewModel.emailChanged()
         }
     }
 
@@ -90,6 +94,8 @@ struct SignUpEmailView: View {
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
                 .keyboardType(.emailAddress)
+                .submitLabel(.done)
+                .onSubmit(submitTapped)
 
                 Text("@\(viewModel.selectedSchoolEmailDomain)")
                     .foregroundStyle(Colors.textQuaternary)
@@ -109,15 +115,39 @@ struct SignUpEmailView: View {
             .frame(height: 56)
             .overlay(
                 RoundedRectangle(cornerRadius: Radius.lg)
-                    .stroke(Colors.fieldBorder, lineWidth: 1)
+                    .stroke(
+                        viewModel.fieldErrorMessage == nil ? Colors.fieldBorder : Colors.borderDanger,
+                        lineWidth: viewModel.fieldErrorMessage == nil ? 1 : 2
+                    )
             )
 
-            Text("학교 메일로 재학생인지 확인해요")
-                .font(Typography.bodySmRegular)
-                .foregroundStyle(Colors.textSecondary)
+            if let fieldErrorMessage = viewModel.fieldErrorMessage {
+                errorFooter(fieldErrorMessage)
+            } else {
+                Text("학교 메일로 재학생인지 확인해요")
+                    .font(Typography.bodySmRegular)
+                    .foregroundStyle(Colors.textSecondary)
+            }
         }
         .padding(Spacing.spacing20)
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func errorFooter(_ message: String) -> some View {
+        HStack(spacing: Spacing.spacing4) {
+            Image(.errorIcon)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 16, height: 16)
+
+            Text(message)
+                .font(Typography.bodySmRegular)
+                .foregroundStyle(Colors.textDanger)
+        }
+    }
+
+    private var isCTAEnabled: Bool {
+        viewModel.isAlreadyRegistered || viewModel.isSubmitEnabled
     }
 
     private var bottomCTA: some View {
@@ -129,23 +159,43 @@ struct SignUpEmailView: View {
             )
             .frame(height: Spacing.spacing40)
 
-            Button(action: { router.push(.verificationCode) }) {
-                Text("인증코드 받기")
-                    .font(Typography.bodyLgSemibold)
-                    .foregroundStyle(viewModel.isEmailValid ? Colors.textOnFill : Colors.textQuaternary)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 56)
-                    .background(viewModel.isEmailValid ? Colors.fillBrand : Colors.fillNeutralWeak)
-                    .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
+            Button(action: submitTapped) {
+                Group {
+                    if viewModel.isLoading {
+                        ProgressView()
+                            .tint(Colors.textOnFill)
+                    } else {
+                        Text(viewModel.isAlreadyRegistered ? "로그인하기" : "인증코드 받기")
+                            .font(Typography.bodyLgSemibold)
+                            .foregroundStyle(isCTAEnabled ? Colors.textOnFill : Colors.textQuaternary)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 56)
+                .background(isCTAEnabled ? Colors.fillBrand : Colors.fillNeutralWeak)
+                .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
             }
             .buttonStyle(.plain)
-            .disabled(!viewModel.isEmailValid)
+            .disabled(!isCTAEnabled)
             .padding(.horizontal, Spacing.spacing20)
             .padding(.bottom, Spacing.spacing32)
             .background(Colors.backgroundDefault)
         }
         .opacity(isBottomCTAVisible ? 1 : 0)
         .offset(y: isBottomCTAVisible ? 0 : 32)
+    }
+
+    private func submitTapped() {
+        if viewModel.isAlreadyRegistered {
+            onNavigateToLogin(viewModel.emailLocalPart)
+            return
+        }
+
+        Task {
+            if await viewModel.requestVerificationCode() {
+                router.push(.verificationCode)
+            }
+        }
     }
 }
 
