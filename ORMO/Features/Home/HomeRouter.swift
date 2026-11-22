@@ -3,6 +3,7 @@ import SwiftUI
 enum HomeRoute: Hashable {
     case storeSelection
     case storeInfo(Store)
+    case search([MenuItem])
 }
 
 @Observable

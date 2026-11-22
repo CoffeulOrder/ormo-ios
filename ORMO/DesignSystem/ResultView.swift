@@ -5,8 +5,8 @@ struct ResultView: View {
     let icon: ImageResource
     let title: String
     let message: String
-    let buttonTitle: String
-    let action: () -> Void
+    var buttonTitle: String?
+    var action: (() -> Void)?
 
     var body: some View {
         VStack(spacing: Spacing.spacing20) {
@@ -30,16 +30,18 @@ struct ResultView: View {
                 }
                 .multilineTextAlignment(.center)
 
-                Button(action: action) {
-                    Text(buttonTitle)
-                        .font(Typography.bodyMdSemibold)
-                        .foregroundStyle(Colors.textOnFill)
-                        .padding(.horizontal, Spacing.spacing16)
-                        .frame(height: 38)
-                        .background(Colors.fillBrand)
-                        .clipShape(RoundedRectangle(cornerRadius: 10)) // Figma control-radius-38 = 10px (토큰 없음)
+                if let buttonTitle, let action {
+                    Button(action: action) {
+                        Text(buttonTitle)
+                            .font(Typography.bodyMdSemibold)
+                            .foregroundStyle(Colors.textOnFill)
+                            .padding(.horizontal, Spacing.spacing16)
+                            .frame(height: 38)
+                            .background(Colors.fillBrand)
+                            .clipShape(RoundedRectangle(cornerRadius: 10)) // Figma control-radius-38 = 10px (토큰 없음)
+                    }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
             }
         }
         .padding(.horizontal, Spacing.spacing40)
