@@ -151,43 +151,13 @@ struct StoreSelectionView: View {
     }
 
     private var errorResultView: some View {
-        VStack(spacing: Spacing.spacing20) {
-            ZStack {
-                Circle().fill(Colors.fillNeutralWeak)
-                Image(.alertCircleLargeIcon)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 32, height: 32)
-            }
-            .frame(width: 60, height: 60)
-
-            VStack(spacing: Spacing.spacing16) {
-                VStack(spacing: Spacing.spacing4) {
-                    Text("매장 정보를 불러오지 못했어요")
-                        .font(Typography.bodyLgSemibold)
-                        .foregroundStyle(Colors.textStrong)
-                    Text("잠시 후 다시 시도해주세요")
-                        .font(Typography.bodyMdRegular)
-                        .foregroundStyle(Colors.textSecondary)
-                }
-                .multilineTextAlignment(.center)
-
-                Button(action: { Task { await viewModel.load() } }) {
-                    Text("다시 시도")
-                        .font(Typography.bodyMdSemibold)
-                        .foregroundStyle(Colors.textOnFill)
-                        .padding(.horizontal, Spacing.spacing16)
-                        .frame(height: 38)
-                        .background(Colors.fillBrand)
-                        .clipShape(RoundedRectangle(cornerRadius: 10)) // Figma control-radius-38 = 10px (토큰 없음)
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .padding(.horizontal, Spacing.spacing40)
-        .padding(.top, Spacing.spacing32)
-        .padding(.bottom, Spacing.spacing40)
-        .frame(maxWidth: .infinity, alignment: .top)
+        ResultView(
+            icon: .alertCircleLargeIcon,
+            title: "매장 정보를 불러오지 못했어요",
+            message: "잠시 후 다시 시도해주세요",
+            buttonTitle: "다시 시도",
+            action: { Task { await viewModel.load() } }
+        )
     }
 
     private func storeChangeSheetContent(_ store: Store) -> some View {

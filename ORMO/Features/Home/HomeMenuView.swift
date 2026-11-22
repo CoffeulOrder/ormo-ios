@@ -20,10 +20,14 @@ struct HomeMenuView: View {
     // 다음 카테고리로 하이라이트가 넘어가기까지, 그 카테고리 메뉴가 이 정도(개수) 보여야 한다.
     private static let sectionActivationItemCount: CGFloat = 1.3
 
-    @State private var viewModel = HomeMenuViewModel()
+    @State private var viewModel: HomeMenuViewModel
     @State private var sectionTopOffsets: [HomeMenuViewModel.Section: CGFloat] = [:]
     @State private var sectionFirstItemHeights: [HomeMenuViewModel.Section: CGFloat] = [:]
     @State private var router = HomeRouter()
+
+    init(viewModel: HomeMenuViewModel = HomeMenuViewModel()) {
+        _viewModel = State(initialValue: viewModel)
+    }
 
     var body: some View {
         NavigationStack(path: $router.path) {
@@ -32,7 +36,7 @@ struct HomeMenuView: View {
                     switch route {
                     case .storeSelection:
                         StoreSelectionView(onStoreConfirmed: { store in
-                            viewModel.storeName = store.name
+                            Task { await viewModel.applySelectedStore(store) }
                             router.path = NavigationPath()
                         })
                     case .storeInfo(let store):
@@ -46,8 +50,38 @@ struct HomeMenuView: View {
     private var content: some View {
         VStack(spacing: 0) {
             topBar
+            if viewModel.isLoaded && viewModel.hasNoMenu {
+                emptyMenuResultView
+            } else {
+                menuListContent
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .background(Colors.backgroundDefault.ignoresSafeArea())
+        .navigationBarHidden(true)
+        .task {
+            await viewModel.loadIfNeeded()
+        }
+    }
+
+    private var emptyMenuResultView: some View {
+        ResultView(
+            icon: .coffeeIcon,
+            title: "아직 메뉴가 없어요",
+            message: "메뉴를 준비하고 있어요",
+            buttonTitle: "다른 매장 보기",
+            action: { router.path.append(HomeRoute.storeSelection) }
+        )
+        .padding(.top, 120)
+    }
+
+    private var menuListContent: some View {
+        VStack(spacing: 0) {
             if !viewModel.sections.isEmpty {
                 tabsBar
+            }
+            if let notice = viewModel.unavailableNotice {
+                unavailableNoticeBanner(notice)
             }
             ZStack(alignment: .bottom) {
                 ScrollViewReader { proxy in
@@ -94,11 +128,27 @@ struct HomeMenuView: View {
                 .allowsHitTesting(false)
             }
         }
-        .background(Colors.backgroundDefault.ignoresSafeArea())
-        .navigationBarHidden(true)
-        .task {
-            await viewModel.loadIfNeeded()
+    }
+
+    private func unavailableNoticeBanner(_ message: String) -> some View {
+        HStack(spacing: Spacing.spacing8) {
+            Image(.calloutInfoIcon)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 20, height: 20)
+
+            Text(message)
+                .font(Typography.bodySmSemibold)
+                .foregroundStyle(Colors.textPrimary)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .padding(.horizontal, Spacing.spacing16)
+        .padding(.vertical, Spacing.spacing12)
+        .background(Colors.fillNeutralWeak)
+        .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
+        .padding(.horizontal, Spacing.spacing20)
+        .padding(.top, Spacing.spacing16)
+        .padding(.bottom, Spacing.spacing8)
     }
 
     private var topBar: some View {

@@ -10,11 +10,16 @@ final class HomeMenuViewModel {
     var storeName: String = ""
     var recentOrders: [MenuItem] = []
     var categories: [MenuCategory] = []
+    var unavailableNotice: String?
     var selectedSection: Section?
+    var isLoaded = false
     // 탭을 직접 눌렀을 때만 채워진다. 스크롤로 감지된 섹션 변경은 이 값을 건드리지 않아
     // 콘텐츠 스크롤과 탭 하이라이트 추적이 서로를 되돌리는 피드백 루프를 막는다.
     var scrollTarget: Section?
 
+    var hasNoMenu: Bool { recentOrders.isEmpty && categories.isEmpty }
+
+    private var currentStoreId = "beomseokgwan"
     private let menuRepository: MenuRepository
 
     init(menuRepository: MenuRepository = MockMenuRepository()) {
@@ -38,12 +43,24 @@ final class HomeMenuViewModel {
     }
 
     func loadIfNeeded() async {
-        guard storeName.isEmpty else { return }
-        guard let menu = try? await menuRepository.fetchStoreMenu() else { return }
+        guard !isLoaded else { return }
+        await load(storeId: currentStoreId)
+    }
+
+    func applySelectedStore(_ store: Store) async {
+        currentStoreId = store.id
+        storeName = store.name
+        await load(storeId: store.id)
+    }
+
+    private func load(storeId: String) async {
+        guard let menu = try? await menuRepository.fetchStoreMenu(storeId: storeId) else { return }
         storeName = menu.storeName
         recentOrders = menu.recentOrders
         categories = menu.categories
+        unavailableNotice = menu.unavailableNotice
         selectedSection = sections.first
+        isLoaded = true
     }
 
     func selectSection(_ section: Section) {

@@ -1,17 +1,45 @@
 import Foundation
 
 struct MockMenuRepository: MenuRepository {
-    func fetchStoreMenu() async throws -> StoreMenu {
+    func fetchStoreMenu(storeId: String) async throws -> StoreMenu {
         try? await Task.sleep(for: .seconds(0.3))
 
-        let americano = "깔끔하고 산뜻한 기본 커피예요"
+        switch storeId {
+        case "bagaegwan":
+            return StoreMenu(
+                storeName: "을지대학교 박애관 카페",
+                recentOrders: [],
+                categories: [],
+                unavailableNotice: nil
+            )
+        case "new-millennium":
+            return StoreMenu(
+                storeName: "을지대학교 뉴밀레니엄센터 카페",
+                recentOrders: recentOrders,
+                categories: categories,
+                unavailableNotice: "내일 14:30부터 다시 주문할 수 있어요"
+            )
+        default:
+            return StoreMenu(
+                storeName: "을지대학교 범석관 카페",
+                recentOrders: recentOrders,
+                categories: categories,
+                unavailableNotice: nil
+            )
+        }
+    }
 
-        let recentOrders = [
+    private var americano: String { "깔끔하고 산뜻한 기본 커피예요" }
+
+    private var recentOrders: [MenuItem] {
+        [
             MenuItem(id: "recent-1", name: "아메리카노", price: 4000, description: americano, badge: .popular, isSoldOut: false),
             MenuItem(id: "recent-2", name: "아메리카노", price: 4000, description: americano, badge: .new, isSoldOut: false),
             MenuItem(id: "recent-3", name: "아메리카노", price: 4000, description: americano, badge: nil, isSoldOut: true)
         ]
+    }
 
+    private var categories: [MenuCategory] {
         let coffee = MenuCategory(
             id: "coffee",
             name: "커피",
@@ -57,10 +85,6 @@ struct MockMenuRepository: MenuRepository {
             ]
         )
 
-        return StoreMenu(
-            storeName: "범석관 카페",
-            recentOrders: recentOrders,
-            categories: [coffee, dessert, ade, smoothie, beverage]
-        )
+        return [coffee, dessert, ade, smoothie, beverage]
     }
 }
