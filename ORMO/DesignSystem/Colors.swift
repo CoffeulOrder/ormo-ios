@@ -21,4 +21,6 @@ enum Colors {
     static let textBrand = Color(.textBrand)
     static let fillSuccess = Color(.fillSuccess)
     static let backgroundLower = Color(.backgroundLower)
+    static let fillWarningWeak = Color(.fillWarningWeak)
+    static let fillBrandWeak = Color(.fillBrandWeak)
 }
