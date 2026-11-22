@@ -102,17 +102,27 @@ final class MenuOptionsViewModel {
 
     func addToCart() {
         guard validateRequiredSelections() else { return }
-        cart.add(
-            CartLineItem(
-                id: UUID().uuidString,
-                menuItemId: item.id,
-                menuItemName: item.name,
-                quantity: quantity,
-                unitPrice: unitPrice,
-                optionsSummary: optionsSummary
-            )
-        )
+        cart.add(buildCartLineItem())
         didAddToCart = true
+    }
+
+    // "바로 주문": 장바구니에 조용히 담고 장바구니 화면으로 바로 넘어간다(메뉴 홈 토스트 없음).
+    // 필수 옵션이 비어 있으면 평소처럼 스크롤+토스트를 띄우고 false를 반환한다.
+    func orderNow() -> Bool {
+        guard validateRequiredSelections() else { return false }
+        cart.addSilently(buildCartLineItem())
+        return true
+    }
+
+    private func buildCartLineItem() -> CartLineItem {
+        CartLineItem(
+            id: UUID().uuidString,
+            menuItemId: item.id,
+            menuItemName: item.name,
+            quantity: quantity,
+            unitPrice: unitPrice,
+            optionsSummary: optionsSummary
+        )
     }
 
     // 필수 옵션을 다 골랐는지 확인한다. 못 고른 그룹이 있으면 그 그룹으로 스크롤하라는
@@ -136,7 +146,7 @@ final class MenuOptionsViewModel {
         optionGroups
             .flatMap { selectedChoices(in: $0) }
             .map(\.name)
-            .joined(separator: " · ")
+            .joined(separator: " | ")
     }
 
     private func selectedChoices(in group: MenuOptionGroup) -> [MenuOptionChoice] {

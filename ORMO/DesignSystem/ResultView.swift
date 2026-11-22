@@ -4,7 +4,7 @@ import SwiftUI
 struct ResultView: View {
     let icon: ImageResource
     let title: String
-    let message: String
+    let message: String?
     var buttonTitle: String?
     var action: (() -> Void)?
 
@@ -24,9 +24,11 @@ struct ResultView: View {
                     Text(title)
                         .font(Typography.bodyLgSemibold)
                         .foregroundStyle(Colors.textStrong)
-                    Text(message)
-                        .font(Typography.bodyMdRegular)
-                        .foregroundStyle(Colors.textSecondary)
+                    if let message {
+                        Text(message)
+                            .font(Typography.bodyMdRegular)
+                            .foregroundStyle(Colors.textSecondary)
+                    }
                 }
                 .multilineTextAlignment(.center)
 
