@@ -17,6 +17,8 @@ final class HomeMenuViewModel {
     // 콘텐츠 스크롤과 탭 하이라이트 추적이 서로를 되돌리는 피드백 루프를 막는다.
     var scrollTarget: Section?
     var liveOrder: LiveOrder?
+    var isCartSnackbarVisible = false
+    var cartSnackbarMessage = ""
 
     var hasNoMenu: Bool { recentOrders.isEmpty && categories.isEmpty }
 
@@ -24,6 +26,7 @@ final class HomeMenuViewModel {
     private let menuRepository: MenuRepository
     private let liveOrderRepository: LiveOrderRepository
     private var liveOrderObservationTask: Task<Void, Never>?
+    private var cartSnackbarTask: Task<Void, Never>?
 
     init(
         menuRepository: MenuRepository = MockMenuRepository(),
@@ -87,6 +90,17 @@ final class HomeMenuViewModel {
             for await order in liveOrderRepository.observeLiveOrder(storeName: storeName) {
                 liveOrder = order
             }
+        }
+    }
+
+    func showCartAddedSnackbar(_ message: String) {
+        cartSnackbarMessage = message
+        isCartSnackbarVisible = true
+        cartSnackbarTask?.cancel()
+        cartSnackbarTask = Task {
+            try? await Task.sleep(for: .seconds(3))
+            guard !Task.isCancelled else { return }
+            isCartSnackbarVisible = false
         }
     }
 }

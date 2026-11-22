@@ -32,4 +32,5 @@ struct StoreMenu {
 
 protocol MenuRepository {
     func fetchStoreMenu(storeId: String) async throws -> StoreMenu
+    func fetchItemDetail(itemId: String) async throws -> MenuItemDetail
 }
