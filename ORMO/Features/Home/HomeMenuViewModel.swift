@@ -19,21 +19,26 @@ final class HomeMenuViewModel {
     var liveOrder: LiveOrder?
     var isCartSnackbarVisible = false
     var cartSnackbarMessage = ""
+    // 장바구니 화면의 "수령 방법" 영역에 매장 이름·주소를 보여주기 위해 들고 있는다.
+    var currentStore: Store?
 
     var hasNoMenu: Bool { recentOrders.isEmpty && categories.isEmpty }
 
     private var currentStoreId = "beomseokgwan"
     private let menuRepository: MenuRepository
     private let liveOrderRepository: LiveOrderRepository
+    private let cafeRepository: CafeRepository
     private var liveOrderObservationTask: Task<Void, Never>?
     private var cartSnackbarTask: Task<Void, Never>?
 
     init(
         menuRepository: MenuRepository = MockMenuRepository(),
-        liveOrderRepository: LiveOrderRepository = MockLiveOrderRepository()
+        liveOrderRepository: LiveOrderRepository = MockLiveOrderRepository(),
+        cafeRepository: CafeRepository = MockCafeRepository()
     ) {
         self.menuRepository = menuRepository
         self.liveOrderRepository = liveOrderRepository
+        self.cafeRepository = cafeRepository
     }
 
     var sections: [Section] {
@@ -60,6 +65,7 @@ final class HomeMenuViewModel {
     func applySelectedStore(_ store: Store) async {
         currentStoreId = store.id
         storeName = store.name
+        currentStore = store
         await load(storeId: store.id)
     }
 
@@ -71,6 +77,10 @@ final class HomeMenuViewModel {
         unavailableNotice = menu.unavailableNotice
         selectedSection = sections.first
         isLoaded = true
+
+        if currentStore?.id != storeId {
+            currentStore = try? await cafeRepository.fetchStores().first { $0.id == storeId }
+        }
     }
 
     func selectSection(_ section: Section) {

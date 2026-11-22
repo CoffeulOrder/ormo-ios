@@ -45,7 +45,14 @@ struct HomeMenuView: View {
                     case .search(let items):
                         MenuSearchView(allItems: items)
                     case .menuOptions(let item):
-                        MenuOptionsView(item: item, cart: cart, onAddedToCart: { router.path.removeLast() })
+                        MenuOptionsView(
+                            item: item,
+                            cart: cart,
+                            onAddedToCart: { router.path.removeLast() },
+                            onOrderNow: { router.path.append(HomeRoute.cart) }
+                        )
+                    case .cart:
+                        CartView(cart: cart, store: viewModel.currentStore)
                     }
                 }
         }
@@ -138,7 +145,7 @@ struct HomeMenuView: View {
     }
 
     private func cartBarTapped() {
-        // TODO: 2.3.1 장바구니 · 주문서 화면으로 이동
+        router.path.append(HomeRoute.cart)
     }
 
     private func liveOrderTapped() {

@@ -5,15 +5,18 @@ struct MenuOptionsView: View {
     @State private var viewModel: MenuOptionsViewModel
 
     let onAddedToCart: () -> Void
+    let onOrderNow: () -> Void
 
     init(
         item: MenuItem,
         cart: CartStore,
         menuRepository: MenuRepository = MockMenuRepository(),
-        onAddedToCart: @escaping () -> Void
+        onAddedToCart: @escaping () -> Void,
+        onOrderNow: @escaping () -> Void
     ) {
         _viewModel = State(initialValue: MenuOptionsViewModel(item: item, cart: cart, menuRepository: menuRepository))
         self.onAddedToCart = onAddedToCart
+        self.onOrderNow = onOrderNow
     }
 
     var body: some View {
@@ -312,8 +315,8 @@ struct MenuOptionsView: View {
     }
 
     private func orderNowTapped() {
-        guard viewModel.validateRequiredSelections() else { return }
-        // TODO: 2.3.1 장바구니 · 주문서 화면으로 이동 (바로 주문)
+        guard viewModel.orderNow() else { return }
+        onOrderNow()
     }
 }
 
@@ -321,6 +324,7 @@ struct MenuOptionsView: View {
     MenuOptionsView(
         item: MenuItem(id: "coffee-1", name: "아메리카노", price: 4000, description: "산미가 적고 고소한 원두로 내린 기본 커피예요. 진하게 마시려면 샷을 추가해 보세요.", badge: .popular, isSoldOut: false),
         cart: CartStore(),
-        onAddedToCart: {}
+        onAddedToCart: {},
+        onOrderNow: {}
     )
 }
