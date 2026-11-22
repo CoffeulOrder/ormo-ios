@@ -6,6 +6,7 @@ struct PasswordResetEmailView: View {
     @State private var viewModel = PasswordResetEmailViewModel()
     @State private var isTitleVisible = false
     @State private var isBottomCTAVisible = false
+    @FocusState private var isEmailFieldFocused: Bool
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -90,6 +91,7 @@ struct PasswordResetEmailView: View {
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
                 .keyboardType(.emailAddress)
+                .focused($isEmailFieldFocused)
 
                 Text("@\(viewModel.selectedSchoolEmailDomain)")
                     .foregroundStyle(Colors.textQuaternary)
@@ -109,7 +111,10 @@ struct PasswordResetEmailView: View {
             .frame(height: 56)
             .overlay(
                 RoundedRectangle(cornerRadius: Radius.lg)
-                    .stroke(Colors.fieldBorder, lineWidth: 1)
+                    .stroke(
+                        isEmailFieldFocused ? Colors.fillBrand : Colors.fieldBorder,
+                        lineWidth: isEmailFieldFocused ? 2 : 1
+                    )
             )
         }
         .padding(Spacing.spacing20)
@@ -146,6 +151,7 @@ struct PasswordResetEmailView: View {
 
     private func requestVerificationCode() {
         // 가입하지 않은 메일이어도 같은 안내를 보여줘야 한다(계정 노출 방지).
+        router.resetEmail = "\(viewModel.emailLocalPart)@\(viewModel.selectedSchoolEmailDomain)"
         router.path.append(PasswordResetRoute.verificationCode)
     }
 }

@@ -2,15 +2,17 @@ import Foundation
 
 struct AgreementItem: Identifiable {
     let id = UUID()
-    let title: String
+    let document: TermsDocument
     var isAgreed: Bool
+
+    var title: String { "[필수] \(document.title)" }
 }
 
 @Observable
 final class TermsAgreementViewModel {
     var items: [AgreementItem] = [
-        AgreementItem(title: "[필수] 서비스 이용약관", isAgreed: false),
-        AgreementItem(title: "[필수] 서비스 이용약관", isAgreed: false)
+        AgreementItem(document: .serviceTerms, isAgreed: false),
+        AgreementItem(document: .privacyPolicy, isAgreed: false)
     ]
 
     var isAllAgreed: Bool { items.allSatisfy(\.isAgreed) }
