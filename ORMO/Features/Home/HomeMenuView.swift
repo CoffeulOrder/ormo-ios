@@ -41,6 +41,8 @@ struct HomeMenuView: View {
                         })
                     case .storeInfo(let store):
                         StoreInfoView(store: store)
+                    case .search(let items):
+                        MenuSearchView(allItems: items)
                     }
                 }
         }
@@ -408,7 +410,19 @@ struct HomeMenuView: View {
     }
 
     private func searchTapped() {
-        // TODO: 2.1.3 메뉴 검색 화면으로 이동
+        router.path.append(HomeRoute.search(searchableMenuItems))
+    }
+
+    // 최근 주문과 카테고리 메뉴를 합쳐서 검색 대상 목록을 만든다. 같은 메뉴가 최근 주문에도
+    // 중복으로 들어있을 수 있어 이름 기준으로 한 번만 남긴다.
+    private var searchableMenuItems: [MenuItem] {
+        var seenNames = Set<String>()
+        var result: [MenuItem] = []
+        for item in viewModel.recentOrders + viewModel.categories.flatMap(\.items) {
+            guard seenNames.insert(item.name).inserted else { continue }
+            result.append(item)
+        }
+        return result
     }
 
     private func myPageTapped() {

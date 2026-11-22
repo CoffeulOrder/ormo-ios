@@ -1,11 +1,11 @@
 import Foundation
 
-enum MenuBadge {
+enum MenuBadge: Hashable {
     case popular
     case new
 }
 
-struct MenuItem: Identifiable {
+struct MenuItem: Identifiable, Hashable {
     let id: String
     let name: String
     let price: Int
@@ -14,7 +14,7 @@ struct MenuItem: Identifiable {
     let isSoldOut: Bool
 }
 
-struct MenuCategory: Identifiable {
+struct MenuCategory: Identifiable, Hashable {
     let id: String
     let name: String
     let items: [MenuItem]
