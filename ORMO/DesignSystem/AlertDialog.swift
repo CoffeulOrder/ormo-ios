@@ -1,9 +1,10 @@
 import SwiftUI
 
+// secondaryTitle이 없으면 확인 버튼 하나만 있는 Single 레이아웃이 된다(Figma Alert Dialog · Single).
 struct AlertDialog: View {
     let title: String
     let message: String
-    let secondaryTitle: String
+    var secondaryTitle: String?
     let primaryTitle: String
     var secondaryAction: () -> Void = {}
     var primaryAction: () -> Void = {}
@@ -22,18 +23,31 @@ struct AlertDialog: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
 
-            HStack(spacing: Spacing.spacing8) {
-                Button(action: secondaryAction) {
-                    Text(secondaryTitle)
-                        .font(Typography.bodyMdSemibold)
-                        .foregroundStyle(Colors.textPrimary)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 48)
-                        .background(Colors.fillNeutralWeak)
-                        .clipShape(RoundedRectangle(cornerRadius: Radius.r14))
-                }
-                .buttonStyle(.plain)
+            if let secondaryTitle {
+                HStack(spacing: Spacing.spacing8) {
+                    Button(action: secondaryAction) {
+                        Text(secondaryTitle)
+                            .font(Typography.bodyMdSemibold)
+                            .foregroundStyle(Colors.textPrimary)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 48)
+                            .background(Colors.fillNeutralWeak)
+                            .clipShape(RoundedRectangle(cornerRadius: Radius.r14))
+                    }
+                    .buttonStyle(.plain)
 
+                    Button(action: primaryAction) {
+                        Text(primaryTitle)
+                            .font(Typography.bodyMdSemibold)
+                            .foregroundStyle(Colors.textOnFill)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 48)
+                            .background(Colors.fillBrand)
+                            .clipShape(RoundedRectangle(cornerRadius: Radius.r14))
+                    }
+                    .buttonStyle(.plain)
+                }
+            } else {
                 Button(action: primaryAction) {
                     Text(primaryTitle)
                         .font(Typography.bodyMdSemibold)
