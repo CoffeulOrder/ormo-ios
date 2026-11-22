@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct LoginView: View {
-    var onSignUpCompleted: () -> Void = {}
+    var onAuthenticated: () -> Void = {}
 
     @State private var viewModel = LoginViewModel()
     @State private var isTitleVisible = false
@@ -30,7 +30,7 @@ struct LoginView: View {
                     case .termsFullText(let document):
                         TermsFullTextView(document: document)
                     case .completion:
-                        SignUpCompletionView(name: signUpRouter.userName, onFinished: onSignUpCompleted)
+                        SignUpCompletionView(name: signUpRouter.userName, onFinished: onAuthenticated)
                     }
                 }
                 .navigationDestination(for: PasswordResetRoute.self) { route in
@@ -110,6 +110,12 @@ struct LoginView: View {
             }
             withAnimation(.easeOut(duration: 0.4).delay(0.12)) {
                 isBottomCTAVisible = true
+            }
+        }
+        .onChange(of: viewModel.isLoginSucceeded) {
+            if viewModel.isLoginSucceeded {
+                onAuthenticated()
+                viewModel.isLoginSucceeded = false
             }
         }
         .onChange(of: viewModel.isSnackbarVisible) {

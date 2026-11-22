@@ -21,6 +21,7 @@ final class LoginViewModel {
 
     var lockoutRemainingSeconds: Int = 0
     var isLockedOut: Bool { lockoutRemainingSeconds > 0 }
+    var isLoginSucceeded = false
     var isSnackbarVisible = false
     var snackbarMessage = "비밀번호를 5회 틀렸어요"
     var snackbarIcon: ImageResource = .alertIconLarge
@@ -76,7 +77,8 @@ final class LoginViewModel {
                 emailErrorMessage = nil
                 passwordErrorMessage = nil
                 failedAttemptCount = 0
-                // TODO: 1.1.1 매장 선택으로 이동
+                // 1.1.1 매장 선택 화면이 아직 없어 바로 메뉴 홈으로 이동한다.
+                isLoginSucceeded = true
             } catch let failure as LoginFailure {
                 if failure.isAccountRestricted {
                     isRestrictedAccountDialogVisible = true
