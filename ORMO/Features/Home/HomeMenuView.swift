@@ -25,9 +25,11 @@ struct HomeMenuView: View {
     @State private var sectionFirstItemHeights: [HomeMenuViewModel.Section: CGFloat] = [:]
     @State private var router = HomeRouter()
     @State private var cart = CartStore()
+    var onLogout: (String?) -> Void = { _ in }
 
-    init(viewModel: HomeMenuViewModel = HomeMenuViewModel()) {
+    init(viewModel: HomeMenuViewModel = HomeMenuViewModel(), onLogout: @escaping (String?) -> Void = { _ in }) {
         _viewModel = State(initialValue: viewModel)
+        self.onLogout = onLogout
     }
 
     var body: some View {
@@ -69,6 +71,16 @@ struct HomeMenuView: View {
                         OrderDetailView(pickupNumber: pickupNumber, storeName: storeName)
                     case .receipt(let pickupNumber, let storeName, let totalPrice, let paidAt):
                         ReceiptView(pickupNumber: pickupNumber, storeName: storeName, totalPrice: totalPrice, paidAt: paidAt)
+                    case .myInfo:
+                        MyInfoView(onLogout: onLogout)
+                    case .changePassword(let email):
+                        ChangePasswordView(email: email, onLogout: onLogout)
+                    case .termsAndPolicy:
+                        TermsAndPolicyView()
+                    case .termsDocument(let document):
+                        TermsFullTextView(document: document)
+                    case .withdraw:
+                        WithdrawView(onWithdrawn: { onLogout(nil) })
                     }
                 }
         }
@@ -528,7 +540,7 @@ struct HomeMenuView: View {
     }
 
     private func myPageTapped() {
-        // TODO: 5.1.1 내 정보 화면으로 이동
+        router.path.append(HomeRoute.myInfo)
     }
 
     private func menuItemTapped(_ item: MenuItem) {

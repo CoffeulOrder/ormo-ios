@@ -2,6 +2,7 @@ import SwiftUI
 
 struct LoginView: View {
     var onAuthenticated: () -> Void = {}
+    var pendingToastMessage: String? = nil
 
     @State private var viewModel = LoginViewModel()
     @State private var isTitleVisible = false
@@ -110,6 +111,9 @@ struct LoginView: View {
             }
             withAnimation(.easeOut(duration: 0.4).delay(0.12)) {
                 isBottomCTAVisible = true
+            }
+            if let pendingToastMessage {
+                viewModel.presentToast(pendingToastMessage)
             }
         }
         .onChange(of: viewModel.isLoginSucceeded) {
