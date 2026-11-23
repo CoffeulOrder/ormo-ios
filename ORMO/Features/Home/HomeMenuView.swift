@@ -57,6 +57,14 @@ struct HomeMenuView: View {
                             store: viewModel.currentStore,
                             onOrderUnavailable: { router.path = NavigationPath() }
                         )
+                    case .paymentProcessing(_, let method, let total, let storeName):
+                        PaymentProcessingView(paymentMethod: method, totalPrice: total, storeName: storeName, cart: cart)
+                    case .paymentFailure(_, let method, let total, let storeName):
+                        PaymentFailureView(cart: cart, paymentMethod: method, totalPrice: total, storeName: storeName)
+                    case .paymentExpired:
+                        PaymentExpiredView()
+                    case .orderComplete(let pickupNumber, let storeName, let queueCount):
+                        OrderCompleteView(pickupNumber: pickupNumber, storeName: storeName, queueCount: queueCount)
                     }
                 }
         }
