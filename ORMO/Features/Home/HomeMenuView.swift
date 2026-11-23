@@ -75,6 +75,8 @@ struct HomeMenuView: View {
                         MyInfoView(onLogout: onLogout)
                     case .changePassword(let email):
                         ChangePasswordView(email: email, onLogout: onLogout)
+                    case .notificationSettings:
+                        NotificationSettingsView()
                     case .termsAndPolicy:
                         TermsAndPolicyView()
                     case .termsDocument(let document):

@@ -26,4 +26,5 @@ enum Colors {
     static let fillDangerWeak = Color(.fillDangerWeak)
     static let fillDanger = Color(.fillDanger)
     static let iconTertiary = Color(.iconTertiary)
+    static let textWarning = Color(.textWarning)
 }

@@ -17,6 +17,7 @@ enum HomeRoute: Hashable {
     case receipt(pickupNumber: Int, storeName: String, totalPrice: Int, paidAt: Date)
     case myInfo
     case changePassword(email: String)
+    case notificationSettings
     case termsAndPolicy
     case termsDocument(TermsDocument)
     case withdraw
