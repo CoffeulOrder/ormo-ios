@@ -1,5 +1,6 @@
 import SwiftUI
 import Lottie
+import UserNotifications
 
 struct OrderCompleteView: View {
     @Environment(HomeRouter.self) private var router
@@ -8,6 +9,7 @@ struct OrderCompleteView: View {
     let queueCount: Int
 
     @State private var appeared = false
+    @State private var showNotificationSheet = false
 
     private struct FadeUpMotion {
         var translateY: CGFloat
@@ -20,23 +22,29 @@ struct OrderCompleteView: View {
     )
 
     var body: some View {
-        VStack(spacing: 0) {
-            Spacer()
+        ZStack {
+            VStack(spacing: 0) {
+                Spacer()
 
-            symbolView
+                symbolView
 
-            pickupNumberLabel
-                .padding(.top, Spacing.spacing41)
+                pickupNumberLabel
+                    .padding(.top, Spacing.spacing41)
 
-            infoCard
-                .padding(.top, Spacing.spacing16)
+                infoCard
+                    .padding(.top, Spacing.spacing16)
 
-            Spacer()
+                Spacer()
 
-            bottomCTA
+                bottomCTA
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .background(Colors.backgroundDefault.ignoresSafeArea())
+
+            if showNotificationSheet {
+                NotificationPermissionSheet(onSkip: notificationSheetSkipTapped, onAllow: notificationSheetAllowTapped)
+            }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .background(Colors.backgroundDefault.ignoresSafeArea())
         .navigationBarHidden(true)
         .onAppear { appeared = true }
     }
@@ -171,8 +179,24 @@ struct OrderCompleteView: View {
         }
     }
 
+    // 지금은 재주문(첫 주문 아님) 판별 로직이 없어, 항상 첫 주문으로 가정하고 4.5.1 알림 권한
+    // 시트를 먼저 보여준다.
     private func orderStatusTapped() {
-        // TODO: 첫 주문이면 4.5.1 알림 권한 시트, 아니면 4.3.1 주문 상세 화면으로 이동
+        showNotificationSheet = true
+    }
+
+    private func notificationSheetSkipTapped() {
+        showNotificationSheet = false
+        router.path.append(HomeRoute.orderDetail(pickupNumber: pickupNumber, storeName: storeName))
+    }
+
+    // OS 알림 권한 팝업을 띄운 뒤에는 허용·거부 결과와 무관하게 주문 상세로 넘어간다.
+    private func notificationSheetAllowTapped() {
+        Task {
+            _ = try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge])
+            showNotificationSheet = false
+            router.path.append(HomeRoute.orderDetail(pickupNumber: pickupNumber, storeName: storeName))
+        }
     }
 
     private func addMoreOrderTapped() {

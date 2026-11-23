@@ -65,6 +65,8 @@ struct HomeMenuView: View {
                         PaymentExpiredView()
                     case .orderComplete(let pickupNumber, let storeName, let queueCount):
                         OrderCompleteView(pickupNumber: pickupNumber, storeName: storeName, queueCount: queueCount)
+                    case .orderDetail(let pickupNumber, let storeName):
+                        OrderDetailView(pickupNumber: pickupNumber, storeName: storeName)
                     }
                 }
         }
