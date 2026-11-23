@@ -15,6 +15,11 @@ enum HomeRoute: Hashable {
     case orderComplete(pickupNumber: Int, storeName: String, queueCount: Int)
     case orderDetail(pickupNumber: Int, storeName: String)
     case receipt(pickupNumber: Int, storeName: String, totalPrice: Int, paidAt: Date)
+    case myInfo
+    case changePassword(email: String)
+    case termsAndPolicy
+    case termsDocument(TermsDocument)
+    case withdraw
 }
 
 @Observable

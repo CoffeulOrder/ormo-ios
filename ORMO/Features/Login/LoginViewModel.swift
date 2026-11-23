@@ -129,6 +129,13 @@ final class LoginViewModel {
         showSnackbar()
     }
 
+    // 비밀번호 변경·탈퇴 등 다른 화면에서 로그아웃된 뒤 로그인 화면에 띄워줄 토스트.
+    func presentToast(_ message: String) {
+        snackbarMessage = message
+        snackbarIcon = .toastSuccessIcon
+        showSnackbar()
+    }
+
     func dismissRestrictedAccountDialog() {
         isRestrictedAccountDialogVisible = false
     }
