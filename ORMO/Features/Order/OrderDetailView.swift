@@ -5,6 +5,25 @@ struct OrderDetailView: View {
     @Environment(HomeRouter.self) private var router
     @State private var viewModel: OrderDetailViewModel
 
+    // 팝업이 트리에 있는지(isDialogPresented)와 보이는 정도(scale·opacity)를 분리한다.
+    // .transition()에 애니메이션을 붙이는 방식은 이 화면에서 실제로 재생되지 않았다(그냥 틱 하고
+    // 나타남/사라짐). scaleEffect·opacity를 직접 들고 withAnimation으로 바꾸는 가장 기본적인 방식이
+    // 확실히 동작한다. Figma 원본 수치(0.94→1, 212:5205)는 변화 폭이 6%뿐이라 오버슈트를 그대로
+    // 구현해도 눈에 띄지 않아서, 통통 튀는 느낌이 보이도록 폭을 키우고 spring으로 바꿨다.
+    @State private var isDialogPresented = false
+    @State private var dialogScale: CGFloat = 0.7
+    @State private var dialogOpacity: Double = 0
+    @State private var dimOpacity: Double = 0
+    @State private var dialogCloseTask: Task<Void, Never>?
+
+    @State private var toast: ToastContent?
+    @State private var toastTask: Task<Void, Never>?
+
+    private static let dimAnimation = Animation.easeOut(duration: 0.2)
+    private static let dialogOpenAnimation = Animation.spring(response: 0.32, dampingFraction: 0.62)
+    private static let dialogCloseAnimation = Animation.easeOut(duration: 0.15)
+    private static let dialogCloseDuration = 0.15
+
     // 버튼이 1개든 2개든 한 줄(56px 높이)이라 하단 CTA 전체 높이가 항상 같다(포그40+버튼56+하단여백32).
     // GeometryReader로 매번 재는 대신 고정값을 써서, 측정 전 프레임에 패딩이 모자라 보이는 걸 막는다.
     private let bottomCTAHeight: CGFloat = 128
@@ -13,6 +32,11 @@ struct OrderDetailView: View {
         let label: String
         let time: Date?
         let color: Color
+    }
+
+    private struct ToastContent: Equatable {
+        let message: String
+        let tone: Snackbar.Tone
     }
 
     private static let dateFormatter: DateFormatter = {
@@ -59,6 +83,34 @@ struct OrderDetailView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
 
             bottomCTA
+
+            if let toast {
+                Snackbar(message: toast.message, tone: toast.tone)
+                    .padding(.bottom, bottomCTAHeight + Spacing.spacing16)
+                    .transition(.opacity.animation(.easeOut(duration: 0.2)))
+            }
+
+            if isDialogPresented {
+                ZStack {
+                    Colors.backgroundDim
+                        .ignoresSafeArea()
+                        .opacity(dimOpacity)
+
+                    AlertDialog(
+                        title: "주문을 취소할까요?",
+                        message: "결제 금액 전액을 환불해 드려요",
+                        secondaryTitle: "닫기",
+                        primaryTitle: "취소하기",
+                        tone: .critical,
+                        secondaryAction: { closeCancelDialog() },
+                        primaryAction: confirmCancelTapped
+                    )
+                    .scaleEffect(dialogScale)
+                    .opacity(dialogOpacity)
+                    .compositingGroup()
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
         }
         .background(Colors.backgroundDefault.ignoresSafeArea())
         .navigationBarHidden(true)
@@ -425,9 +477,62 @@ struct OrderDetailView: View {
         .buttonStyle(.plain)
     }
 
-    // 4.4.1 주문 취소 확인 화면은 범위 밖이라, 누르면 바로 취소 처리한다.
     private func cancelOrderTapped() {
-        viewModel.cancelOrder()
+        dialogCloseTask?.cancel()
+        // 지난번 닫히다 만 값이 남아있을 수 있어, 보이기 전에 "숨은" 값으로 되돌려 놓고 그 다음 프레임에서
+        // 목표값으로 애니메이션한다.
+        dialogScale = 0.7
+        dialogOpacity = 0
+        dimOpacity = 0
+        isDialogPresented = true
+        withAnimation(Self.dimAnimation) {
+            dimOpacity = 1
+        }
+        withAnimation(Self.dialogOpenAnimation) {
+            dialogScale = 1
+            dialogOpacity = 1
+        }
+    }
+
+    // 닫는 애니메이션(0.15초)이 끝난 뒤에 뷰를 트리에서 빼고, 그 다음에야 onFinished를 실행한다.
+    // 취소 성공 시 order.status 변경(진행바 섹션이 사라지는 구조 변경)이 팝업이 흐려지는 도중에
+    // 겹치면, 흐릿하게 비치는 팝업 너머로 레이아웃이 재배치되는 게 보여서 줄이 생긴 것처럼 보였다.
+    private func closeCancelDialog(then onFinished: (() -> Void)? = nil) {
+        withAnimation(Self.dialogCloseAnimation) {
+            dialogScale = 0.94
+            dialogOpacity = 0
+            dimOpacity = 0
+        }
+        dialogCloseTask?.cancel()
+        dialogCloseTask = Task {
+            try? await Task.sleep(for: .seconds(Self.dialogCloseDuration))
+            guard !Task.isCancelled else { return }
+            isDialogPresented = false
+            onFinished?()
+        }
+    }
+
+    // 팝업이 떠 있는 동안 매장이 먼저 주문을 수락했을 수 있어서, 실제 취소 전에 상태를 다시 확인한다.
+    private func confirmCancelTapped() {
+        let shouldCancel = viewModel.order.status == .confirming
+        closeCancelDialog {
+            if shouldCancel {
+                viewModel.cancelOrder()
+                showToast(message: "주문을 취소했어요", tone: .positive)
+            } else {
+                showToast(message: "주문이 접수되어 취소할 수 없어요", tone: .critical)
+            }
+        }
+    }
+
+    private func showToast(message: String, tone: Snackbar.Tone) {
+        toast = ToastContent(message: message, tone: tone)
+        toastTask?.cancel()
+        toastTask = Task {
+            try? await Task.sleep(for: .seconds(3))
+            guard !Task.isCancelled else { return }
+            toast = nil
+        }
     }
 
     private func chooseOtherMenuTapped() {
