@@ -17,6 +17,8 @@ final class CartViewModel {
     var hasAgreedToNoCancellation = false
     // nil이 아니면 "매장이 지금 주문을 못 받는다"는 Alert Dialog를 띄운다.
     var orderUnavailableAlert: OrderUnavailableAlert?
+    // true가 되면 결제 확인 중 화면으로 넘어가라는 신호. 화면이 소비한 뒤 false로 되돌린다.
+    var didStartPayment = false
 
     private let cafeRepository: CafeRepository
 
@@ -35,7 +37,7 @@ final class CartViewModel {
             let acceptance = (try? await cafeRepository.fetchOrderAcceptance(storeId: store.id)) ?? .accepting
             switch acceptance {
             case .accepting:
-                break // TODO: 3.2.2 결제 확인 중 → 주문 완료 화면으로 이동
+                didStartPayment = true
             case .closedForToday(let reopensAtText):
                 orderUnavailableAlert = OrderUnavailableAlert(
                     title: "오늘 영업이 끝났어요",

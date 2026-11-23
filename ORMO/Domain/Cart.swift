@@ -29,11 +29,15 @@ struct CartLineItem: Identifiable, Hashable {
 final class CartStore {
     static let maxQuantityPerLine = 5
 
+    static let maxPaymentFailureCount = 5
+
     private(set) var items: [CartLineItem] = []
     // 담기에 성공한 직후 한 번만 보여줄 스낵바 문구. 소비한 화면이 nil로 되돌린다.
     var justAddedMessage: String?
     // 삭제 직후 "되돌리기"와 함께 보여줄 스낵바 문구. 일정 시간 뒤 또는 되돌리면 nil이 된다.
     var removedItemMessage: String?
+    // 같은 장바구니로 결제를 연달아 실패한 횟수. 5번째에 "더 이상 결제할 수 없음" 화면으로 바뀐다.
+    private(set) var paymentFailureCount = 0
 
     private var lastRemoved: (item: CartLineItem, index: Int)?
     private var removalMessageTask: Task<Void, Never>?
@@ -79,6 +83,22 @@ final class CartStore {
         lastRemoved = nil
         removalMessageTask?.cancel()
         removedItemMessage = nil
+    }
+
+    var isPaymentFailureLimitExceeded: Bool { paymentFailureCount >= Self.maxPaymentFailureCount }
+
+    func recordPaymentFailure() {
+        paymentFailureCount += 1
+    }
+
+    func resetPaymentFailureCount() {
+        paymentFailureCount = 0
+    }
+
+    // 결제 성공: 이 주문은 끝났으니 장바구니와 실패 횟수를 모두 비운다.
+    func clearAfterSuccessfulPayment() {
+        items.removeAll()
+        paymentFailureCount = 0
     }
 
     private func showRemovedMessage(_ message: String) {

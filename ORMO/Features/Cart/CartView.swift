@@ -11,6 +11,7 @@ private struct BottomCTAHeightKey: PreferenceKey {
 
 struct CartView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(HomeRouter.self) private var router
     @State private var viewModel: CartViewModel
     @State private var bottomCTAHeight: CGFloat = 0
     @State private var dimOpacity: Double = 0
@@ -77,6 +78,18 @@ struct CartView: View {
                     dialogOpacity = 0
                 }
             }
+        }
+        .onChange(of: viewModel.didStartPayment) {
+            guard viewModel.didStartPayment else { return }
+            viewModel.didStartPayment = false
+            router.path.append(
+                HomeRoute.paymentProcessing(
+                    attemptId: UUID(),
+                    paymentMethod: viewModel.paymentMethod,
+                    totalPrice: viewModel.checkoutTotalPrice,
+                    storeName: viewModel.store?.name ?? ""
+                )
+            )
         }
     }
 
