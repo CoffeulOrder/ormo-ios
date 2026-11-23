@@ -14,6 +14,7 @@ enum HomeRoute: Hashable {
     case paymentExpired
     case orderComplete(pickupNumber: Int, storeName: String, queueCount: Int)
     case orderDetail(pickupNumber: Int, storeName: String)
+    case receipt(pickupNumber: Int, storeName: String, totalPrice: Int, paidAt: Date)
 }
 
 @Observable

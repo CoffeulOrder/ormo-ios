@@ -6,6 +6,12 @@ enum OrderStatus {
     case waitingPickup
     case cancelled
     case pickedUp
+    // 사용자가 직접 주문을 취소한 상태. 매장이 거절한 cancelled와는 구분한다.
+    case userCancelled
+    // 픽업까지 끝난 뒤(또는 취소 후) 환불이 완료된 상태.
+    case refunded
+    // 픽업 대기 시간 안에 찾아가지 않은 상태.
+    case unclaimed
 }
 
 struct OrderItem: Identifiable {
@@ -27,6 +33,9 @@ struct Order {
     var madeAt: Date?
     var waitingAt: Date?
     var pickedUpAt: Date?
+    var userCancelledAt: Date?
+    var refundedAt: Date?
+    var unclaimedAt: Date?
 }
 
 protocol OrderRepository {
