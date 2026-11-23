@@ -50,6 +50,13 @@ final class OrderDetailViewModel {
         order.pickedUpAt = Date()
     }
 
+    // 사용자가 "주문 취소하기"를 눌렀을 때. 자동 진행 중이었다면 멈추고 취소 상태로 바꾼다.
+    func cancelOrder() {
+        progressionTask?.cancel()
+        order.status = .userCancelled
+        order.userCancelledAt = Date()
+    }
+
     deinit {
         progressionTask?.cancel()
     }

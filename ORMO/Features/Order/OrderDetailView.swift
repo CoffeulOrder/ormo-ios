@@ -1,18 +1,13 @@
 import SwiftUI
 
-// 하단 CTA의 실제 높이를 재서, 스크롤 콘텐츠가 그 아래로 다 지나갈 수 있게 여백을 준다. (CartView와 동일한 패턴)
-private struct BottomCTAHeightKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = nextValue()
-    }
-}
-
 struct OrderDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(HomeRouter.self) private var router
     @State private var viewModel: OrderDetailViewModel
-    @State private var bottomCTAHeight: CGFloat = 0
+
+    // 버튼이 1개든 2개든 한 줄(56px 높이)이라 하단 CTA 전체 높이가 항상 같다(포그40+버튼56+하단여백32).
+    // GeometryReader로 매번 재는 대신 고정값을 써서, 측정 전 프레임에 패딩이 모자라 보이는 걸 막는다.
+    private let bottomCTAHeight: CGFloat = 128
 
     private struct StepInfo {
         let label: String
@@ -49,7 +44,10 @@ struct OrderDetailView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
                         statusHeader
-                        orderStepsSection
+                        calloutSection
+                        if showsOrderSteps {
+                            orderStepsSection
+                        }
                         thickDivider
                         orderItemsSection
                         thickDivider
@@ -61,12 +59,6 @@ struct OrderDetailView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
 
             bottomCTA
-                .background(
-                    GeometryReader { geometry in
-                        Color.clear.preference(key: BottomCTAHeightKey.self, value: geometry.size.height)
-                    }
-                )
-                .onPreferenceChange(BottomCTAHeightKey.self) { bottomCTAHeight = $0 }
         }
         .background(Colors.backgroundDefault.ignoresSafeArea())
         .navigationBarHidden(true)
@@ -113,17 +105,56 @@ struct OrderDetailView: View {
         .padding(.vertical, Spacing.spacing24)
     }
 
+    private var showsOrderSteps: Bool {
+        viewModel.order.status != .userCancelled
+    }
+
+    @ViewBuilder
+    private var calloutSection: some View {
+        switch viewModel.order.status {
+        case .userCancelled:
+            calloutView("결제한 금액은 모두 돌려드려요.\n카드사에 따라 3~5일 걸려요.")
+        case .refunded:
+            calloutView("결제한 수단으로 금액을 돌려드렸어요. 카드사에 따라 3~5일 걸려요")
+        case .unclaimed:
+            calloutView("환불이 필요하면 매장에 문의해주세요")
+        default:
+            EmptyView()
+        }
+    }
+
+    private func calloutView(_ text: String) -> some View {
+        HStack(alignment: .top, spacing: Spacing.spacing8) {
+            Image(.calloutInfoIcon)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 20, height: 20)
+            Text(text)
+                .font(Typography.bodySmRegular)
+                .foregroundStyle(Colors.textSecondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(.horizontal, Spacing.spacing16)
+        .padding(.vertical, Spacing.spacing12)
+        .background(Colors.fillNeutralWeak)
+        .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
+        .padding(.horizontal, Spacing.spacing20)
+        .padding(.bottom, Spacing.spacing20)
+    }
+
     private var orderStepsSection: some View {
         VStack(spacing: Spacing.spacing8) {
             HStack(spacing: Spacing.spacing4) {
-                ForEach(0..<barFillFractions.count, id: \.self) { index in
-                    barSegment(index: index)
+                // barFillFractions도 steps와 같은 이유로 한 번만 읽어서 넘긴다.
+                ForEach(Array(barFillFractions.enumerated()), id: \.offset) { index, fraction in
+                    barSegment(index: index, count: barFillFractions.count, fraction: fraction)
                 }
             }
 
             HStack(spacing: Spacing.spacing4) {
-                ForEach(steps.indices, id: \.self) { index in
-                    let step = steps[index]
+                // steps는 상태에 따라 길이가 바뀌는 computed property라, .indices와 구독 두 번 호출하면
+                // 애니메이션 전환 중 다른 상태값으로 평가돼 범위를 벗어날 수 있다. 한 번만 읽어서 쓴다.
+                ForEach(Array(steps.enumerated()), id: \.offset) { _, step in
                     VStack(spacing: 0) {
                         Text(step.label)
                             .font(Typography.bodySmMedium)
@@ -156,22 +187,27 @@ struct OrderDetailView: View {
     }
 
     // 상태가 바뀔 때 색이 순간적으로 탁 바뀌지 않고, 칸이 왼쪽부터 부드럽게 차오르게 한다.
-    private func barSegment(index: Int) -> some View {
+    private func barSegment(index: Int, count: Int, fraction: CGFloat) -> some View {
         GeometryReader { geometry in
             ZStack(alignment: .leading) {
-                Rectangle().fill(Colors.fillBrandWeak)
+                Rectangle().fill(barTrackColor(index: index))
                 Rectangle()
                     .fill(barActiveColor(index: index))
-                    .frame(width: geometry.size.width * barFillFractions[index])
-                    .animation(.easeInOut(duration: 0.6), value: barFillFractions[index])
+                    .frame(width: geometry.size.width * fraction)
+                    .animation(.easeInOut(duration: 0.6), value: fraction)
             }
         }
         .frame(height: 8)
-        .clipShape(barShape(index: index, count: barFillFractions.count))
+        .clipShape(barShape(index: index, count: count))
     }
 
     private func barActiveColor(index: Int) -> Color {
         viewModel.order.status == .cancelled && index == 0 ? Colors.fillDanger : Colors.fillBrand
+    }
+
+    // 미수령은 마지막 칸이 "아직 안 참" 파란색이 아니라 "다시는 안 참"이라는 뜻으로 회색이다.
+    private func barTrackColor(index: Int) -> Color {
+        viewModel.order.status == .unclaimed && index == 3 ? Colors.fillNeutralWeak : Colors.fillBrandWeak
     }
 
     private var barFillFractions: [CGFloat] {
@@ -181,6 +217,9 @@ struct OrderDetailView: View {
         case .waitingPickup: [1, 1, 1, 0]
         case .pickedUp: [1, 1, 1, 1]
         case .cancelled: [1, 0, 0, 0]
+        case .userCancelled: [0, 0, 0, 0]
+        case .refunded: [1, 1, 1, 1]
+        case .unclaimed: [1, 1, 1, 0]
         }
     }
 
@@ -222,6 +261,22 @@ struct OrderDetailView: View {
                 StepInfo(label: "픽업 대기", time: nil, color: Colors.textTertiary),
                 StepInfo(label: "픽업 완료", time: nil, color: Colors.textTertiary)
             ]
+        case .userCancelled:
+            return []
+        case .refunded:
+            return [
+                StepInfo(label: "주문 확인 중", time: order.confirmedAt, color: Colors.textSecondary),
+                StepInfo(label: "만드는 중", time: order.madeAt, color: Colors.textSecondary),
+                StepInfo(label: "픽업 대기", time: order.waitingAt, color: Colors.textSecondary),
+                StepInfo(label: "픽업 완료", time: order.pickedUpAt, color: Colors.textBrand)
+            ]
+        case .unclaimed:
+            return [
+                StepInfo(label: "주문 확인 중", time: order.confirmedAt, color: Colors.textSecondary),
+                StepInfo(label: "만드는 중", time: order.madeAt, color: Colors.textSecondary),
+                StepInfo(label: "픽업 대기", time: order.waitingAt, color: Colors.textSecondary),
+                StepInfo(label: "미수령", time: order.unclaimedAt, color: Colors.textDanger)
+            ]
         }
     }
 
@@ -233,6 +288,9 @@ struct OrderDetailView: View {
         case .waitingPickup: return "\(number)번 주문을 픽업해주세요"
         case .pickedUp: return "\(number)번 주문을 픽업했어요"
         case .cancelled: return "매장 사정으로\n주문이 취소됐어요"
+        case .userCancelled: return "주문을 취소했어요"
+        case .refunded: return "\(viewModel.order.subtotalPrice.formatted())원을 환불했어요"
+        case .unclaimed: return "픽업 예정 시간이 지났어요"
         }
     }
 
@@ -340,10 +398,10 @@ struct OrderDetailView: View {
                         .disabled(true)
                 case .cancelled:
                     actionButton("다른 메뉴 고르기", textColor: Colors.textOnFill, background: Colors.fillBrand, action: chooseOtherMenuTapped)
-                case .pickedUp:
+                case .pickedUp, .userCancelled, .refunded, .unclaimed:
                     HStack(spacing: Spacing.spacing8) {
                         actionButton("재주문", textColor: Colors.textBrand, background: Colors.fillBrandWeak, action: reorderTapped)
-                        actionButton("영수증 보기", textColor: Colors.textOnFill, background: Colors.fillBrand, action: {})
+                        actionButton("영수증 보기", textColor: Colors.textOnFill, background: Colors.fillBrand, action: viewReceiptTapped)
                             .frame(width: 200)
                     }
                 }
@@ -367,8 +425,9 @@ struct OrderDetailView: View {
         .buttonStyle(.plain)
     }
 
+    // 4.4.1 주문 취소 확인 화면은 범위 밖이라, 누르면 바로 취소 처리한다.
     private func cancelOrderTapped() {
-        // TODO: 4.4.1 주문 취소 확인 화면으로 이동 (이번 범위 밖)
+        viewModel.cancelOrder()
     }
 
     private func chooseOtherMenuTapped() {
@@ -377,6 +436,13 @@ struct OrderDetailView: View {
 
     private func reorderTapped() {
         router.path.append(HomeRoute.cart)
+    }
+
+    private func viewReceiptTapped() {
+        let order = viewModel.order
+        router.path.append(
+            HomeRoute.receipt(pickupNumber: order.pickupNumber, storeName: order.storeName, totalPrice: order.subtotalPrice, paidAt: order.paidAt)
+        )
     }
 }
 
@@ -398,6 +464,17 @@ private func previewOrder(status: OrderStatus) -> Order {
         order.madeAt = now
         order.waitingAt = now
         order.pickedUpAt = now
+    case .userCancelled:
+        order.userCancelledAt = now
+    case .refunded:
+        order.madeAt = now
+        order.waitingAt = now
+        order.pickedUpAt = now
+        order.refundedAt = now
+    case .unclaimed:
+        order.madeAt = now
+        order.waitingAt = now
+        order.unclaimedAt = now
     }
     return order
 }
@@ -433,6 +510,27 @@ private func previewOrder(status: OrderStatus) -> Order {
 #Preview("픽업 완료") {
     NavigationStack {
         OrderDetailView(order: previewOrder(status: .pickedUp))
+    }
+    .environment(HomeRouter())
+}
+
+#Preview("주문 취소") {
+    NavigationStack {
+        OrderDetailView(order: previewOrder(status: .userCancelled))
+    }
+    .environment(HomeRouter())
+}
+
+#Preview("환불 완료") {
+    NavigationStack {
+        OrderDetailView(order: previewOrder(status: .refunded))
+    }
+    .environment(HomeRouter())
+}
+
+#Preview("미수령") {
+    NavigationStack {
+        OrderDetailView(order: previewOrder(status: .unclaimed))
     }
     .environment(HomeRouter())
 }
