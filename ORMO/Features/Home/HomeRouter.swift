@@ -13,6 +13,7 @@ enum HomeRoute: Hashable {
     case paymentFailure(attemptId: UUID, paymentMethod: PaymentMethod, totalPrice: Int, storeName: String)
     case paymentExpired
     case orderComplete(pickupNumber: Int, storeName: String, queueCount: Int)
+    case orderDetail(pickupNumber: Int, storeName: String)
 }
 
 @Observable

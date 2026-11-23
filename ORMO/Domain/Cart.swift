@@ -10,6 +10,15 @@ enum PaymentMethod: Hashable {
     case tossPay
     case naverPay
     case kakaoPay
+
+    var displayName: String {
+        switch self {
+        case .card: "신용·체크카드"
+        case .tossPay: "토스페이"
+        case .naverPay: "네이버페이"
+        case .kakaoPay: "카카오페이"
+        }
+    }
 }
 
 struct CartLineItem: Identifiable, Hashable {
