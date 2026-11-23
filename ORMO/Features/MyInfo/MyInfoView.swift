@@ -132,7 +132,7 @@ struct MyInfoView: View {
     }
 
     private func notificationSettingsTapped() {
-        // TODO: 5.5.1 알림 설정 (이번 범위 밖)
+        router.path.append(HomeRoute.notificationSettings)
     }
 
     private func termsTapped() {
