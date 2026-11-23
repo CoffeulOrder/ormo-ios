@@ -2,10 +2,24 @@ import SwiftUI
 
 // secondaryTitle이 없으면 확인 버튼 하나만 있는 Single 레이아웃이 된다(Figma Alert Dialog · Single).
 struct AlertDialog: View {
+    // Figma "Alert Dialog" Tone: Neutral(Brand Solid) · Critical(Critical Solid, 되돌릴 수 없는 행동).
+    enum Tone {
+        case neutral
+        case critical
+
+        var primaryBackground: Color {
+            switch self {
+            case .neutral: Colors.fillBrand
+            case .critical: Colors.fillDanger
+            }
+        }
+    }
+
     let title: String
     let message: String
     var secondaryTitle: String?
     let primaryTitle: String
+    var tone: Tone = .neutral
     var secondaryAction: () -> Void = {}
     var primaryAction: () -> Void = {}
 
@@ -42,7 +56,7 @@ struct AlertDialog: View {
                             .foregroundStyle(Colors.textOnFill)
                             .frame(maxWidth: .infinity)
                             .frame(height: 48)
-                            .background(Colors.fillBrand)
+                            .background(tone.primaryBackground)
                             .clipShape(RoundedRectangle(cornerRadius: Radius.r14))
                     }
                     .buttonStyle(.plain)
@@ -71,7 +85,7 @@ struct AlertDialog: View {
     }
 }
 
-#Preview {
+#Preview("Neutral") {
     ZStack {
         Colors.backgroundDim.ignoresSafeArea()
         AlertDialog(
@@ -79,6 +93,19 @@ struct AlertDialog: View {
             message: "궁금한 점은 고객센터로 문의해 주세요",
             secondaryTitle: "닫기",
             primaryTitle: "문의하기"
+        )
+    }
+}
+
+#Preview("Critical") {
+    ZStack {
+        Colors.backgroundDim.ignoresSafeArea()
+        AlertDialog(
+            title: "주문을 취소할까요?",
+            message: "결제 금액 전액을 환불해 드려요",
+            secondaryTitle: "닫기",
+            primaryTitle: "취소하기",
+            tone: .critical
         )
     }
 }
