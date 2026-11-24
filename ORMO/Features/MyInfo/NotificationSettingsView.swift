@@ -28,7 +28,7 @@ struct NotificationSettingsView: View {
                         title: "주문 알림",
                         description: "음료가 준비되거나\n주문 상태가 변경되면 알려드려요",
                         isOn: Binding(
-                            get: { viewModel.isOrderNotificationEnabled },
+                            get: { viewModel.isOrderNotificationEffectivelyOn },
                             set: { viewModel.orderNotificationToggled(to: $0) }
                         ),
                         isDisabled: viewModel.isSystemNotificationDenied
@@ -36,7 +36,10 @@ struct NotificationSettingsView: View {
                     listItem(
                         title: "잠금 화면 실시간 현황",
                         description: "주문 상태를 잠금 화면에서 확인할 수 있어요",
-                        isOn: $viewModel.isLockScreenLiveStatusEnabled,
+                        isOn: Binding(
+                            get: { viewModel.isLockScreenLiveStatusEffectivelyOn },
+                            set: { viewModel.isLockScreenLiveStatusEnabled = $0 }
+                        ),
                         isDisabled: viewModel.isSystemNotificationDenied
                     )
 
@@ -45,7 +48,7 @@ struct NotificationSettingsView: View {
                         title: "내 위치 사용",
                         description: "매장까지 거리와 도보 시간을 보여줘요",
                         isOn: Binding(
-                            get: { viewModel.isLocationEnabled },
+                            get: { viewModel.isLocationEffectivelyOn },
                             set: { viewModel.locationToggled(to: $0) }
                         ),
                         isDisabled: viewModel.isSystemLocationDenied
