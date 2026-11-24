@@ -91,9 +91,8 @@ struct NotificationPermissionSheet: View {
     }
 
     private var handle: some View {
-        // Figma "base/grey/grey-300" — 핸들 전용 고정 색이라 디자인시스템 토큰으로 추상화하지 않았다.
         Capsule()
-            .fill(Color(red: 209 / 255, green: 214 / 255, blue: 219 / 255))
+            .fill(Colors.fieldBorder)
             .frame(width: 40, height: 4)
             .padding(.vertical, Spacing.spacing4)
     }
