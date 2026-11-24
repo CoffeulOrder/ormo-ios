@@ -21,9 +21,10 @@ struct ORMOWidgetLiveActivity: Widget {
                     OrderActivityDynamicIslandExpandedView(attributes: context.attributes, state: context.state)
                 }
             } compactLeading: {
-                Text("ORMO")
-                    .font(.system(size: 11, weight: .heavy))
-                    .foregroundStyle(.white)
+                Image("OrmoLogoOnDark")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 30, height: 13)
             } compactTrailing: {
                 Text("\(context.attributes.pickupNumber)")
                     .font(.system(size: 16, weight: .semibold))
@@ -62,10 +63,10 @@ struct OrderActivityCardView: View {
                 pickupNumberTile
                 VStack(alignment: .leading, spacing: 2) {
                     Text(Self.title(for: state.phase))
-                        .font(.system(size: 18, weight: .bold))
+                        .font(.system(size: 18, weight: titleWeight))
                         .foregroundStyle(titleColor)
                     Text(subtitle)
-                        .font(.system(size: 14, weight: .medium))
+                        .font(.system(size: 14, weight: subtitleWeight))
                         .foregroundStyle(subtitleColor)
                 }
             }
@@ -78,9 +79,10 @@ struct OrderActivityCardView: View {
 
     private var header: some View {
         HStack {
-            Text("ORMO")
-                .font(.system(size: 13, weight: .heavy))
-                .foregroundStyle(headerLogoColor)
+            Image(state.phase == .waitingPickup ? "OrmoLogoOnDark" : "OrmoLogo")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 37, height: 16)
             Spacer()
             Text(headerLabel)
                 .font(.system(size: 14, weight: .medium))
@@ -94,7 +96,7 @@ struct OrderActivityCardView: View {
             .frame(width: 48, height: 48)
             .overlay(
                 Text("\(attributes.pickupNumber)")
-                    .font(.system(size: 20, weight: .bold))
+                    .font(.system(size: tileNumberSize, weight: .bold))
                     .foregroundStyle(tileTextColor)
             )
     }
@@ -127,8 +129,29 @@ struct OrderActivityCardView: View {
         switch phase {
         case .confirming: "주문 확인 중이에요"
         case .making: "음료를 만들고 있어요"
-        case .waitingPickup: "음료가 준비됐어요"
+        case .waitingPickup: "음료가 준비되었어요"
         case .pickedUp: "음료를 받았어요"
+        }
+    }
+
+    private var titleWeight: Font.Weight {
+        switch state.phase {
+        case .confirming, .making: .semibold
+        case .waitingPickup, .pickedUp: .bold
+        }
+    }
+
+    private var subtitleWeight: Font.Weight {
+        switch state.phase {
+        case .confirming, .making: .regular
+        case .waitingPickup, .pickedUp: .medium
+        }
+    }
+
+    private var tileNumberSize: CGFloat {
+        switch state.phase {
+        case .confirming, .making: 20
+        case .waitingPickup, .pickedUp: 18
         }
     }
 
@@ -142,9 +165,9 @@ struct OrderActivityCardView: View {
             }
         case .waitingPickup:
             if let deadline = state.pickupDeadline {
-                "\(Self.timeFormatter.string(from: deadline))까지 받아주세요"
+                "\(Self.timeFormatter.string(from: deadline))까지 받아 주세요"
             } else {
-                "매장에서 받아주세요"
+                "매장에서 받아 주세요"
             }
         case .pickedUp:
             "\(attributes.storeName) · 맛있게 드세요"
@@ -161,8 +184,6 @@ struct OrderActivityCardView: View {
     }
 
     private var backgroundColor: Color { state.phase == .waitingPickup ? Self.brand : .white }
-
-    private var headerLogoColor: Color { state.phase == .waitingPickup ? .white : Self.textBrand }
 
     private var headerLabelColor: Color {
         switch state.phase {
@@ -190,8 +211,8 @@ struct OrderActivityCardView: View {
 
     private func segmentColor(_ index: Int) -> Color {
         switch state.phase {
-        case .confirming: index == 0 ? Self.brand : Self.brandWeak
-        case .making: index <= 1 ? Self.brand : Self.brandWeak
+        case .confirming: index == 0 ? Self.brand : Self.neutralWeak
+        case .making: index <= 1 ? Self.brand : Self.neutralWeak
         case .waitingPickup: .white
         case .pickedUp: Self.textTertiary
         }
@@ -249,9 +270,10 @@ struct OrderActivityDynamicIslandExpandedView: View {
 
     private var header: some View {
         HStack {
-            Text("ORMO")
-                .font(.system(size: 12, weight: .heavy))
-                .foregroundStyle(.white)
+            Image("OrmoLogoOnDark")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 37, height: 16)
             Spacer()
             Text(headerLabel)
                 .font(.system(size: 12, weight: .medium))
