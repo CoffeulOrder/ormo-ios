@@ -1,10 +1,16 @@
 import SwiftUI
 
 struct LoginView: View {
+    private enum Field {
+        case email
+        case password
+    }
+
     var onAuthenticated: () -> Void = {}
     var pendingToastMessage: String? = nil
 
     @State private var viewModel = LoginViewModel()
+    @FocusState private var focusedField: Field?
     @State private var isTitleVisible = false
     @State private var isBottomCTAVisible = false
     @State private var snackbarOffset: CGFloat = 24
@@ -225,6 +231,7 @@ struct LoginView: View {
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
                 .keyboardType(.emailAddress)
+                .focused($focusedField, equals: .email)
 
                 Text("@\(viewModel.selectedSchoolEmailDomain)")
                     .foregroundStyle(Colors.textQuaternary)
@@ -245,8 +252,8 @@ struct LoginView: View {
             .overlay(
                 RoundedRectangle(cornerRadius: Radius.lg)
                     .stroke(
-                        viewModel.emailErrorMessage == nil ? Colors.fieldBorder : Colors.borderDanger,
-                        lineWidth: viewModel.emailErrorMessage == nil ? 1 : 2
+                        fieldBorderColor(hasError: viewModel.passwordErrorMessage != nil, isFocused: focusedField == .email),
+                        lineWidth: viewModel.passwordErrorMessage != nil || focusedField == .email ? 2 : 1
                     )
             )
             .keyframeAnimator(initialValue: CGFloat.zero, trigger: viewModel.emailShakeTrigger) { content, offset in
@@ -260,14 +267,10 @@ struct LoginView: View {
                     CubicKeyframe(0, duration: 0.06)
                 }
             }
-
-            if let emailErrorMessage = viewModel.emailErrorMessage {
-                errorFooter(emailErrorMessage)
-            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .onChange(of: viewModel.emailLocalPart) {
-            viewModel.emailErrorMessage = nil
+            viewModel.passwordErrorMessage = nil
         }
     }
 
@@ -282,14 +285,15 @@ struct LoginView: View {
                 text: $viewModel.password,
                 prompt: Text("비밀번호를 입력해 주세요").foregroundStyle(Colors.textQuaternary)
             )
+            .focused($focusedField, equals: .password)
             .font(Typography.bodyMdRegular)
             .padding(.horizontal, Spacing.spacing16)
             .frame(height: 56)
             .overlay(
                 RoundedRectangle(cornerRadius: Radius.lg)
                     .stroke(
-                        viewModel.passwordErrorMessage == nil ? Colors.fieldBorder : Colors.borderDanger,
-                        lineWidth: viewModel.passwordErrorMessage == nil ? 1 : 2
+                        fieldBorderColor(hasError: viewModel.passwordErrorMessage != nil, isFocused: focusedField == .password),
+                        lineWidth: viewModel.passwordErrorMessage != nil || focusedField == .password ? 2 : 1
                     )
             )
             .keyframeAnimator(initialValue: CGFloat.zero, trigger: viewModel.passwordShakeTrigger) { content, offset in
@@ -312,6 +316,13 @@ struct LoginView: View {
         .onChange(of: viewModel.password) {
             viewModel.passwordErrorMessage = nil
         }
+    }
+
+    // Figma Text Input 상태 우선순위: Invalid(빨강 2px) > Focused(브랜드 블루 2px) > Enabled(1px).
+    private func fieldBorderColor(hasError: Bool, isFocused: Bool) -> Color {
+        if hasError { return Colors.borderDanger }
+        if isFocused { return Colors.fillBrand }
+        return Colors.fieldBorder
     }
 
     private func errorFooter(_ message: String) -> some View {

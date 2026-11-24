@@ -14,7 +14,6 @@ final class LoginViewModel {
     var isSchoolEmailDomainSheetVisible = false
     var hasMultipleSchoolEmailDomains: Bool { schoolEmailDomains.count > 1 }
 
-    var emailErrorMessage: String?
     var passwordErrorMessage: String?
     var emailShakeTrigger: Int = 0
     var passwordShakeTrigger: Int = 0
@@ -23,7 +22,7 @@ final class LoginViewModel {
     var isLockedOut: Bool { lockoutRemainingSeconds > 0 }
     var isLoginSucceeded = false
     var isSnackbarVisible = false
-    var snackbarMessage = "비밀번호를 5회 틀렸어요"
+    var snackbarMessage = "비밀번호 입력 횟수를 초과했어요"
     var snackbarIcon: ImageResource = .alertIconLarge
     var isRestrictedAccountDialogVisible = false
     var isPasswordResetRequested = false
@@ -74,7 +73,6 @@ final class LoginViewModel {
                     email: "\(emailLocalPart)@\(selectedSchoolEmailDomain)",
                     password: password
                 )
-                emailErrorMessage = nil
                 passwordErrorMessage = nil
                 failedAttemptCount = 0
                 // 1.1.1 매장 선택 화면이 아직 없어 바로 메뉴 홈으로 이동한다.
@@ -85,15 +83,11 @@ final class LoginViewModel {
                     return
                 }
 
-                if failure.isEmailInvalid {
-                    emailErrorMessage = "이메일을 다시 확인해 주세요"
+                // 이메일·비밀번호 중 무엇이 잘못됐는지 구분해 알려주지 않는다. 두 입력창 다 흔들며
+                // 강조하고, 문구는 비밀번호 칸 아래에만 남긴다.
+                if failure.isEmailInvalid || failure.isPasswordInvalid {
+                    passwordErrorMessage = "이메일이나 비밀번호를 다시 확인해 주세요"
                     emailShakeTrigger += 1
-                } else {
-                    emailErrorMessage = nil
-                }
-
-                if failure.isPasswordInvalid {
-                    passwordErrorMessage = "비밀번호를 다시 확인해 주세요"
                     passwordShakeTrigger += 1
                 } else {
                     passwordErrorMessage = nil
@@ -147,7 +141,7 @@ final class LoginViewModel {
 
     private func startLockout() {
         lockoutRemainingSeconds = Self.lockoutDurationSeconds - 1
-        snackbarMessage = "비밀번호를 5회 틀렸어요"
+        snackbarMessage = "비밀번호 입력 횟수를 초과했어요"
         snackbarIcon = .alertIconLarge
         showSnackbar()
 
