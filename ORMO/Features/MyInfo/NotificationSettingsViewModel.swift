@@ -34,6 +34,12 @@ final class NotificationSettingsViewModel {
     private(set) var isSystemNotificationDenied = false
     private(set) var isSystemLocationDenied = false
 
+    // 토글의 실제 on/off 표시는 사용자가 마지막으로 설정한 값과 OS 권한 상태를 함께 반영한다.
+    // OS에서 꺼져 있으면 사용자가 예전에 켜뒀던 값과 상관없이 기기 실제 상태대로 꺼진 채로 보여준다.
+    var isOrderNotificationEffectivelyOn: Bool { isOrderNotificationEnabled && !isSystemNotificationDenied }
+    var isLockScreenLiveStatusEffectivelyOn: Bool { isLockScreenLiveStatusEnabled && !isSystemNotificationDenied }
+    var isLocationEffectivelyOn: Bool { isLocationEnabled && !isSystemLocationDenied }
+
     private let defaults: UserDefaults
 
     init(defaults: UserDefaults = .standard) {

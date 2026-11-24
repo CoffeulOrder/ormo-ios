@@ -14,7 +14,7 @@ struct MyInfoView: View {
                     profileCard
                     listItem("주문 내역", action: orderHistoryTapped)
                     listItem("비밀번호 바꾸기", action: changePasswordTapped)
-                    listItem("알림 설정", verticalPadding: Spacing.spacing16, action: notificationSettingsTapped)
+                    listItem("권한 설정", verticalPadding: Spacing.spacing16, action: notificationSettingsTapped)
                     listItem("약관 및 정책", action: termsTapped)
                     listItem("로그아웃", action: logoutTapped)
                     listItem("탈퇴하기", textColor: Colors.textQuaternary, action: withdrawTapped)
