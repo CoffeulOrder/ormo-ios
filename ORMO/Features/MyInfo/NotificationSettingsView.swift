@@ -11,20 +11,44 @@ struct NotificationSettingsView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     if viewModel.isSystemNotificationDenied {
-                        systemDisabledCallout
+                        disabledCallout(
+                            title: "ORMO 알림이 꺼져 있어요",
+                            message: "주문 알림을 받으려면\n휴대폰 설정에서 알림을 켜주세요"
+                        )
                     }
+                    if viewModel.isSystemLocationDenied {
+                        disabledCallout(
+                            title: "위치 권한이 꺼져 있어요",
+                            message: "매장까지 거리를 보려면 휴대폰 설정에서\n위치를 켜 주세요"
+                        )
+                    }
+
+                    sectionHeader("알림")
                     listItem(
                         title: "주문 알림",
                         description: "음료가 준비되거나\n주문 상태가 변경되면 알려드려요",
                         isOn: Binding(
                             get: { viewModel.isOrderNotificationEnabled },
                             set: { viewModel.orderNotificationToggled(to: $0) }
-                        )
+                        ),
+                        isDisabled: viewModel.isSystemNotificationDenied
                     )
                     listItem(
                         title: "잠금 화면 실시간 현황",
                         description: "주문 상태를 잠금 화면에서 확인할 수 있어요",
-                        isOn: $viewModel.isLockScreenLiveStatusEnabled
+                        isOn: $viewModel.isLockScreenLiveStatusEnabled,
+                        isDisabled: viewModel.isSystemNotificationDenied
+                    )
+
+                    sectionHeader("위치")
+                    listItem(
+                        title: "내 위치 사용",
+                        description: "매장까지 거리와 도보 시간을 보여줘요",
+                        isOn: Binding(
+                            get: { viewModel.isLocationEnabled },
+                            set: { viewModel.locationToggled(to: $0) }
+                        ),
+                        isDisabled: viewModel.isSystemLocationDenied
                     )
                 }
             }
@@ -32,17 +56,21 @@ struct NotificationSettingsView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(Colors.backgroundDefault.ignoresSafeArea())
         .navigationBarHidden(true)
-        .task { await viewModel.refreshSystemNotificationStatus() }
+        .task {
+            await viewModel.refreshSystemNotificationStatus()
+            viewModel.refreshSystemLocationStatus()
+        }
         .onChange(of: scenePhase) {
             if scenePhase == .active {
                 Task { await viewModel.refreshSystemNotificationStatus() }
+                viewModel.refreshSystemLocationStatus()
             }
         }
     }
 
     private var topNavigationBar: some View {
         ZStack {
-            Text("알림 설정")
+            Text("권한 설정")
                 .font(Typography.bodyLgSemibold)
                 .foregroundStyle(Colors.textStrong)
 
@@ -64,7 +92,7 @@ struct NotificationSettingsView: View {
         .background(Colors.backgroundDefault)
     }
 
-    private var systemDisabledCallout: some View {
+    private func disabledCallout(title: String, message: String) -> some View {
         Button(action: viewModel.openSystemSettingsTapped) {
             HStack(alignment: .top, spacing: Spacing.spacing8) {
                 Image(.calloutWarningIcon)
@@ -73,10 +101,10 @@ struct NotificationSettingsView: View {
                     .frame(width: 20, height: 20)
 
                 VStack(alignment: .leading, spacing: Spacing.spacing2) {
-                    Text("ORMO 알림이 꺼져 있어요")
+                    Text(title)
                         .font(Typography.bodySmBold)
                         .foregroundStyle(Colors.textWarning)
-                    Text("주문 알림을 받으려면\n휴대폰 설정에서 알림을 켜주세요")
+                    Text(message)
                         .font(Typography.bodySmRegular)
                         .foregroundStyle(Colors.textSecondary)
                 }
@@ -93,21 +121,31 @@ struct NotificationSettingsView: View {
         .padding(.bottom, Spacing.spacing8)
     }
 
-    private func listItem(title: String, description: String, isOn: Binding<Bool>) -> some View {
+    private func sectionHeader(_ title: String) -> some View {
+        Text(title)
+            .font(Typography.bodyLgSemibold)
+            .foregroundStyle(Colors.textSecondary)
+            .padding(.horizontal, Spacing.spacing24)
+            .padding(.top, Spacing.spacing16)
+            .padding(.bottom, Spacing.spacing8)
+    }
+
+    private func listItem(title: String, description: String, isOn: Binding<Bool>, isDisabled: Bool = false) -> some View {
         HStack(spacing: Spacing.spacing12) {
             VStack(alignment: .leading, spacing: Spacing.spacing2) {
                 Text(title)
                     .font(Typography.bodyMdMedium)
-                    .foregroundStyle(Colors.textPrimary)
+                    .foregroundStyle(isDisabled ? Colors.textQuaternary : Colors.textPrimary)
                 Text(description)
                     .font(Typography.bodySmRegular)
-                    .foregroundStyle(Colors.textTertiary)
+                    .foregroundStyle(isDisabled ? Colors.textQuaternary : Colors.textTertiary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
             Toggle("", isOn: isOn)
                 .labelsHidden()
                 .tint(Colors.fillBrand)
+                .disabled(isDisabled)
         }
         .padding(.horizontal, Spacing.spacing24)
         .padding(.vertical, Spacing.spacing16)

@@ -114,6 +114,7 @@ struct HomeMenuView: View {
         .task {
             await viewModel.loadIfNeeded()
             viewModel.observeLiveOrderIfNeeded()
+            LocationPermissionManager.shared.requestAuthorizationIfNeeded()
         }
     }
 
