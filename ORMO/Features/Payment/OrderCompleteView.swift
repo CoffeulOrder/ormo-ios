@@ -23,22 +23,30 @@ struct OrderCompleteView: View {
 
     var body: some View {
         ZStack {
-            VStack(spacing: 0) {
-                Spacer()
+            GeometryReader { proxy in
+                // Figma 캔버스가 375pt 기준이라, 너비 비율로 두 여백(X 아이콘-컵 31 · 컵-픽업번호 46)을
+                // 같은 비율로 스케일한다. 화면 높이와 무관하게 폭에 맞춰 반응형으로 늘고 줄어든다.
+                let scale = proxy.size.width / 375
 
-                symbolView
+                VStack(spacing: 0) {
+                    topNavigationBar
+                        .padding(.bottom, 31 * scale)
 
-                pickupNumberLabel
-                    .padding(.top, Spacing.spacing41)
+                    symbolView
 
-                infoCard
-                    .padding(.top, Spacing.spacing16)
+                    pickupNumberLabel
+                        .padding(.top, 46 * scale)
 
-                Spacer()
+                    infoCard(scale: scale)
+                        .padding(.top, Spacing.spacing16)
 
-                bottomCTA
+                    Spacer()
+
+                    bottomCTA(scale: scale)
+                }
+                .frame(width: proxy.size.width, height: proxy.size.height, alignment: .top)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .ignoresSafeArea(.container, edges: .bottom)
             .background(Colors.backgroundDefault.ignoresSafeArea())
 
             if showNotificationSheet {
@@ -47,6 +55,23 @@ struct OrderCompleteView: View {
         }
         .navigationBarHidden(true)
         .onAppear { appeared = true }
+    }
+
+    private var topNavigationBar: some View {
+        HStack(spacing: 0) {
+            Spacer()
+
+            Button(action: closeTapped) {
+                Image(.closeIcon)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 24, height: 24)
+                    .frame(width: 40, height: 40)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, Spacing.spacing8)
+        .frame(height: 56)
     }
 
     // Lottie(ormo-cup-check-badge, 375×812 캔버스)에 "ORMO Symbol"이 Figma 시작 좌표(137,233)에서
@@ -61,6 +86,7 @@ struct OrderCompleteView: View {
                     .resizable()
                     .frame(width: 375, height: 812)
                     .offset(x: -137, y: -117)
+                    .allowsHitTesting(false)
             }
     }
 
@@ -89,8 +115,9 @@ struct OrderCompleteView: View {
         }
     }
 
-    private var infoCard: some View {
-        VStack(spacing: 10) { // Figma 원본값이 10px (스페이싱 토큰 중 일치 항목 없음)
+    // Figma 원본 행간은 10px이지만, 더 여유 있게 보이도록 20px(375pt 기준)로 늘리고 화면 폭 비율로 스케일한다.
+    private func infoCard(scale: CGFloat) -> some View {
+        VStack(spacing: 20 * scale) {
             infoRow("매장", storeName)
             infoRow("내 앞 대기", "\(queueCount)건")
             infoRow("현재 상태", "매장에서 확인하고 있어요")
@@ -127,7 +154,7 @@ struct OrderCompleteView: View {
         .font(Typography.bodyMdRegular)
     }
 
-    private var bottomCTA: some View {
+    private func bottomCTA(scale: CGFloat) -> some View {
         VStack(spacing: 0) {
             LinearGradient(
                 colors: [Colors.backgroundDefault.opacity(0), Colors.backgroundDefault],
@@ -160,7 +187,7 @@ struct OrderCompleteView: View {
                 .buttonStyle(.plain)
             }
             .padding(.horizontal, Spacing.spacing20)
-            .padding(.bottom, Spacing.spacing32)
+            .padding(.bottom, 32 * scale)
             .background(Colors.backgroundDefault)
         }
         .keyframeAnimator(initialValue: FadeUpMotion(translateY: 32), trigger: appeared) { content, motion in
@@ -200,6 +227,10 @@ struct OrderCompleteView: View {
     }
 
     private func addMoreOrderTapped() {
+        router.path = NavigationPath()
+    }
+
+    private func closeTapped() {
         router.path = NavigationPath()
     }
 }
