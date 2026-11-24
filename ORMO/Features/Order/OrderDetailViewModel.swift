@@ -41,12 +41,14 @@ final class OrderDetailViewModel {
         guard !Task.isCancelled else { return }
         order.status = .making
         order.madeAt = Date()
+        LocalStore.shared.updateOrder(order)
         await OrderLiveActivityController.update(for: order, queueCount: 2)
 
         try? await Task.sleep(for: .seconds(4))
         guard !Task.isCancelled else { return }
         order.status = .waitingPickup
         order.waitingAt = Date()
+        LocalStore.shared.updateOrder(order)
         await OrderPushNotifier.scheduleIfNeeded(for: order)
         await OrderLiveActivityController.update(for: order)
 
@@ -54,6 +56,7 @@ final class OrderDetailViewModel {
         guard !Task.isCancelled else { return }
         order.status = .pickedUp
         order.pickedUpAt = Date()
+        LocalStore.shared.updateOrder(order)
         await OrderLiveActivityController.end(for: order)
     }
 
@@ -62,6 +65,7 @@ final class OrderDetailViewModel {
         progressionTask?.cancel()
         order.status = .userCancelled
         order.userCancelledAt = Date()
+        LocalStore.shared.updateOrder(order)
         Task { await OrderLiveActivityController.end(for: order) }
     }
 

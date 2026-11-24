@@ -78,11 +78,34 @@ struct WithdrawView: View {
             .frame(height: 56)
             .overlay(
                 RoundedRectangle(cornerRadius: Radius.lg)
-                    .stroke(Colors.fieldBorder, lineWidth: 1)
+                    .stroke(
+                        viewModel.isPasswordInvalid ? Colors.borderDanger : Colors.fieldBorder,
+                        lineWidth: viewModel.isPasswordInvalid ? 2 : 1
+                    )
             )
+
+            if viewModel.isPasswordInvalid {
+                errorFooter("비밀번호가 올바르지 않아요")
+            }
         }
         .padding(Spacing.spacing20)
         .frame(maxWidth: .infinity, alignment: .leading)
+        .onChange(of: viewModel.password) {
+            viewModel.isPasswordInvalid = false
+        }
+    }
+
+    private func errorFooter(_ message: String) -> some View {
+        HStack(spacing: Spacing.spacing4) {
+            Image(.errorIcon)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 16, height: 16)
+
+            Text(message)
+                .font(Typography.bodySmRegular)
+                .foregroundStyle(Colors.textDanger)
+        }
     }
 
     private var infoRows: some View {

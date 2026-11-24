@@ -1,7 +1,12 @@
 import Foundation
 
+struct ProfileFetchError: Error {}
+
 struct MockUserProfileRepository: UserProfileRepository {
     func fetchProfile() async throws -> UserProfile {
-        UserProfile(name: "가을", email: "ormo@eulji.ac.kr", schoolName: "을지대학교")
+        guard let account = LocalStore.shared.currentAccount else {
+            throw ProfileFetchError()
+        }
+        return UserProfile(name: account.name, email: account.email, schoolName: account.schoolName)
     }
 }

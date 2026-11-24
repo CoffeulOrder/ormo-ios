@@ -14,14 +14,21 @@ enum OrderStatus: Hashable, Codable {
     case unclaimed
 }
 
-struct OrderItem: Identifiable, Hashable {
-    let id = UUID()
+struct OrderItem: Identifiable, Hashable, Codable {
+    let id: UUID
     let name: String
     let quantity: Int
     let optionsSummary: String
+
+    init(id: UUID = UUID(), name: String, quantity: Int, optionsSummary: String) {
+        self.id = id
+        self.name = name
+        self.quantity = quantity
+        self.optionsSummary = optionsSummary
+    }
 }
 
-struct Order: Hashable {
+struct Order: Hashable, Codable {
     let pickupNumber: Int
     let storeName: String
     var status: OrderStatus

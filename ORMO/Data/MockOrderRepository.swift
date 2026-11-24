@@ -1,12 +1,18 @@
 import Foundation
 
+struct OrderNotFoundError: Error {}
+
 struct MockOrderRepository: OrderRepository {
     func fetchOrder(pickupNumber: Int, storeName: String) async throws -> Order {
-        .mock(pickupNumber: pickupNumber, storeName: storeName)
+        guard let order = LocalStore.shared.order(pickupNumber: pickupNumber, storeName: storeName) else {
+            throw OrderNotFoundError()
+        }
+        return order
     }
 }
 
 extension Order {
+    // OrderDetailViewModel이 실제 주문을 받아오기 전까지 잠깐 보여줄 자리표시자, 그리고 Preview 전용.
     static func mock(pickupNumber: Int, storeName: String) -> Order {
         let now = Date()
         return Order(

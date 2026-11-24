@@ -12,4 +12,5 @@ struct SignUpVerificationRequestFailure: Error {
 
 protocol SignUpRepository {
     func requestVerificationCode(email: String) async throws
+    func completeSignUp(email: String, password: String, name: String) async throws
 }

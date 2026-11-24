@@ -1,18 +1,11 @@
 import Foundation
 
-// 결제수단별 트리거: 신용·체크카드 → 처음엔 실패, 재시도하면 성공. 네이버페이 → 결제 가능 시간 만료.
-// 토스페이·카카오페이(기본값) → 바로 결제 성공.
+// 실제 PG사 연동 전까지는 결제수단과 상관없이 항상 성공시켜, 결제 이후 전체 흐름(주문 완료·추적·내역)을
+// 실제로 테스트할 수 있게 한다. 실패·만료 화면(PaymentFailureView·PaymentExpiredView) 자체는 그대로
+// 남아있고 Preview로 확인할 수 있다.
 struct MockPaymentRepository: PaymentRepository {
     func submitPayment(method: PaymentMethod, totalPrice: Int, previousFailureCount: Int) async throws -> PaymentOutcome {
-        try? await Task.sleep(for: .seconds(2))
-
-        switch method {
-        case .card:
-            return previousFailureCount > 0 ? .success : .failure
-        case .naverPay:
-            return .expired
-        case .tossPay, .kakaoPay:
-            return .success
-        }
+        try? await Task.sleep(for: .seconds(1.2))
+        return .success
     }
 }

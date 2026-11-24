@@ -112,8 +112,7 @@ struct HomeMenuView: View {
         }
         .task {
             await viewModel.loadIfNeeded()
-            // 실제 주문이 접수된 뒤에만 떠야 한다. 결제·주문 접수 화면이 아직 없어
-            // observeLiveOrderIfNeeded()는 그 화면이 생기면 주문 완료 시점에 호출한다.
+            viewModel.observeLiveOrderIfNeeded()
         }
     }
 
@@ -239,7 +238,8 @@ struct HomeMenuView: View {
     }
 
     private func liveOrderTapped() {
-        // TODO: 4.3.x 주문 상세 화면으로 이동
+        guard let liveOrder = viewModel.liveOrder else { return }
+        router.path.append(HomeRoute.orderDetail(pickupNumber: liveOrder.pickupNumber, storeName: liveOrder.storeName))
     }
 
     private var emptyMenuResultView: some View {

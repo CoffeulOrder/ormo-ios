@@ -4,6 +4,7 @@ struct SignUpProfileView: View {
     @Environment(SignUpRouter.self) private var router
     @State private var viewModel = SignUpProfileViewModel()
     @State private var termsViewModel = TermsAgreementViewModel()
+    private let signUpRepository: SignUpRepository = MockSignUpRepository()
     @State private var isTermsSheetVisible = false
     @State private var isTitleVisible = false
     @State private var isBottomCTAVisible = false
@@ -40,8 +41,15 @@ struct SignUpProfileView: View {
         .onChange(of: termsViewModel.isCompleted) {
             if termsViewModel.isCompleted {
                 isTermsSheetVisible = false
-                router.push(.completion)
                 termsViewModel.isCompleted = false
+                Task {
+                    try? await signUpRepository.completeSignUp(
+                        email: router.signUpEmail,
+                        password: router.signUpPassword,
+                        name: router.userName
+                    )
+                    router.push(.completion)
+                }
             }
         }
     }
@@ -328,6 +336,7 @@ struct SignUpProfileView: View {
             viewModel.confirmPasswordTapped()
         case .passwordConfirmation:
             guard viewModel.isPasswordConfirmationValid else { return }
+            router.signUpPassword = viewModel.password
             isTermsSheetVisible = true
         }
     }
