@@ -27,6 +27,9 @@ final class OrderDetailViewModel {
         progressionTask = Task {
             guard let fetched = try? await repository.fetchOrder(pickupNumber: order.pickupNumber, storeName: order.storeName) else { return }
             order = fetched
+            // 실시간 현황을 켜둔 사용자에게는 잠금 화면 Live Activity로, 꺼둔 사용자에게는
+            // OrderPushNotifier의 대체 알림으로 보여준다 (둘 다 켤 일은 없다).
+            await OrderLiveActivityController.start(for: order, queueCount: 3)
             await runProgression()
         }
     }
@@ -38,16 +41,20 @@ final class OrderDetailViewModel {
         guard !Task.isCancelled else { return }
         order.status = .making
         order.madeAt = Date()
+        await OrderLiveActivityController.update(for: order, queueCount: 2)
 
         try? await Task.sleep(for: .seconds(4))
         guard !Task.isCancelled else { return }
         order.status = .waitingPickup
         order.waitingAt = Date()
+        await OrderPushNotifier.scheduleIfNeeded(for: order)
+        await OrderLiveActivityController.update(for: order)
 
         try? await Task.sleep(for: .seconds(4))
         guard !Task.isCancelled else { return }
         order.status = .pickedUp
         order.pickedUpAt = Date()
+        await OrderLiveActivityController.end(for: order)
     }
 
     // 사용자가 "주문 취소하기"를 눌렀을 때. 자동 진행 중이었다면 멈추고 취소 상태로 바꾼다.
@@ -55,6 +62,7 @@ final class OrderDetailViewModel {
         progressionTask?.cancel()
         order.status = .userCancelled
         order.userCancelledAt = Date()
+        Task { await OrderLiveActivityController.end(for: order) }
     }
 
     deinit {

@@ -8,6 +8,15 @@ final class NotificationSettingsViewModel {
         static let isLockScreenLiveStatusEnabled = "notificationSettings.isLockScreenLiveStatusEnabled"
     }
 
+    // 주문 상태가 바뀔 때 알림을 보내야 하는 다른 코드(OrderPushNotifier 등)가, 화면을 띄우지 않고도
+    // 저장된 알림 설정을 바로 읽을 수 있도록 하는 정적 접근자.
+    static var isOrderNotificationEnabledSetting: Bool {
+        UserDefaults.standard.object(forKey: DefaultsKey.isOrderNotificationEnabled) as? Bool ?? true
+    }
+    static var isLockScreenLiveStatusEnabledSetting: Bool {
+        UserDefaults.standard.object(forKey: DefaultsKey.isLockScreenLiveStatusEnabled) as? Bool ?? true
+    }
+
     // Switch는 저장 버튼 없이 바로 반영돼야 하므로, 바뀔 때마다 즉시 UserDefaults에 적는다.
     var isOrderNotificationEnabled: Bool {
         didSet { UserDefaults.standard.set(isOrderNotificationEnabled, forKey: DefaultsKey.isOrderNotificationEnabled) }
