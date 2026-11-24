@@ -1,6 +1,6 @@
 import Foundation
 
-enum OrderStatus {
+enum OrderStatus: Hashable {
     case confirming
     case making
     case waitingPickup
@@ -14,14 +14,14 @@ enum OrderStatus {
     case unclaimed
 }
 
-struct OrderItem: Identifiable {
+struct OrderItem: Identifiable, Hashable {
     let id = UUID()
     let name: String
     let quantity: Int
     let optionsSummary: String
 }
 
-struct Order {
+struct Order: Hashable {
     let pickupNumber: Int
     let storeName: String
     var status: OrderStatus
@@ -40,4 +40,8 @@ struct Order {
 
 protocol OrderRepository {
     func fetchOrder(pickupNumber: Int, storeName: String) async throws -> Order
+}
+
+protocol OrderHistoryRepository {
+    func fetchOrderHistory() async throws -> [Order]
 }

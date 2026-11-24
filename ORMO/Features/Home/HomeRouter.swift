@@ -14,8 +14,10 @@ enum HomeRoute: Hashable {
     case paymentExpired
     case orderComplete(pickupNumber: Int, storeName: String, queueCount: Int)
     case orderDetail(pickupNumber: Int, storeName: String)
+    case orderDetailHistory(Order)
     case receipt(pickupNumber: Int, storeName: String, totalPrice: Int, paidAt: Date)
     case myInfo
+    case orderHistory
     case changePassword(email: String)
     case notificationSettings
     case termsAndPolicy

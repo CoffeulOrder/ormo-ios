@@ -124,7 +124,7 @@ struct MyInfoView: View {
     }
 
     private func orderHistoryTapped() {
-        // TODO: 4.2.1 내 주문 목록 (이번 범위 밖)
+        router.path.append(HomeRoute.orderHistory)
     }
 
     private func changePasswordTapped() {
