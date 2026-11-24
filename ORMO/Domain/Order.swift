@@ -1,6 +1,6 @@
 import Foundation
 
-enum OrderStatus: Hashable {
+enum OrderStatus: Hashable, Codable {
     case confirming
     case making
     case waitingPickup
