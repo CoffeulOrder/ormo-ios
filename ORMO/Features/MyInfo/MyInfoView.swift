@@ -119,6 +119,7 @@ struct MyInfoView: View {
             }
             .padding(.horizontal, Spacing.spacing24)
             .padding(.vertical, verticalPadding)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
