@@ -4,6 +4,7 @@ import SwiftUI
 // "반짝임(shimmer) 애니메이션은 개발에서 적용"이라고 명시돼 있어, 뼈대 모양 위에
 // 대각선 밝은 띠가 반복해서 지나가는 효과를 직접 구현했다.
 struct SkeletonLoadingView: View {
+    @Environment(\.colorScheme) private var colorScheme
     @State private var shimmerPhase: CGFloat = -1
 
     var body: some View {
@@ -55,7 +56,7 @@ struct SkeletonLoadingView: View {
     private var shimmerBand: some View {
         GeometryReader { proxy in
             LinearGradient(
-                colors: [.clear, Color.white.opacity(0.7), .clear],
+                colors: [.clear, Color.white.opacity(colorScheme == .dark ? 0.12 : 0.7), .clear],
                 startPoint: .top,
                 endPoint: .bottom
             )
