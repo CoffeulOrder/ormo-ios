@@ -69,10 +69,14 @@ struct HomeMenuView: View {
                         OrderCompleteView(pickupNumber: pickupNumber, storeName: storeName, queueCount: queueCount)
                     case .orderDetail(let pickupNumber, let storeName):
                         OrderDetailView(pickupNumber: pickupNumber, storeName: storeName)
+                    case .orderDetailHistory(let order):
+                        OrderDetailView(order: order)
                     case .receipt(let pickupNumber, let storeName, let totalPrice, let paidAt):
                         ReceiptView(pickupNumber: pickupNumber, storeName: storeName, totalPrice: totalPrice, paidAt: paidAt)
                     case .myInfo:
                         MyInfoView(onLogout: onLogout)
+                    case .orderHistory:
+                        OrderHistoryView(cart: cart)
                     case .changePassword(let email):
                         ChangePasswordView(email: email, onLogout: onLogout)
                     case .notificationSettings:

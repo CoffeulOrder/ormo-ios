@@ -56,8 +56,9 @@ struct OrderDetailView: View {
         _viewModel = State(initialValue: OrderDetailViewModel(pickupNumber: pickupNumber, storeName: storeName))
     }
 
-    // 프리뷰 전용: 특정 상태를 고정해서 보여준다.
-    fileprivate init(order: Order) {
+    // 특정 상태를 고정해서 보여준다. 주문 내역(완료·취소된 지난 주문)에서 상세로 들어갈 때처럼,
+    // 실시간 진행 상태를 처음부터 다시 재생하면 안 되는 곳에서 쓴다.
+    init(order: Order) {
         _viewModel = State(initialValue: OrderDetailViewModel(order: order))
     }
 
