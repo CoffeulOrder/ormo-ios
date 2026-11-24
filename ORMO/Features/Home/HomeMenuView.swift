@@ -89,6 +89,7 @@ struct HomeMenuView: View {
                         WithdrawView(onWithdrawn: { onLogout(nil) })
                     }
                 }
+                .enableSwipeBackGesture()
         }
         .environment(router)
     }
