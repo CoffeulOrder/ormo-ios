@@ -6,6 +6,7 @@ struct SignUpEmailView: View {
     @State private var viewModel = SignUpEmailViewModel()
     @State private var isTitleVisible = false
     @State private var isBottomCTAVisible = false
+    @FocusState private var isEmailFocused: Bool
     var onNavigateToLogin: (String) -> Void = { _ in }
 
     var body: some View {
@@ -96,6 +97,7 @@ struct SignUpEmailView: View {
                 .keyboardType(.emailAddress)
                 .submitLabel(.done)
                 .onSubmit(submitTapped)
+                .focused($isEmailFocused)
 
                 Text("@\(viewModel.selectedSchoolEmailDomain)")
                     .foregroundStyle(Colors.textQuaternary)
@@ -115,10 +117,7 @@ struct SignUpEmailView: View {
             .frame(height: 56)
             .overlay(
                 RoundedRectangle(cornerRadius: Radius.lg)
-                    .stroke(
-                        viewModel.fieldErrorMessage == nil ? Colors.fieldBorder : Colors.borderDanger,
-                        lineWidth: viewModel.fieldErrorMessage == nil ? 1 : 2
-                    )
+                    .stroke(fieldBorderColor, lineWidth: viewModel.fieldErrorMessage != nil || isEmailFocused ? 2 : 1)
             )
 
             if let fieldErrorMessage = viewModel.fieldErrorMessage {
@@ -131,6 +130,13 @@ struct SignUpEmailView: View {
         }
         .padding(Spacing.spacing20)
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    // Figma Text Input 상태 우선순위: Invalid(빨강 2px) > Focused(브랜드 블루 2px) > Enabled(1px).
+    private var fieldBorderColor: Color {
+        if viewModel.fieldErrorMessage != nil { return Colors.borderDanger }
+        if isEmailFocused { return Colors.fillBrand }
+        return Colors.fieldBorder
     }
 
     private func errorFooter(_ message: String) -> some View {
