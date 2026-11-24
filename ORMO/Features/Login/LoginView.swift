@@ -49,6 +49,7 @@ struct LoginView: View {
                         })
                     }
                 }
+                .enableSwipeBackGesture()
         }
         .environment(signUpRouter)
     }
