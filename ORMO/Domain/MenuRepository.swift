@@ -34,3 +34,11 @@ protocol MenuRepository {
     func fetchStoreMenu(storeId: String) async throws -> StoreMenu
     func fetchItemDetail(itemId: String) async throws -> MenuItemDetail
 }
+
+// 메뉴를 불러오다 생길 수 있는 예외 상황. 서버가 실제로 구분해 내려주기 전까지는
+// Mock에서 특정 storeId로 재현한다 (MockMenuRepository 참고).
+enum MenuLoadError: Error {
+    case network
+    case serviceUnavailable
+    case sessionExpired
+}
