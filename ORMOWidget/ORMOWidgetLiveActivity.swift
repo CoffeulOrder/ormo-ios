@@ -17,24 +17,21 @@ struct ORMOWidgetLiveActivity: Widget {
                 .activitySystemActionForegroundColor(.white)
         } dynamicIsland: { context in
             DynamicIsland {
-                DynamicIslandExpandedRegion(.leading) {
-                    Text("\(context.attributes.pickupNumber)")
-                        .font(.system(size: 20, weight: .bold))
-                }
-                DynamicIslandExpandedRegion(.trailing) {
-                    EmptyView()
-                }
                 DynamicIslandExpandedRegion(.bottom) {
-                    Text(OrderActivityCardView.title(for: context.state.phase))
-                        .font(.system(size: 15, weight: .semibold))
+                    OrderActivityDynamicIslandExpandedView(attributes: context.attributes, state: context.state)
                 }
             } compactLeading: {
-                Text("\(context.attributes.pickupNumber)")
-                    .font(.system(size: 13, weight: .bold))
+                Text("ORMO")
+                    .font(.system(size: 11, weight: .heavy))
+                    .foregroundStyle(.white)
             } compactTrailing: {
-                Image(systemName: context.state.phase == .pickedUp ? "checkmark.circle.fill" : "cup.and.saucer.fill")
+                Text("\(context.attributes.pickupNumber)")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(OrderActivityDynamicIslandExpandedView.blue300)
             } minimal: {
-                Image(systemName: context.state.phase == .pickedUp ? "checkmark.circle.fill" : "cup.and.saucer.fill")
+                Text("\(context.attributes.pickupNumber)")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(OrderActivityDynamicIslandExpandedView.blue300)
             }
         }
     }
@@ -205,6 +202,132 @@ struct OrderActivityCardView: View {
         case .waitingPickup: .white.opacity(isActive ? 1 : 0.7)
         case .pickedUp: Self.textTertiary
         default: isActive ? Self.textBrand : Self.textTertiary
+        }
+    }
+}
+
+// Figma "Live Activity · Dynamic Island" — Expanded. 아일랜드는 상태와 상관없이 항상 검정이고,
+// 그 위에 잠금 화면 카드와 같은 구성(픽업 번호 타일 + 제목·설명 + 3단계 바)을 밝은 브랜드 색으로 얹는다.
+struct OrderActivityDynamicIslandExpandedView: View {
+    let attributes: OrderActivityAttributes
+    let state: OrderActivityAttributes.ContentState
+
+    static let blue300 = Color(red: 0x67 / 255, green: 0xaf / 255, blue: 0xfe / 255)
+    private static let blue400 = Color(red: 0x45 / 255, green: 0x9c / 255, blue: 0xff / 255)
+    private static let grey800 = Color(red: 0x33 / 255, green: 0x3d / 255, blue: 0x4b / 255)
+    private static let grey700 = Color(red: 0x4e / 255, green: 0x59 / 255, blue: 0x68 / 255)
+    private static let grey400 = Color(red: 0xb0 / 255, green: 0xb8 / 255, blue: 0xc1 / 255)
+
+    private static let timeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        return formatter
+    }()
+
+    var body: some View {
+        // Dynamic Island Expanded는 높이 제한(84~160pt)이 빠듯해서, 잠금 화면 카드보다
+        // 세로 여백·크기를 더 줄여야 단계 라벨까지 안 잘리고 다 보인다.
+        VStack(alignment: .leading, spacing: 4) {
+            header
+            HStack(spacing: 10) {
+                pickupNumberTile
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(OrderActivityCardView.title(for: state.phase))
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(.white)
+                    Text(subtitle)
+                        .font(.system(size: 12, weight: .regular))
+                        .foregroundStyle(Self.grey400)
+                }
+            }
+            stepsBar
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 4)
+        .padding(.bottom, 4)
+    }
+
+    private var header: some View {
+        HStack {
+            Text("ORMO")
+                .font(.system(size: 12, weight: .heavy))
+                .foregroundStyle(.white)
+            Spacer()
+            Text(headerLabel)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(Self.blue300)
+        }
+    }
+
+    private var pickupNumberTile: some View {
+        RoundedRectangle(cornerRadius: 14)
+            .fill(Self.grey800)
+            .frame(width: 40, height: 40)
+            .overlay(
+                Text("\(attributes.pickupNumber)")
+                    .font(.system(size: 17, weight: .bold))
+                    .foregroundStyle(Self.blue300)
+            )
+    }
+
+    private var stepsBar: some View {
+        VStack(spacing: 4) {
+            HStack(spacing: 4) {
+                ForEach(0..<3, id: \.self) { index in
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(segmentColor(index))
+                        .frame(height: 6)
+                }
+            }
+            HStack(spacing: 8) {
+                stepLabel("주문 확인", isActive: state.phase == .confirming)
+                stepLabel("만드는 중", isActive: state.phase == .making)
+                stepLabel("픽업 대기", isActive: state.phase == .waitingPickup)
+            }
+        }
+    }
+
+    private func stepLabel(_ text: String, isActive: Bool) -> some View {
+        Text(text)
+            .font(.system(size: 10, weight: isActive ? .semibold : .medium))
+            .foregroundStyle(isActive ? Self.blue300 : Self.grey400)
+            .frame(maxWidth: .infinity)
+    }
+
+    private var headerLabel: String {
+        switch state.phase {
+        case .confirming: "주문 확인 중"
+        case .making: "만드는 중"
+        case .waitingPickup: "픽업 대기"
+        case .pickedUp: "픽업 완료"
+        }
+    }
+
+    private var subtitle: String {
+        switch state.phase {
+        case .confirming, .making:
+            if let queueCount = state.queueCount {
+                "\(attributes.storeName) · 내 앞에 \(queueCount)건"
+            } else {
+                attributes.storeName
+            }
+        case .waitingPickup:
+            if let deadline = state.pickupDeadline {
+                "\(Self.timeFormatter.string(from: deadline))까지 받아주세요"
+            } else {
+                "매장에서 받아주세요"
+            }
+        case .pickedUp:
+            "\(attributes.storeName) · 맛있게 드세요"
+        }
+    }
+
+    private func segmentColor(_ index: Int) -> Color {
+        switch state.phase {
+        case .confirming: index == 0 ? Self.blue400 : Self.grey700
+        case .making: index <= 1 ? Self.blue400 : Self.grey700
+        case .waitingPickup: Self.blue400
+        case .pickedUp: Self.grey700
         }
     }
 }
