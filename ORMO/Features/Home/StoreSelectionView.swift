@@ -90,7 +90,9 @@ struct StoreSelectionView: View {
         Button(action: { viewModel.storeTapped(store) }) {
             HStack(spacing: Spacing.spacing12) {
                 VStack(alignment: .leading, spacing: Spacing.spacing12) {
-                    HStack(spacing: Spacing.spacing8) {
+                    // 매장 이름이 길어 2줄로 접히면, 영업 상태 라벨은 줄 사이가 아니라 첫째 줄에
+                    // 맞춰 정렬돼야 한다.
+                    HStack(alignment: .firstTextBaseline, spacing: Spacing.spacing8) {
                         Text(store.name)
                             .font(Typography.bodyMdSemibold)
                             .foregroundStyle(Colors.textPrimary)
