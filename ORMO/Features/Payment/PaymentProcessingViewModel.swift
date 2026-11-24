@@ -36,8 +36,21 @@ final class PaymentProcessingViewModel {
 
         switch result {
         case .success:
+            let pickupNumber = LocalStore.shared.nextPickupNumber()
+            let now = Date()
+            let order = Order(
+                pickupNumber: pickupNumber,
+                storeName: storeName,
+                status: .confirming,
+                items: cart.items.map { OrderItem(name: $0.menuItemName, quantity: $0.quantity, optionsSummary: $0.optionsSummary) },
+                subtotalPrice: totalPrice,
+                paymentMethod: paymentMethod,
+                paidAt: now,
+                confirmedAt: now
+            )
+            LocalStore.shared.addOrder(order)
             cart.clearAfterSuccessfulPayment()
-            completedOrderPickupNumber = Int.random(in: 10...99)
+            completedOrderPickupNumber = pickupNumber
         case .failure:
             cart.recordPaymentFailure()
         case .expired:

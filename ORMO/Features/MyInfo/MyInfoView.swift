@@ -39,14 +39,14 @@ struct MyInfoView: View {
         }
         .alertDialogOverlay(isPresented: $viewModel.isWithdrawBlockedDialogVisible) {
             AlertDialog(
-                title: "진행 중인 주문이 2건 있어요",
+                title: "진행 중인 주문이 \(viewModel.ongoingOrderCount)건 있어요",
                 message: "주문이 끝난 뒤에 탈퇴할 수 있어요",
                 secondaryTitle: "닫기",
                 primaryTitle: "주문 보기",
                 secondaryAction: { viewModel.isWithdrawBlockedDialogVisible = false },
                 primaryAction: {
                     viewModel.isWithdrawBlockedDialogVisible = false
-                    // TODO: 4.2.1 내 주문 목록 (이번 범위 밖)
+                    router.path.append(HomeRoute.orderHistory)
                 }
             )
         }

@@ -6,9 +6,13 @@ final class MyInfoViewModel {
     var isLogoutDialogVisible = false
     var isWithdrawBlockedDialogVisible = false
 
-    // Mock: 진행 중인 주문이 없다고 가정해 탈퇴 안내 화면으로 바로 이어지게 한다.
-    // 실제로는 서버가 진행 중인 주문 수를 알려줘야 판단할 수 있다.
-    let hasOngoingOrders = false
+    private static let ongoingStatuses: Set<OrderStatus> = [.confirming, .making, .waitingPickup]
+
+    var ongoingOrderCount: Int {
+        LocalStore.shared.orders.filter { Self.ongoingStatuses.contains($0.status) }.count
+    }
+
+    var hasOngoingOrders: Bool { ongoingOrderCount > 0 }
 
     private let repository: UserProfileRepository
 

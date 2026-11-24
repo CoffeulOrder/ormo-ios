@@ -5,7 +5,7 @@ enum PickupMethod: Hashable {
     case takeout
 }
 
-enum PaymentMethod: Hashable {
+enum PaymentMethod: Hashable, Codable {
     case card
     case tossPay
     case naverPay

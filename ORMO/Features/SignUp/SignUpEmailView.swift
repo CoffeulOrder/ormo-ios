@@ -193,6 +193,7 @@ struct SignUpEmailView: View {
 
         Task {
             if await viewModel.requestVerificationCode() {
+                router.signUpEmail = viewModel.fullEmail
                 router.push(.verificationCode)
             }
         }

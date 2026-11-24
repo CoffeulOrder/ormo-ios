@@ -1,37 +1,55 @@
 import Foundation
 
-// 실시간 주문 현황 데모용: 실제 결제·주문 접수 기능이 아직 없어서, 화면을 보고 있으면
-// 주문 확인 중(8초) → 만드는 중(10초) → 픽업 대기(12초) → 사라짐(5초) 순서로 자동 반복한다.
-// 각 단계 길이는 데모 시연용으로 짧게 잡은 값이고 실제 서비스 타이밍이 아니다.
+// 홈 화면 하단의 "진행 중인 주문" 바. LocalStore에 실제로 진행 중(픽업 전)인 주문이 있으면 그 상태를
+// 보여주고, 없으면(또는 픽업·취소로 끝나면) 사라진다. OrderDetailViewModel이 다른 화면에서 상태를
+// 바꾸므로, 1초 간격으로 LocalStore를 들여다봐서 바뀐 게 있을 때만 새로 내보낸다.
 struct MockLiveOrderRepository: LiveOrderRepository {
+    private static let terminalStatuses: Set<OrderStatus> = [.pickedUp, .cancelled, .userCancelled, .refunded, .unclaimed]
+
     func observeLiveOrder(storeName: String) -> AsyncStream<LiveOrder?> {
         AsyncStream { continuation in
             let task = Task {
+                var lastSignature: String?
                 while !Task.isCancelled {
-                    continuation.yield(
-                        LiveOrder(pickupNumber: 27, storeName: storeName, stage: .confirming, queueCount: 3, pickupDeadlineText: "")
-                    )
-                    try? await Task.sleep(for: .seconds(8))
-                    guard !Task.isCancelled else { break }
-
-                    continuation.yield(
-                        LiveOrder(pickupNumber: 27, storeName: storeName, stage: .making, queueCount: 2, pickupDeadlineText: "")
-                    )
-                    try? await Task.sleep(for: .seconds(10))
-                    guard !Task.isCancelled else { break }
-
-                    continuation.yield(
-                        LiveOrder(pickupNumber: 27, storeName: storeName, stage: .readyForPickup, queueCount: 0, pickupDeadlineText: "13:30까지 받아주세요")
-                    )
-                    try? await Task.sleep(for: .seconds(12))
-                    guard !Task.isCancelled else { break }
-
-                    continuation.yield(nil)
-                    try? await Task.sleep(for: .seconds(5))
+                    let liveOrder = Self.currentLiveOrder(storeName: storeName)
+                    let signature = liveOrder.map { "\($0.pickupNumber)-\($0.stage)-\($0.queueCount)-\($0.pickupDeadlineText)" }
+                    if signature != lastSignature {
+                        continuation.yield(liveOrder)
+                        lastSignature = signature
+                    }
+                    try? await Task.sleep(for: .seconds(1))
                 }
                 continuation.finish()
             }
             continuation.onTermination = { _ in task.cancel() }
         }
+    }
+
+    private static func currentLiveOrder(storeName: String) -> LiveOrder? {
+        guard let order = LocalStore.shared.orders.first(where: {
+            $0.storeName == storeName && !terminalStatuses.contains($0.status)
+        }) else { return nil }
+
+        let stage: OrderStage
+        let queueCount: Int
+        let pickupDeadlineText: String
+        switch order.status {
+        case .confirming:
+            stage = .confirming
+            queueCount = 3
+            pickupDeadlineText = ""
+        case .making:
+            stage = .making
+            queueCount = 2
+            pickupDeadlineText = ""
+        case .waitingPickup:
+            stage = .readyForPickup
+            queueCount = 0
+            pickupDeadlineText = "13:30까지 받아주세요"
+        case .cancelled, .pickedUp, .userCancelled, .refunded, .unclaimed:
+            return nil
+        }
+
+        return LiveOrder(pickupNumber: order.pickupNumber, storeName: order.storeName, stage: stage, queueCount: queueCount, pickupDeadlineText: pickupDeadlineText)
     }
 }
