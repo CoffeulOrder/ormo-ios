@@ -7,29 +7,44 @@ final class HomeMenuViewModel {
         case category(String)
     }
 
+    // 6.1.1(네트워크 오류)·6.1.3(서비스 점검)·6.1.2(로그인 만료)·6.1.4(로딩) 예외 화면을
+    // 이 상태 하나로 구분해서 그린다.
+    enum LoadState: Equatable {
+        case loading
+        case loaded
+        case networkError
+        case serviceUnavailable
+        case sessionExpired
+    }
+
     var storeName: String = ""
     var recentOrders: [MenuItem] = []
     var categories: [MenuCategory] = []
     var unavailableNotice: String?
     var selectedSection: Section?
-    var isLoaded = false
+    var loadState: LoadState = .loading
     // 탭을 직접 눌렀을 때만 채워진다. 스크롤로 감지된 섹션 변경은 이 값을 건드리지 않아
     // 콘텐츠 스크롤과 탭 하이라이트 추적이 서로를 되돌리는 피드백 루프를 막는다.
     var scrollTarget: Section?
     var liveOrder: LiveOrder?
     var isCartSnackbarVisible = false
     var cartSnackbarMessage = ""
+    // 메뉴는 정상적으로 불러왔지만 부가 정보(매장 상세) 호출만 실패했을 때, 화면 전체를
+    // 막지 않고 잠깐 띄우는 토스트 (6.1.1 "연결이 불안정해요" 변형).
+    var isConnectionUnstable = false
     // 장바구니 화면의 "수령 방법" 영역에 매장 이름·주소를 보여주기 위해 들고 있는다.
     var currentStore: Store?
 
     var hasNoMenu: Bool { recentOrders.isEmpty && categories.isEmpty }
 
     private var currentStoreId = "beomseokgwan"
+    private var hasStartedInitialLoad = false
     private let menuRepository: MenuRepository
     private let liveOrderRepository: LiveOrderRepository
     private let cafeRepository: CafeRepository
     private var liveOrderObservationTask: Task<Void, Never>?
     private var cartSnackbarTask: Task<Void, Never>?
+    private var connectionUnstableTask: Task<Void, Never>?
 
     init(
         menuRepository: MenuRepository = MockMenuRepository(),
@@ -58,8 +73,13 @@ final class HomeMenuViewModel {
     }
 
     func loadIfNeeded() async {
-        guard !isLoaded else { return }
+        guard !hasStartedInitialLoad else { return }
+        hasStartedInitialLoad = true
         await load(storeId: currentStoreId)
+    }
+
+    func retryLoadTapped() {
+        Task { await load(storeId: currentStoreId) }
     }
 
     func applySelectedStore(_ store: Store) async {
@@ -70,16 +90,39 @@ final class HomeMenuViewModel {
     }
 
     private func load(storeId: String) async {
-        guard let menu = try? await menuRepository.fetchStoreMenu(storeId: storeId) else { return }
-        storeName = menu.storeName
-        recentOrders = menu.recentOrders
-        categories = menu.categories
-        unavailableNotice = menu.unavailableNotice
-        selectedSection = sections.first
-        isLoaded = true
+        loadState = .loading
+        do {
+            let menu = try await menuRepository.fetchStoreMenu(storeId: storeId)
+            storeName = menu.storeName
+            recentOrders = menu.recentOrders
+            categories = menu.categories
+            unavailableNotice = menu.unavailableNotice
+            selectedSection = sections.first
+            loadState = .loaded
 
-        if currentStore?.id != storeId {
-            currentStore = try? await cafeRepository.fetchStores().first { $0.id == storeId }
+            if currentStore?.id != storeId {
+                do {
+                    currentStore = try await cafeRepository.fetchStores().first { $0.id == storeId }
+                } catch {
+                    showConnectionUnstableSnackbar()
+                }
+            }
+        } catch MenuLoadError.network {
+            loadState = .networkError
+        } catch MenuLoadError.sessionExpired {
+            loadState = .sessionExpired
+        } catch {
+            loadState = .serviceUnavailable
+        }
+    }
+
+    private func showConnectionUnstableSnackbar() {
+        isConnectionUnstable = true
+        connectionUnstableTask?.cancel()
+        connectionUnstableTask = Task {
+            try? await Task.sleep(for: .seconds(3))
+            guard !Task.isCancelled else { return }
+            isConnectionUnstable = false
         }
     }
 

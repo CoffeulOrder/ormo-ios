@@ -1,10 +1,22 @@
 import Foundation
 
 struct MockMenuRepository: MenuRepository {
+    // 6.1.1·6.1.2·6.1.3 예외 화면을 실제로 재현해 보기 위한 테스트 전용 storeId.
+    // 실제 매장 선택 화면에는 노출되지 않고, Preview·테스트 코드에서만 사용한다.
+    static let networkErrorStoreId = "test-network-error"
+    static let serviceUnavailableStoreId = "test-service-unavailable"
+    static let sessionExpiredStoreId = "test-session-expired"
+
     func fetchStoreMenu(storeId: String) async throws -> StoreMenu {
         try? await Task.sleep(for: .seconds(0.3))
 
         switch storeId {
+        case Self.networkErrorStoreId:
+            throw MenuLoadError.network
+        case Self.serviceUnavailableStoreId:
+            throw MenuLoadError.serviceUnavailable
+        case Self.sessionExpiredStoreId:
+            throw MenuLoadError.sessionExpired
         case "bagaegwan":
             return StoreMenu(
                 storeName: "을지대학교 박애관 카페",

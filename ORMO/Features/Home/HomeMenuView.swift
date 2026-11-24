@@ -34,7 +34,7 @@ struct HomeMenuView: View {
 
     var body: some View {
         NavigationStack(path: $router.path) {
-            content
+            rootContent
                 .navigationDestination(for: HomeRoute.self) { route in
                     switch route {
                     case .storeSelection:
@@ -89,11 +89,59 @@ struct HomeMenuView: View {
         .environment(router)
     }
 
+    // 로딩·네트워크 오류·서비스 점검·로그인 만료일 때는 상단 바(매장명·검색·내 정보)조차
+    // 보여줄 데이터가 없어 화면 전체를 교체한다. 정상적으로 불러온 뒤에만 content를 보여준다.
+    private var rootContent: some View {
+        Group {
+            switch viewModel.loadState {
+            case .loading:
+                SkeletonLoadingView()
+            case .networkError:
+                networkErrorView
+            case .serviceUnavailable:
+                serviceUnavailableView
+            case .sessionExpired:
+                SessionExpiredView(onLoginTapped: { onLogout(nil) })
+            case .loaded:
+                content
+            }
+        }
+        .task {
+            await viewModel.loadIfNeeded()
+            // 실제 주문이 접수된 뒤에만 떠야 한다. 결제·주문 접수 화면이 아직 없어
+            // observeLiveOrderIfNeeded()는 그 화면이 생기면 주문 완료 시점에 호출한다.
+        }
+    }
+
+    private var networkErrorView: some View {
+        ResultView(
+            icon: .wifiOffIcon,
+            title: "인터넷 연결을 확인해주세요",
+            message: "연결이 복구되면 다시 불러올게요",
+            buttonTitle: "다시 시도",
+            action: viewModel.retryLoadTapped
+        )
+        .padding(.top, 120)
+        .background(Colors.backgroundDefault.ignoresSafeArea())
+    }
+
+    private var serviceUnavailableView: some View {
+        ResultView(
+            icon: .buildIcon,
+            title: "서비스 이용이 원활하지 않아요",
+            message: "잠시 후 다시 시도해주세요",
+            buttonTitle: "다시 시도",
+            action: viewModel.retryLoadTapped
+        )
+        .padding(.top, 120)
+        .background(Colors.backgroundDefault.ignoresSafeArea())
+    }
+
     private var content: some View {
         ZStack(alignment: .bottom) {
             VStack(spacing: 0) {
                 topBar
-                if viewModel.isLoaded && viewModel.hasNoMenu {
+                if viewModel.hasNoMenu {
                     emptyMenuResultView
                 } else {
                     menuListContent
@@ -114,20 +162,28 @@ struct HomeMenuView: View {
                     .padding(.bottom, cart.isEmpty ? Spacing.spacing16 : 104)
                     .transition(.opacity)
             }
+
+            if viewModel.isConnectionUnstable {
+                connectionUnstableSnackbar
+                    .padding(.top, Spacing.spacing4)
+                    .frame(maxHeight: .infinity, alignment: .top)
+                    .transition(.opacity)
+            }
         }
         .background(Colors.backgroundDefault.ignoresSafeArea())
         .navigationBarHidden(true)
         .animation(.easeOut(duration: 0.2), value: viewModel.isCartSnackbarVisible)
-        .task {
-            await viewModel.loadIfNeeded()
-            // 실제 주문이 접수된 뒤에만 떠야 한다. 결제·주문 접수 화면이 아직 없어
-            // observeLiveOrderIfNeeded()는 그 화면이 생기면 주문 완료 시점에 호출한다.
-        }
+        .animation(.easeOut(duration: 0.2), value: viewModel.isConnectionUnstable)
         .onChange(of: cart.justAddedMessage) {
             guard let message = cart.justAddedMessage else { return }
             viewModel.showCartAddedSnackbar(message)
             cart.justAddedMessage = nil
         }
+    }
+
+    private var connectionUnstableSnackbar: some View {
+        Snackbar(message: "연결이 불안정해요", tone: .critical)
+            .frame(maxWidth: .infinity)
     }
 
     private var cartBar: some View {
@@ -552,4 +608,31 @@ struct HomeMenuView: View {
 
 #Preview {
     HomeMenuView()
+}
+
+#Preview("Network Error") {
+    let viewModel = HomeMenuViewModel()
+    return HomeMenuView(viewModel: viewModel)
+        .task {
+            try? await Task.sleep(for: .seconds(0.6))
+            viewModel.loadState = .networkError
+        }
+}
+
+#Preview("Service Unavailable") {
+    let viewModel = HomeMenuViewModel()
+    return HomeMenuView(viewModel: viewModel)
+        .task {
+            try? await Task.sleep(for: .seconds(0.6))
+            viewModel.loadState = .serviceUnavailable
+        }
+}
+
+#Preview("Connection Unstable") {
+    let viewModel = HomeMenuViewModel()
+    return HomeMenuView(viewModel: viewModel)
+        .task {
+            try? await Task.sleep(for: .seconds(0.6))
+            viewModel.isConnectionUnstable = true
+        }
 }
