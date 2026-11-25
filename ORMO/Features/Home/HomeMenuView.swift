@@ -19,12 +19,16 @@ private struct SectionFirstItemHeightKey: PreferenceKey {
 struct HomeMenuView: View {
     // 다음 카테고리로 하이라이트가 넘어가기까지, 그 카테고리 메뉴가 이 정도(개수) 보여야 한다.
     private static let sectionActivationItemCount: CGFloat = 1.3
+    // 카테고리를 전환할 때 탭 밑줄·탭 스크롤·메뉴 스크롤에 공통으로 쓰는 애니메이션.
+    // 뚝뚝 끊기던 easeOut 대신, 끝에서 살짝 튕기는 스프링으로 부드럽게 넘어가게 한다.
+    private static let categoryTransitionAnimation = Animation.bouncy(duration: 0.4, extraBounce: 0.15)
 
     @State private var viewModel: HomeMenuViewModel
     @State private var sectionTopOffsets: [HomeMenuViewModel.Section: CGFloat] = [:]
     @State private var sectionFirstItemHeights: [HomeMenuViewModel.Section: CGFloat] = [:]
     @State private var router = HomeRouter()
     @State private var cart = CartStore()
+    @Namespace private var tabIndicatorNamespace
     var onLogout: (String?) -> Void = { _ in }
 
     init(viewModel: HomeMenuViewModel = HomeMenuViewModel(), onLogout: @escaping (String?) -> Void = { _ in }) {
@@ -299,7 +303,7 @@ struct HomeMenuView: View {
                     }
                     .onChange(of: viewModel.scrollTarget) {
                         guard let section = viewModel.scrollTarget else { return }
-                        withAnimation(.easeOut(duration: 0.25)) {
+                        withAnimation(Self.categoryTransitionAnimation) {
                             proxy.scrollTo(section, anchor: .top)
                         }
                     }
@@ -395,7 +399,7 @@ struct HomeMenuView: View {
                 }
                 .onChange(of: viewModel.selectedSection) {
                     guard let section = viewModel.selectedSection else { return }
-                    withAnimation(.easeOut(duration: 0.25)) {
+                    withAnimation(Self.categoryTransitionAnimation) {
                         proxy.scrollTo(section, anchor: .center)
                     }
                 }
@@ -432,7 +436,11 @@ struct HomeMenuView: View {
     private func tabButton(_ section: HomeMenuViewModel.Section) -> some View {
         let isSelected = viewModel.selectedSection == section
 
-        return Button(action: { viewModel.selectSection(section) }) {
+        return Button(action: {
+            withAnimation(Self.categoryTransitionAnimation) {
+                viewModel.selectSection(section)
+            }
+        }) {
             Text(viewModel.sectionTitle(section))
                 .font(isSelected ? Typography.bodyLgBold : Typography.bodyLgSemibold)
                 .foregroundStyle(isSelected ? Colors.textPrimary : Colors.textTertiary)
@@ -442,12 +450,14 @@ struct HomeMenuView: View {
         .buttonStyle(.plain)
         // Figma: Indicator는 탭 바닥(bottom-0)에 틈 없이 붙고, 좌우 12px은 탭 자체 패딩과 같다.
         // 두께는 사용자 요청으로 Figma 원본 2px의 1.5배인 3px을 쓴다.
+        // matchedGeometryEffect로 탭 사이를 슬라이드하게 해서, 꺼졌다 켜지며 툭 끊기던 느낌을 없앤다.
         .overlay(alignment: .bottom) {
             if isSelected {
                 Capsule()
                     .fill(Colors.textPrimary)
                     .frame(height: 3)
                     .padding(.horizontal, Spacing.spacing12)
+                    .matchedGeometryEffect(id: "tabIndicator", in: tabIndicatorNamespace)
             }
         }
     }
