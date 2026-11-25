@@ -16,6 +16,15 @@ private struct SectionFirstItemHeightKey: PreferenceKey {
     }
 }
 
+// 탭 바 안에서 각 탭이 실제로 차지하는 프레임. 탭 밑줄을 matchedGeometryEffect 없이
+// 직접 측정한 위치·너비로 그려서, 스크롤 중 조건부 렌더링이 섞일 때 생기는 튐을 없앤다.
+private struct TabFrameKey: PreferenceKey {
+    static var defaultValue: [HomeMenuViewModel.Section: CGRect] = [:]
+    static func reduce(value: inout [HomeMenuViewModel.Section: CGRect], nextValue: () -> [HomeMenuViewModel.Section: CGRect]) {
+        value.merge(nextValue()) { _, new in new }
+    }
+}
+
 struct HomeMenuView: View {
     // 다음 카테고리로 하이라이트가 넘어가기까지, 그 카테고리 메뉴가 이 정도(개수) 보여야 한다.
     private static let sectionActivationItemCount: CGFloat = 1.3
@@ -26,9 +35,9 @@ struct HomeMenuView: View {
     @State private var viewModel: HomeMenuViewModel
     @State private var sectionTopOffsets: [HomeMenuViewModel.Section: CGFloat] = [:]
     @State private var sectionFirstItemHeights: [HomeMenuViewModel.Section: CGFloat] = [:]
+    @State private var tabFrames: [HomeMenuViewModel.Section: CGRect] = [:]
     @State private var router = HomeRouter()
     @State private var cart = CartStore()
-    @Namespace private var tabIndicatorNamespace
     var onLogout: (String?) -> Void = { _ in }
 
     init(viewModel: HomeMenuViewModel = HomeMenuViewModel(), onLogout: @escaping (String?) -> Void = { _ in }) {
@@ -396,6 +405,20 @@ struct HomeMenuView: View {
                         }
                     }
                     .padding(.leading, Spacing.spacing8)
+                    .coordinateSpace(name: "tabsRow")
+                    // Figma: Indicator는 탭 바닥(bottom-0)에 틈 없이 붙고, 좌우 12px은 탭 자체 패딩과 같다.
+                    // 두께는 사용자 요청으로 Figma 원본 2px의 1.5배인 3px을 쓴다.
+                    // matchedGeometryEffect는 스크롤 중 조건부 렌더링과 섞이면 다른 탭으로 튀어 보이는
+                    // 버그가 있어, 각 탭의 실측 프레임을 직접 추적해 하나의 밑줄만 위치·너비를 옮긴다.
+                    .overlay(alignment: .bottomLeading) {
+                        if let section = viewModel.selectedSection, let frame = tabFrames[section] {
+                            Capsule()
+                                .fill(Colors.textPrimary)
+                                .frame(width: max(frame.width - Spacing.spacing12 * 2, 0), height: 3)
+                                .offset(x: frame.minX + Spacing.spacing12)
+                        }
+                    }
+                    .onPreferenceChange(TabFrameKey.self) { tabFrames = $0 }
                 }
                 .onChange(of: viewModel.selectedSection) {
                     guard let section = viewModel.selectedSection else { return }
@@ -448,18 +471,14 @@ struct HomeMenuView: View {
                 .frame(height: 51)
         }
         .buttonStyle(.plain)
-        // Figma: Indicator는 탭 바닥(bottom-0)에 틈 없이 붙고, 좌우 12px은 탭 자체 패딩과 같다.
-        // 두께는 사용자 요청으로 Figma 원본 2px의 1.5배인 3px을 쓴다.
-        // matchedGeometryEffect로 탭 사이를 슬라이드하게 해서, 꺼졌다 켜지며 툭 끊기던 느낌을 없앤다.
-        .overlay(alignment: .bottom) {
-            if isSelected {
-                Capsule()
-                    .fill(Colors.textPrimary)
-                    .frame(height: 3)
-                    .padding(.horizontal, Spacing.spacing12)
-                    .matchedGeometryEffect(id: "tabIndicator", in: tabIndicatorNamespace)
+        .background(
+            GeometryReader { geometry in
+                Color.clear.preference(
+                    key: TabFrameKey.self,
+                    value: [section: geometry.frame(in: .named("tabsRow"))]
+                )
             }
-        }
+        )
     }
 
     private func sectionView(_ section: HomeMenuViewModel.Section) -> some View {
