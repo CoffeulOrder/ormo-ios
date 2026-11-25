@@ -164,7 +164,9 @@ struct HomeMenuView: View {
 
             if viewModel.isCartSnackbarVisible {
                 cartSnackbar
-                    .padding(.bottom, cart.isEmpty ? Spacing.spacing16 : 104)
+                    // Figma 스펙: Snackbar는 하단 CTA 위 spacing-16.
+                    // cartBar 높이 56 + 자체 하단 패딩 8 + 여기 16 = 80.
+                    .padding(.bottom, cart.isEmpty ? Spacing.spacing16 : 80)
                     .transition(.opacity)
             }
 
