@@ -204,16 +204,21 @@ struct StoreSelectionView: View {
             .padding(.horizontal, Spacing.spacing24)
             .padding(.top, Spacing.spacing16)
 
-            Group {
+            HStack(alignment: .top, spacing: Spacing.spacing8) {
+                Image(.calloutWarningIcon)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 20, height: 20)
+
                 Text("매장을 변경하면 장바구니의 메뉴가 삭제돼요")
                     .font(Typography.bodySmRegular)
                     .foregroundStyle(Colors.textSecondary)
-                    .padding(.horizontal, Spacing.spacing16)
-                    .padding(.vertical, Spacing.spacing12)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Colors.fillWarningWeak)
-                    .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
             }
+            .padding(.horizontal, Spacing.spacing16)
+            .padding(.vertical, Spacing.spacing12)
+            .background(Colors.fillWarningWeak)
+            .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
             .padding(.horizontal, Spacing.spacing24)
             .padding(.top, Spacing.spacing12)
 
