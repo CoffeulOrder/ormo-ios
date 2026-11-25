@@ -1,19 +1,9 @@
 import SwiftUI
 
-// 하단 CTA의 실제 높이를 재서, 스크롤 콘텐츠가 그 아래로 다 지나갈 수 있게 여백을 주고
-// 토스트도 그만큼 띄워서 가려지지 않게 한다.
-private struct BottomCTAHeightKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = nextValue()
-    }
-}
-
 struct CartView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(HomeRouter.self) private var router
     @State private var viewModel: CartViewModel
-    @State private var bottomCTAHeight: CGFloat = 0
     @State private var dimOpacity: Double = 0
     @State private var dialogScale: CGFloat = 0.94
     @State private var dialogOpacity: Double = 0
@@ -137,22 +127,16 @@ struct CartView: View {
                         thickDivider
                         paymentSection
                     }
-                    // 콘텐츠가 하단 CTA 뒤로 지나가며 포그에 자연스럽게 가려지도록 CTA 높이만큼 여백을 두되,
-                    // 기존엔 포그(흐림 40pt) 구간까지 통째로 빈 여백으로 남아 결제수단 아래가 과하게 넓어 보였다.
-                    // 포그는 원래 실제 콘텐츠를 흐리게 비쳐 보이게 하려는 것이라, 2/3만 띄워 포그 구간에 콘텐츠가 비치게 한다.
-                    .padding(.bottom, (bottomCTAHeight + Spacing.spacing8) * 2 / 3)
+                    // 마지막 결제수단(카카오페이)이 CTA의 불투명한 부분에 가리지 않도록, 화면 맨 아래로부터
+                    // 210pt를 띄운다. bottomCTA 높이를 GeometryReader로 동적 측정해 계산해봤지만 실제
+                    // 기기에서 여전히 가려져(측정 타이밍 문제로 보임), 실측으로 확인한 고정값을 직접 쓴다.
+                    .padding(.bottom, 210)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
 
             // 스크롤 콘텐츠 위에 겹쳐야 포그가 실제로 콘텐츠를 흐리게 덮는 효과가 난다.
             bottomCTA
-                .background(
-                    GeometryReader { geometry in
-                        Color.clear.preference(key: BottomCTAHeightKey.self, value: geometry.size.height)
-                    }
-                )
-                .onPreferenceChange(BottomCTAHeightKey.self) { bottomCTAHeight = $0 }
         }
     }
 
