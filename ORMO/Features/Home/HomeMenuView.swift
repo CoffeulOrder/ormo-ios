@@ -589,11 +589,20 @@ struct HomeMenuView: View {
                                 .frame(width: max(frame.width - Spacing.spacing12 * 2, 0), height: 3)
                                 .offset(x: frame.minX + Spacing.spacing12)
                                 // 밑줄의 위치·너비만 여기서 따로 애니메이션한다(라벨 폰트 교체는
-                                // 즉시 반영돼야 가변 폰트 보간으로 인한 깜빡임이 없다).
-                                .animation(anim(Self.indicatorAnimation), value: section)
+                                // 즉시 반영돼야 가변 폰트 보간으로 인한 깜빡임이 없다). section이
+                                // 아니라 frame 값 자체를 기준으로 걸어서, 탭 전환이 아니더라도
+                                // 프레임이 바뀌면(측정 잡음 포함) 스냅 없이 항상 부드럽게 보간한다.
+                                .animation(anim(Self.indicatorAnimation), value: frame)
                         }
                     }
-                    .onPreferenceChange(TabFrameKey.self) { tabFrames = $0 }
+                    // 가로 스크롤 중에는 같은 탭이라도 GeometryReader가 미세하게(소수점 단위로)
+                    // 다른 값을 계속 보고해서, 그 값을 그대로 밑줄에 쓰면 좌우로 떨리는 것처럼
+                    // 보였다. 정수 pt로 반올림해 그 잡음을 걸러낸다.
+                    .onPreferenceChange(TabFrameKey.self) { newFrames in
+                        tabFrames = newFrames.mapValues {
+                            CGRect(x: $0.minX.rounded(), y: $0.minY.rounded(), width: $0.width.rounded(), height: $0.height.rounded())
+                        }
+                    }
                     .background(
                         GeometryReader { geometry in
                             Color.clear.preference(
