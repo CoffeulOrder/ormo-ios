@@ -26,7 +26,7 @@ struct CartView: View {
     }
 
     var body: some View {
-        ZStack {
+        ZStack(alignment: .bottom) {
             Group {
                 if viewModel.cart.isEmpty {
                     emptyStateContent
@@ -56,7 +56,23 @@ struct CartView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
+
+            // 장바구니 마지막 메뉴를 지우면 orderFormContent가 emptyStateContent로 바뀌므로,
+            // 스낵바는 그 안이 아니라 여기(항상 떠 있는 레벨)에 둬야 빈 상태에서도 계속 보인다.
+            if let message = viewModel.cart.removedItemMessage {
+                // "매장이 주문을 받은 뒤에는 취소할 수 없어요" 문구 상단에서 20pt 위.
+                // bottomCTA의 고정 레이아웃 값으로 직접 계산(비동기로 측정되는 bottomCTAHeight에
+                // 기대면, 아직 측정 전이라 0일 때 음수 패딩이 나와 화면 밖으로 밀려날 수 있다):
+                // 하단여백32 + 메뉴 추가하기(상단패딩4+높이40) + 결제하기 버튼56
+                // + 체크박스 행 하단패딩16 + 체크박스 문구 높이24 + 요청 간격20 = 192
+                // bottomCTA와 같은 좌표 기준(화면 끝)을 쓰도록 ignoresSafeArea를 맞춘다.
+                removalSnackbar(message)
+                    .padding(.bottom, 192)
+                    .ignoresSafeArea(edges: .bottom)
+                    .transition(.opacity)
+            }
         }
+        .animation(.easeOut(duration: 0.2), value: viewModel.cart.removedItemMessage)
         .background(Colors.backgroundDefault.ignoresSafeArea())
         .ignoresSafeArea(.keyboard)
         .navigationBarHidden(true)
@@ -137,14 +153,7 @@ struct CartView: View {
                     }
                 )
                 .onPreferenceChange(BottomCTAHeightKey.self) { bottomCTAHeight = $0 }
-
-            if let message = viewModel.cart.removedItemMessage {
-                removalSnackbar(message)
-                    .padding(.bottom, bottomCTAHeight + 2) // 2px 여백 (스페이싱 토큰 중 일치 항목 없음)
-                    .transition(.opacity)
-            }
         }
-        .animation(.easeOut(duration: 0.2), value: viewModel.cart.removedItemMessage)
     }
 
     private var topNavigationBar: some View {
