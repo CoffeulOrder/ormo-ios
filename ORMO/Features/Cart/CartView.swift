@@ -216,7 +216,7 @@ struct CartView: View {
     private func pickupRow(_ title: String, method: PickupMethod) -> some View {
         Button(action: { viewModel.pickupMethod = method }) {
             HStack(spacing: Spacing.spacing12) {
-                radioControl(isSelected: viewModel.pickupMethod == method)
+                Radio(isSelected: viewModel.pickupMethod == method, size: 20)
                 Text(title)
                     .typography(Typography.bodyMdRegular)
                     .foregroundStyle(Colors.textPrimary)
@@ -369,7 +369,7 @@ struct CartView: View {
     private func paymentRow(_ title: String, method: PaymentMethod) -> some View {
         Button(action: { viewModel.paymentMethod = method }) {
             HStack(spacing: Spacing.spacing12) {
-                radioControl(isSelected: viewModel.paymentMethod == method)
+                Radio(isSelected: viewModel.paymentMethod == method, size: 20)
                 Text(title)
                     .typography(Typography.bodyMdRegular)
                     .foregroundStyle(Colors.textPrimary)
@@ -377,21 +377,6 @@ struct CartView: View {
             }
         }
         .buttonStyle(.plain)
-    }
-
-    private func radioControl(isSelected: Bool) -> some View {
-        ZStack {
-            Circle()
-                .fill(isSelected ? Colors.fillBrand : Color.clear)
-            Circle()
-                .strokeBorder(Colors.fieldBorder, lineWidth: isSelected ? 0 : 2)
-            if isSelected {
-                Circle()
-                    .fill(Colors.textOnFill)
-                    .frame(width: 6, height: 6)
-            }
-        }
-        .frame(width: 20, height: 20)
     }
 
     private var thinDivider: some View {
@@ -420,7 +405,7 @@ struct CartView: View {
             VStack(spacing: 0) {
                 Button(action: { viewModel.hasAgreedToNoCancellation.toggle() }) {
                     HStack(spacing: Spacing.spacing12) {
-                        checkboxControl(isSelected: viewModel.hasAgreedToNoCancellation)
+                        Checkbox(isSelected: viewModel.hasAgreedToNoCancellation)
                         Text("매장이 주문을 받은 뒤에는 취소할 수 없어요")
                             .typography(Typography.bodyMdRegular)
                             .foregroundStyle(Colors.textPrimary)
@@ -458,22 +443,6 @@ struct CartView: View {
             .background(Colors.backgroundDefault)
         }
         .ignoresSafeArea(edges: .bottom)
-    }
-
-    // 이 체크박스는 안 골랐을 때도 체크 표시가 보인다: 안 고르면 회색 원, 고르면 파란 원(흰 체크는 항상 그대로).
-    // 마크는 Figma Checkbox 전용 "Mark" 아이콘(16px, 원 20px 안)을 쓴다 — 범용 Icon/check(24px)와는 다른 비율이다.
-    private func checkboxControl(isSelected: Bool) -> some View {
-        Circle()
-            .fill(isSelected ? Colors.fillBrand : Colors.fieldBorder)
-            .overlay {
-                Image(.checkboxMark)
-                    .renderingMode(.template)
-                    .resizable()
-                    .scaledToFit()
-                    .foregroundStyle(Colors.textOnFill)
-                    .frame(width: 16, height: 16)
-            }
-            .frame(width: 20, height: 20)
     }
 
     private func removalSnackbar(_ message: String) -> some View {
