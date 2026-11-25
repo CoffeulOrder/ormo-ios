@@ -382,7 +382,7 @@ struct HomeMenuView: View {
                                 .id(section)
                         }
                     }
-                    .padding(.horizontal, Spacing.spacing20)
+                    .padding(.leading, Spacing.spacing8)
                 }
                 .onChange(of: viewModel.selectedSection) {
                     guard let section = viewModel.selectedSection else { return }
