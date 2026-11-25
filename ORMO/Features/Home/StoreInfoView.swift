@@ -84,8 +84,8 @@ struct StoreInfoView: View {
     }
 
     private var storeTitleRow: some View {
-        HStack(spacing: Spacing.spacing8) {
-            Text(store.name)
+        HStack(alignment: .firstTextBaseline, spacing: Spacing.spacing8) {
+            Text(hangulWrapping: store.name)
                 .typography(Typography.bodyXlBold)
                 .foregroundStyle(Colors.textStrong)
 
