@@ -538,6 +538,7 @@ struct HomeMenuView: View {
                     Text(viewModel.storeName)
                         .typography(Typography.bodyXlSemibold)
                         .foregroundStyle(Colors.textPrimary)
+                        .lineLimit(1)
 
                     Image(.chevronDown)
                         .resizable()

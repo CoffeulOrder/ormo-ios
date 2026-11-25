@@ -97,6 +97,7 @@ struct OrderHistoryView: View {
                     Text("\(order.storeName) ∙ \(Self.dateFormatter.string(from: order.paidAt))")
                         .typography(Typography.bodySmMedium)
                         .foregroundStyle(Colors.textSecondary)
+                        .lineLimit(1)
                         .frame(maxWidth: .infinity, alignment: .leading)
 
                     Image(.chevronRight)
