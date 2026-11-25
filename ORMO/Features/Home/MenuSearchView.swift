@@ -159,6 +159,7 @@ struct MenuSearchView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, Spacing.spacing20)
             .padding(.vertical, Spacing.spacing16)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
@@ -221,6 +222,7 @@ struct MenuSearchView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(Spacing.spacing20)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
