@@ -42,6 +42,5 @@ final class MenuSearchViewModel {
 
     func resultTapped(_ item: MenuItem) {
         submitSearch()
-        // TODO: 2.2.1 옵션 선택 화면으로 이동
     }
 }

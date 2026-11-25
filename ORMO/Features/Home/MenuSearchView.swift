@@ -2,6 +2,7 @@ import SwiftUI
 
 struct MenuSearchView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(HomeRouter.self) private var router
     @State private var viewModel: MenuSearchViewModel
     @FocusState private var isSearchFieldFocused: Bool
 
@@ -138,14 +139,16 @@ struct MenuSearchView: View {
     }
 
     private func resultRow(_ item: MenuItem) -> some View {
-        Button(action: { viewModel.resultTapped(item) }) {
-            VStack(alignment: .leading, spacing: Spacing.spacing4) {
-                highlightedName(item.name, query: viewModel.query)
-                    .font(Typography.bodyLgSemibold)
+        Button(action: { menuItemTapped(item) }) {
+            VStack(alignment: .leading, spacing: Spacing.spacing8) {
+                VStack(alignment: .leading, spacing: 0) {
+                    highlightedName(item.name, query: viewModel.query)
+                        .font(Typography.bodyLgSemibold)
 
-                Text("\(item.price.formatted())원")
-                    .font(Typography.bodyMdSemibold)
-                    .foregroundStyle(Colors.textPrimary)
+                    Text("\(item.price.formatted())원")
+                        .font(Typography.bodyMdSemibold)
+                        .foregroundStyle(Colors.textPrimary)
+                }
 
                 Text(item.description)
                     .font(Typography.bodySmRegular)
@@ -200,19 +203,29 @@ struct MenuSearchView: View {
     }
 
     private func popularMenuCard(_ item: MenuItem) -> some View {
-        VStack(alignment: .leading, spacing: Spacing.spacing8) {
-            Text(item.name)
-                .font(Typography.bodyLgSemibold)
-                .foregroundStyle(Colors.textPrimary)
-            Text("\(item.price.formatted())원")
-                .font(Typography.bodyMdSemibold)
-                .foregroundStyle(Colors.textPrimary)
-            Text(item.description)
-                .font(Typography.bodySmRegular)
-                .foregroundStyle(Colors.textSecondary)
+        Button(action: { menuItemTapped(item) }) {
+            VStack(alignment: .leading, spacing: Spacing.spacing8) {
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(item.name)
+                        .font(Typography.bodyLgSemibold)
+                        .foregroundStyle(Colors.textPrimary)
+                    Text("\(item.price.formatted())원")
+                        .font(Typography.bodyMdSemibold)
+                        .foregroundStyle(Colors.textPrimary)
+                }
+                Text(item.description)
+                    .font(Typography.bodySmRegular)
+                    .foregroundStyle(Colors.textSecondary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(Spacing.spacing20)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(Spacing.spacing20)
+        .buttonStyle(.plain)
+    }
+
+    private func menuItemTapped(_ item: MenuItem) {
+        viewModel.resultTapped(item)
+        router.path.append(HomeRoute.menuOptions(item))
     }
 
     private var thinDivider: some View {
@@ -234,4 +247,5 @@ struct MenuSearchView: View {
         MenuItem(id: "2", name: "카페라떼", price: 4500, description: "에스프레소에 부드러운 우유를 더했어요", badge: .popular, isSoldOut: false),
         MenuItem(id: "3", name: "바닐라라테", price: 5000, description: "달콤한 바닐라 시럽이 들어가요", badge: .popular, isSoldOut: false)
     ])
+    .environment(HomeRouter())
 }
