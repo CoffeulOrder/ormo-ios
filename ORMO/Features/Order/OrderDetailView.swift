@@ -359,7 +359,7 @@ struct OrderDetailView: View {
                 .padding(.horizontal, Spacing.spacing20)
                 .padding(.vertical, Spacing.spacing12)
 
-            VStack(alignment: .leading, spacing: Spacing.spacing16) {
+            VStack(alignment: .leading, spacing: Spacing.spacing12) {
                 ForEach(viewModel.order.items) { item in
                     VStack(alignment: .leading, spacing: Spacing.spacing8) {
                         HStack(spacing: Spacing.spacing4) {
@@ -429,10 +429,11 @@ struct OrderDetailView: View {
             .frame(maxWidth: .infinity)
     }
 
+    // 이 화면은 다른 화면들의 섹션 구분선(12px)과 달리 Figma에서 24px로 더 두껍게 쓴다.
     private var thickDivider: some View {
         Rectangle()
             .fill(Colors.backgroundLower)
-            .frame(height: 12)
+            .frame(height: 24)
             .frame(maxWidth: .infinity)
     }
 
