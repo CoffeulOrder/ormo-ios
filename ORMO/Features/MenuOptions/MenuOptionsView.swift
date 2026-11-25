@@ -235,11 +235,14 @@ struct MenuOptionsView: View {
     @ViewBuilder
     private func selectionControl(_ choice: MenuOptionChoice, in group: MenuOptionGroup) -> some View {
         let isSelected = viewModel.isSelected(choice, in: group)
+        // Radio(단일 선택)는 선택 시 Fill/Brand 원 + 흰 점으로 바뀌지만,
+        // Checkbox(다중 선택)는 선택 여부와 무관하게 테두리 원 그대로 두고 체크 표시만 더한다.
+        let isBrandFilled = isSelected && group.selectionType == .single
         ZStack {
             Circle()
-                .fill(isSelected ? Colors.fillBrand : (choice.isSoldOut ? Colors.fillNeutralWeak : Color.clear))
+                .fill(isBrandFilled ? Colors.fillBrand : (choice.isSoldOut ? Colors.fillNeutralWeak : Color.clear))
             Circle()
-                .strokeBorder(choice.isSoldOut ? Colors.borderDefault : Colors.fieldBorder, lineWidth: isSelected ? 0 : 2)
+                .strokeBorder(choice.isSoldOut ? Colors.borderDefault : Colors.fieldBorder, lineWidth: isBrandFilled ? 0 : 2)
 
             if isSelected {
                 switch group.selectionType {
@@ -252,8 +255,8 @@ struct MenuOptionsView: View {
                         .renderingMode(.template)
                         .resizable()
                         .scaledToFit()
-                        .foregroundStyle(Colors.textOnFill)
-                        .frame(width: 14, height: 14)
+                        .foregroundStyle(Colors.iconTertiary)
+                        .frame(width: 20, height: 20)
                 }
             }
         }
