@@ -26,6 +26,13 @@ final class HomeMenuViewModel {
     // 탭을 직접 눌렀을 때만 채워진다. 스크롤로 감지된 섹션 변경은 이 값을 건드리지 않아
     // 콘텐츠 스크롤과 탭 하이라이트 추적이 서로를 되돌리는 피드백 루프를 막는다.
     var scrollTarget: Section?
+    // 탭 클릭으로 시작된 프로그램 스크롤이 진행 중인 동안 true. 이 동안은 scroll-spy가
+    // 지나가는 중간 섹션으로 selectedSection을 가로채지 않는다(탭 전환 중 깜빡임 방지).
+    // 스크롤 완료 콜백 또는 타임아웃(§programmaticScrollTimeout)으로 해제되고,
+    // 사용자가 직접 드래그를 시작하면(userDidStartDragging) 즉시 해제된다.
+    private(set) var isProgrammaticScrollInProgress = false
+    private var programmaticScrollTimeoutTask: Task<Void, Never>?
+    private static let programmaticScrollTimeout: Duration = .milliseconds(600)
     var liveOrder: LiveOrder?
     var isCartSnackbarVisible = false
     var cartSnackbarMessage = ""
@@ -129,10 +136,35 @@ final class HomeMenuViewModel {
     func selectSection(_ section: Section) {
         selectedSection = section
         scrollTarget = section
+        isProgrammaticScrollInProgress = true
+
+        // 스크롤 완료 콜백이 어떤 이유로든 안 불리는 경우를 대비한 보호장치.
+        programmaticScrollTimeoutTask?.cancel()
+        programmaticScrollTimeoutTask = Task { [weak self] in
+            try? await Task.sleep(for: Self.programmaticScrollTimeout)
+            guard !Task.isCancelled else { return }
+            self?.isProgrammaticScrollInProgress = false
+        }
+    }
+
+    // 탭 클릭으로 시작한 프로그램 스크롤 애니메이션이 실제로 끝났을 때 뷰가 호출한다.
+    func programmaticScrollDidFinish() {
+        programmaticScrollTimeoutTask?.cancel()
+        isProgrammaticScrollInProgress = false
+    }
+
+    // 사용자가 리스트를 손가락으로 직접 드래그하기 시작하면, 아직 프로그램 스크롤이
+    // "끝났다고 확정"되지 않았더라도 즉시 scroll-spy로 돌아간다.
+    func userDidStartDragging() {
+        programmaticScrollTimeoutTask?.cancel()
+        isProgrammaticScrollInProgress = false
     }
 
     // 스크롤 위치로 현재 보이는 섹션이 바뀌면 탭 하이라이트만 갱신한다(콘텐츠를 다시 스크롤하지 않음).
+    // 탭 클릭으로 시작된 프로그램 스크롤이 진행 중일 때는 지나가는 섹션에 하이라이트가
+    // 잠깐씩 가로채이지 않도록 무시한다.
     func updateSelectedSectionFromScroll(_ section: Section) {
+        guard !isProgrammaticScrollInProgress else { return }
         guard selectedSection != section else { return }
         selectedSection = section
     }
