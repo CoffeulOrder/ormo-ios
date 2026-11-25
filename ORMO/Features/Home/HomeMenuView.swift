@@ -8,14 +8,6 @@ private struct SectionTopOffsetKey: PreferenceKey {
     }
 }
 
-// 각 섹션 첫 메뉴 카드의 높이. "메뉴 1.3개 정도" 기준으로 하이라이트 전환 시점을 늦추는 데 쓴다.
-private struct SectionFirstItemHeightKey: PreferenceKey {
-    static var defaultValue: [HomeMenuViewModel.Section: CGFloat] = [:]
-    static func reduce(value: inout [HomeMenuViewModel.Section: CGFloat], nextValue: () -> [HomeMenuViewModel.Section: CGFloat]) {
-        value.merge(nextValue()) { _, new in new }
-    }
-}
-
 // 탭 바 안에서 각 탭이 실제로 차지하는 프레임. 탭 밑줄을 matchedGeometryEffect 없이
 // 직접 측정한 위치·너비로 그려서, 스크롤 중 조건부 렌더링이 섞일 때 생기는 튐을 없앤다.
 private struct TabFrameKey: PreferenceKey {
@@ -70,8 +62,6 @@ private struct BottomOverlayBarHeightKey: PreferenceKey {
 }
 
 struct HomeMenuView: View {
-    // 다음 카테고리로 하이라이트가 넘어가기까지, 그 카테고리 메뉴가 이 정도(개수) 보여야 한다.
-    private static let sectionActivationItemCount: CGFloat = 1.3
     // 탭 밑줄·탭 줄 스크롤에 쓰는 애니메이션(150~250ms 범위의 ease-out).
     // easeOut은 초반에 이동이 몰려 있어 빠르게(0.2초) 재생하면 "스냅됐다가 슬쩍 더 간다"는
     // 느낌을 준다. easeInOut으로 바꿔 가속·감속이 고르게 보이도록 했다.
@@ -84,7 +74,6 @@ struct HomeMenuView: View {
 
     @State private var viewModel: HomeMenuViewModel
     @State private var sectionTopOffsets: [HomeMenuViewModel.Section: CGFloat] = [:]
-    @State private var sectionFirstItemHeights: [HomeMenuViewModel.Section: CGFloat] = [:]
     @State private var sectionHeights: [HomeMenuViewModel.Section: CGFloat] = [:]
     @State private var tabFrames: [HomeMenuViewModel.Section: CGRect] = [:]
     @State private var tabsContentFrame: CGRect = .zero
@@ -93,6 +82,9 @@ struct HomeMenuView: View {
     @State private var bottomOverlayBarHeight: CGFloat = 0
     @State private var noticeHeight: CGFloat = 0
     @State private var scrollSpyDebounceToken = 0
+    // 프로그램 스크롤 보호(isProgrammaticScrollInProgress)가 풀린 시각 + settleWindow.
+    // 이 시각 이전이면 아직 관성이 남아있을 수 있는 구간으로 보고 디바운스를 적용한다.
+    @State private var programmaticScrollSettleGuardUntil: Date?
     @State private var router = HomeRouter()
     @State private var cart = CartStore()
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -412,10 +404,6 @@ struct HomeMenuView: View {
                             sectionTopOffsets = offsets
                             updateCurrentSectionFromScroll()
                         }
-                        .onPreferenceChange(SectionFirstItemHeightKey.self) { heights in
-                            sectionFirstItemHeights = heights
-                            updateCurrentSectionFromScroll()
-                        }
                         .onPreferenceChange(SectionHeightKey.self) { sectionHeights = $0 }
                         .onPreferenceChange(NoticeHeightKey.self) { noticeHeight = $0 }
                         // 사용자가 리스트를 직접 드래그하기 시작하면, 탭 클릭으로 시작된 프로그램
@@ -427,6 +415,10 @@ struct HomeMenuView: View {
                         .onChange(of: viewModel.scrollTarget) {
                             guard let section = viewModel.scrollTarget else { return }
                             scrollToSection(section, proxy: proxy)
+                        }
+                        .onChange(of: viewModel.isProgrammaticScrollInProgress) {
+                            guard !viewModel.isProgrammaticScrollInProgress else { return }
+                            programmaticScrollSettleGuardUntil = Date().addingTimeInterval(Self.scrollSpySettleWindow)
                         }
                     }
 
@@ -730,31 +722,18 @@ struct HomeMenuView: View {
                 if index > 0 {
                     thinDivider
                 }
-                if index == 0 {
-                    menuCard(item)
-                        .background(
-                            GeometryReader { geometry in
-                                Color.clear.preference(
-                                    key: SectionFirstItemHeightKey.self,
-                                    value: [section: geometry.size.height]
-                                )
-                            }
-                        )
-                } else {
-                    menuCard(item)
-                }
+                menuCard(item)
             }
         }
     }
 
-    // "메뉴 1.3개 정도" 보일 때 다음 섹션으로 하이라이트를 넘긴다: 섹션 상단이 화면 위로
-    // (첫 카드 높이 × 1.3)만큼 더 지나가야 그 섹션을 "현재"로 인정한다.
+    // 섹션 바로 위 두꺼운 디바이더의 "상단"이 화면 맨 위에 닿거나 넘어가는 순간 바로 그
+    // 섹션으로 하이라이트를 옮긴다. sectionTopOffsets는 디바이더가 아니라 그 다음 섹션
+    // 자체의 상단(= 디바이더 하단)을 재므로, 디바이더 높이만큼 당겨서 디바이더 상단 기준으로
+    // 바꾼다.
     private func currentSectionFromScrollPosition() -> HomeMenuViewModel.Section? {
         sectionTopOffsets
-            .filter { section, minY in
-                let itemHeight = sectionFirstItemHeights[section] ?? 0
-                return minY - itemHeight * Self.sectionActivationItemCount <= 0
-            }
+            .filter { _, minY in minY - Spacing.spacing12 <= 0 }
             .max { $0.value < $1.value }?
             .key
             ?? viewModel.sections.first
@@ -764,13 +743,19 @@ struct HomeMenuView: View {
     // 관성으로 몇 프레임 더 움직이는 경우가 있다. 그 몇 프레임 동안 onPreferenceChange가 연달아
     // 여러 섹션을 "현재"로 보고하면, 보호가 풀리자마자 그 중간 섹션들로 탭이 순간적으로
     // 전부 튀어 보인다(실측 확인 — 드래그 직후 한 탭 틱 사이에 5개 섹션을 연쇄적으로 거침).
-    // 여기서 매번 바로 반영하지 않고 짧게(80ms) 묶어서, 그 사이 또 바뀌면 타이머를 다시
-    // 시작한다 — 연쇄가 멈추고 실제로 자리 잡은 마지막 섹션 하나만 반영된다. 정상적인 손가락
-    // 스크롤은 계속 새 값을 보고하므로 체감 지연이 없고, 멈췄을 때만 이 지연이 적용된다.
+    // 디바운스는 보호가 풀린 직후의 아주 짧은 구간(scrollSpySettleWindow)에만 적용한다.
+    // 평소 손가락 스크롤에는 전혀 적용되지 않아, 디바이더를 지나는 즉시 하이라이트가 바뀐다.
     private static let scrollSpySettleDelay: Duration = .milliseconds(80)
+    private static let scrollSpySettleWindow: TimeInterval = 0.15
 
     private func updateCurrentSectionFromScroll() {
         guard let current = currentSectionFromScrollPosition() else { return }
+
+        guard let guardUntil = programmaticScrollSettleGuardUntil, Date() < guardUntil else {
+            viewModel.updateSelectedSectionFromScroll(current)
+            return
+        }
+
         scrollSpyDebounceToken += 1
         let token = scrollSpyDebounceToken
         Task {
