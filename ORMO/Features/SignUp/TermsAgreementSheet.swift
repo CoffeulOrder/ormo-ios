@@ -45,7 +45,7 @@ struct TermsAgreementSheet: View {
     private var allAgreeRow: some View {
         Button(action: viewModel.toggleAll) {
             HStack(spacing: Spacing.spacing8) {
-                checkbox(isAgreed: viewModel.isAllAgreed)
+                animatedCheckbox(isAgreed: viewModel.isAllAgreed)
 
                 Text("전체 동의")
                     .typography(Typography.bodyMdRegular)
@@ -61,7 +61,7 @@ struct TermsAgreementSheet: View {
         HStack(spacing: 0) {
             Button(action: { viewModel.toggle(item) }) {
                 HStack(spacing: Spacing.spacing8) {
-                    checkbox(isAgreed: item.isAgreed)
+                    animatedCheckbox(isAgreed: item.isAgreed)
 
                     Text(item.title)
                         .typography(Typography.bodyMdRegular)
@@ -85,29 +85,16 @@ struct TermsAgreementSheet: View {
         .frame(height: 44)
     }
 
-    private func checkbox(isAgreed: Bool) -> some View {
-        ZStack {
-            Circle()
-                .fill(isAgreed ? Colors.fillBrand : Color.clear)
-            Circle()
-                .stroke(Colors.fieldBorder, lineWidth: isAgreed ? 0 : 2)
-
-            Image(.checkboxMark)
-                .renderingMode(.template)
-                .resizable()
-                .scaledToFit()
-                .frame(width: 16, height: 16)
-                .foregroundStyle(isAgreed ? Color.white : Colors.fieldBorder)
-        }
-        .frame(width: 20, height: 20)
-        .keyframeAnimator(initialValue: CGFloat(1), trigger: isAgreed) { content, scale in
-            content.scaleEffect(scale)
-        } keyframes: { _ in
-            KeyframeTrack {
-                CubicKeyframe(1.25, duration: 0.1)
-                CubicKeyframe(1.0, duration: 0.15)
+    private func animatedCheckbox(isAgreed: Bool) -> some View {
+        Checkbox(isSelected: isAgreed)
+            .keyframeAnimator(initialValue: CGFloat(1), trigger: isAgreed) { content, scale in
+                content.scaleEffect(scale)
+            } keyframes: { _ in
+                KeyframeTrack {
+                    CubicKeyframe(1.25, duration: 0.1)
+                    CubicKeyframe(1.0, duration: 0.15)
+                }
             }
-        }
     }
 }
 

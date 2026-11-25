@@ -248,32 +248,12 @@ struct MenuOptionsView: View {
     @ViewBuilder
     private func selectionControl(_ choice: MenuOptionChoice, in group: MenuOptionGroup) -> some View {
         let isSelected = viewModel.isSelected(choice, in: group)
-        // Radio(단일 선택)는 선택 시 Fill/Brand 원 + 흰 점으로 바뀌지만,
-        // Checkbox(다중 선택)는 선택 여부와 무관하게 테두리 원 그대로 두고 체크 표시만 더한다.
-        let isBrandFilled = isSelected && group.selectionType == .single
-        ZStack {
-            Circle()
-                .fill(isBrandFilled ? Colors.fillBrand : (choice.isSoldOut ? Colors.fillNeutralWeak : Color.clear))
-            Circle()
-                .strokeBorder(choice.isSoldOut ? Colors.borderDefault : Colors.fieldBorder, lineWidth: isBrandFilled ? 0 : 2)
-
-            if isSelected {
-                switch group.selectionType {
-                case .single:
-                    Circle()
-                        .fill(Colors.textOnFill)
-                        .frame(width: 8, height: 8)
-                case .multiple:
-                    Image(.checkIcon)
-                        .renderingMode(.template)
-                        .resizable()
-                        .scaledToFit()
-                        .foregroundStyle(Colors.iconTertiary)
-                        .frame(width: 20, height: 20)
-                }
-            }
+        switch group.selectionType {
+        case .single:
+            Radio(isSelected: isSelected, isEnabled: !choice.isSoldOut, size: 24)
+        case .multiple:
+            Checkbox(isSelected: isSelected, isEnabled: !choice.isSoldOut, size: 24)
         }
-        .frame(width: 24, height: 24)
     }
 
     private var thickDivider: some View {
