@@ -1,8 +1,14 @@
 import SwiftUI
 
 struct ChangePasswordView: View {
+    private enum Field {
+        case newPassword
+        case confirmation
+    }
+
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel: ChangePasswordViewModel
+    @FocusState private var focusedField: Field?
     let onLogout: (String?) -> Void
 
     init(email: String, onLogout: @escaping (String?) -> Void) {
@@ -22,6 +28,9 @@ struct ChangePasswordView: View {
             bottomCTA
         }
         .background(Colors.backgroundDefault.ignoresSafeArea())
+        .ignoresSafeArea(.keyboard)
+        .contentShape(Rectangle())
+        .onTapGesture { focusedField = nil }
         .navigationBarHidden(true)
         .onChange(of: viewModel.isCompleted) {
             if viewModel.isCompleted {
@@ -89,7 +98,10 @@ struct ChangePasswordView: View {
                 }
                 .typography(Typography.bodyMdRegular)
                 .foregroundStyle(Colors.textPrimary)
+                .textContentType(.newPassword)
+                .focused($focusedField, equals: .newPassword)
                 .submitLabel(.next)
+                .onSubmit { focusedField = .confirmation }
 
                 Button(action: { viewModel.isPasswordVisible.toggle() }) {
                     Image(viewModel.isPasswordVisible ? .eyeIcon : .eyeOffIcon)
@@ -150,8 +162,13 @@ struct ChangePasswordView: View {
                 }
                 .typography(Typography.bodyMdRegular)
                 .foregroundStyle(Colors.textPrimary)
+                .textContentType(.newPassword)
+                .focused($focusedField, equals: .confirmation)
                 .submitLabel(.done)
-                .onSubmit(confirmTapped)
+                .onSubmit {
+                    focusedField = nil
+                    confirmTapped()
+                }
 
                 Button(action: { viewModel.isPasswordConfirmationVisible.toggle() }) {
                     Image(viewModel.isPasswordConfirmationVisible ? .eyeIcon : .eyeOffIcon)

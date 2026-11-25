@@ -73,6 +73,9 @@ struct LoginView: View {
                 bottomCTA
             }
             .background(Colors.backgroundDefault.ignoresSafeArea())
+            .ignoresSafeArea(.keyboard)
+            .contentShape(Rectangle())
+            .onTapGesture { focusedField = nil }
 
             snackbar
                 .padding(.top, Spacing.spacing8)
@@ -193,7 +196,6 @@ struct LoginView: View {
     private var topNavigationBar: some View {
         Color.clear
             .frame(height: 56)
-            .background(Colors.backgroundDefault)
     }
 
     private var titleView: some View {
@@ -231,7 +233,10 @@ struct LoginView: View {
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
                 .keyboardType(.emailAddress)
+                .textContentType(.username)
                 .focused($focusedField, equals: .email)
+                .submitLabel(.next)
+                .onSubmit { focusedField = .password }
 
                 Text("@\(viewModel.selectedSchoolEmailDomain)")
                     .foregroundStyle(Colors.textQuaternary)
@@ -286,6 +291,12 @@ struct LoginView: View {
                 prompt: Text("비밀번호를 입력해 주세요").foregroundStyle(Colors.textQuaternary)
             )
             .focused($focusedField, equals: .password)
+            .textContentType(.password)
+            .submitLabel(.done)
+            .onSubmit {
+                focusedField = nil
+                viewModel.loginTapped()
+            }
             .typography(Typography.bodyMdRegular)
             .padding(.horizontal, Spacing.spacing16)
             .frame(height: 56)
@@ -387,7 +398,6 @@ struct LoginView: View {
                 .frame(maxWidth: .infinity)
             }
             .padding(.bottom, Spacing.spacing32)
-            .background(Colors.backgroundDefault)
         }
         .opacity(isBottomCTAVisible ? 1 : 0)
         .offset(y: isBottomCTAVisible ? 0 : 32)

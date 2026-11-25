@@ -30,6 +30,7 @@ struct PaymentExpiredView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(Colors.backgroundDefault.ignoresSafeArea())
+        .ignoresSafeArea(.keyboard)
         .navigationBarHidden(true)
         .onAppear { appeared = true }
     }

@@ -58,6 +58,7 @@ struct CartView: View {
             }
         }
         .background(Colors.backgroundDefault.ignoresSafeArea())
+        .ignoresSafeArea(.keyboard)
         .navigationBarHidden(true)
         .onChange(of: viewModel.orderUnavailableAlert) {
             if viewModel.orderUnavailableAlert != nil {

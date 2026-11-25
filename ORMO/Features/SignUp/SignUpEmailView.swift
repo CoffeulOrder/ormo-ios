@@ -22,6 +22,9 @@ struct SignUpEmailView: View {
                 bottomCTA
             }
             .background(Colors.backgroundDefault.ignoresSafeArea())
+            .ignoresSafeArea(.keyboard)
+            .contentShape(Rectangle())
+            .onTapGesture { isEmailFocused = false }
 
             BottomSheetContainer(isPresented: $viewModel.isSchoolEmailDomainSheetVisible) {
                 SchoolEmailDomainSheet(
@@ -95,8 +98,12 @@ struct SignUpEmailView: View {
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
                 .keyboardType(.emailAddress)
+                .textContentType(.username)
                 .submitLabel(.done)
-                .onSubmit(submitTapped)
+                .onSubmit {
+                    isEmailFocused = false
+                    submitTapped()
+                }
                 .focused($isEmailFocused)
 
                 Text("@\(viewModel.selectedSchoolEmailDomain)")

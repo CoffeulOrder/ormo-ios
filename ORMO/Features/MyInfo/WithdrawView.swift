@@ -3,6 +3,7 @@ import SwiftUI
 struct WithdrawView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel = WithdrawViewModel()
+    @FocusState private var isPasswordFocused: Bool
     let onWithdrawn: () -> Void
 
     var body: some View {
@@ -18,6 +19,9 @@ struct WithdrawView: View {
             bottomCTA
         }
         .background(Colors.backgroundDefault.ignoresSafeArea())
+        .ignoresSafeArea(.keyboard)
+        .contentShape(Rectangle())
+        .onTapGesture { isPasswordFocused = false }
         .navigationBarHidden(true)
     }
 
@@ -64,7 +68,10 @@ struct WithdrawView: View {
                 }
                 .typography(Typography.bodyMdRegular)
                 .foregroundStyle(Colors.textPrimary)
+                .textContentType(.password)
+                .focused($isPasswordFocused)
                 .submitLabel(.done)
+                .onSubmit { isPasswordFocused = false }
 
                 Button(action: { viewModel.isPasswordVisible.toggle() }) {
                     Image(viewModel.isPasswordVisible ? .eyeIcon : .eyeOffIcon)

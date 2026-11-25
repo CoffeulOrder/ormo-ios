@@ -8,6 +8,7 @@ struct SignUpProfileView: View {
     @State private var isTermsSheetVisible = false
     @State private var isTitleVisible = false
     @State private var isBottomCTAVisible = false
+    @FocusState private var isFieldFocused: Bool
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -22,6 +23,9 @@ struct SignUpProfileView: View {
                 bottomCTA
             }
             .background(Colors.backgroundDefault.ignoresSafeArea())
+            .ignoresSafeArea(.keyboard)
+            .contentShape(Rectangle())
+            .onTapGesture { isFieldFocused = false }
 
             BottomSheetContainer(isPresented: $isTermsSheetVisible, bottomPadding: Spacing.spacing32) {
                 TermsAgreementSheet(viewModel: termsViewModel)
@@ -137,8 +141,13 @@ struct SignUpProfileView: View {
                         ),
                         prompt: Text("오르모").foregroundStyle(Colors.textQuaternary)
                     )
+                    .textContentType(.name)
+                    .focused($isFieldFocused)
                     .submitLabel(.next)
-                    .onSubmit(confirmTapped)
+                    .onSubmit {
+                        isFieldFocused = false
+                        confirmTapped()
+                    }
                 } else {
                     Text(viewModel.name)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -202,8 +211,13 @@ struct SignUpProfileView: View {
             }
             .typography(Typography.bodyMdRegular)
             .foregroundStyle(Colors.textPrimary)
+            .textContentType(.newPassword)
+            .focused($isFieldFocused)
             .submitLabel(.next)
-            .onSubmit(confirmTapped)
+            .onSubmit {
+                isFieldFocused = false
+                confirmTapped()
+            }
 
             Button(action: { viewModel.isPasswordVisible.toggle() }) {
                 Image(viewModel.isPasswordVisible ? .eyeIcon : .eyeOffIcon)
@@ -246,8 +260,13 @@ struct SignUpProfileView: View {
                 }
                 .typography(Typography.bodyMdRegular)
                 .foregroundStyle(Colors.textPrimary)
+                .textContentType(.newPassword)
+                .focused($isFieldFocused)
                 .submitLabel(.done)
-                .onSubmit(confirmTapped)
+                .onSubmit {
+                    isFieldFocused = false
+                    confirmTapped()
+                }
 
                 Button(action: { viewModel.isPasswordConfirmationVisible.toggle() }) {
                     Image(viewModel.isPasswordConfirmationVisible ? .eyeIcon : .eyeOffIcon)
