@@ -525,8 +525,8 @@ struct HomeMenuView: View {
 
     private func menuCardContent(_ item: MenuItem) -> some View {
         HStack(spacing: Spacing.spacing12) {
-            VStack(alignment: .leading, spacing: Spacing.spacing12) {
-                VStack(alignment: .leading, spacing: Spacing.spacing8) {
+            VStack(alignment: .leading, spacing: Spacing.spacing8) {
+                VStack(alignment: .leading, spacing: Spacing.spacing4) {
                     menuBadge(item)
 
                     VStack(alignment: .leading, spacing: 0) {
