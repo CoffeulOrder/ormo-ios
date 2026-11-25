@@ -103,6 +103,8 @@ struct MenuSearchView: View {
                 ForEach(viewModel.recentSearches, id: \.self) { term in
                     recentSearchRow(term)
                 }
+
+                Color.clear.frame(height: Spacing.spacing16)
             }
         }
     }
