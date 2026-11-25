@@ -51,6 +51,15 @@ private struct SectionHeightKey: PreferenceKey {
     }
 }
 
+// 리스트 맨 아래 유의사항 섹션 자체의 높이. bottomInset보다 짧으면 그 차이만큼만
+// 빈 공간을 추가로 둔다.
+private struct NoticeHeightKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
+    }
+}
+
 // 메뉴 리스트 위에 떠 있는 하단 바(장바구니 바·실시간 주문 바)의 높이. 0이면 아무것도
 // 떠 있지 않다는 뜻이다.
 private struct BottomOverlayBarHeightKey: PreferenceKey {
@@ -64,7 +73,9 @@ struct HomeMenuView: View {
     // 다음 카테고리로 하이라이트가 넘어가기까지, 그 카테고리 메뉴가 이 정도(개수) 보여야 한다.
     private static let sectionActivationItemCount: CGFloat = 1.3
     // 탭 밑줄·탭 줄 스크롤에 쓰는 애니메이션(150~250ms 범위의 ease-out).
-    private static let indicatorAnimation = Animation.easeOut(duration: 0.2)
+    // easeOut은 초반에 이동이 몰려 있어 빠르게(0.2초) 재생하면 "스냅됐다가 슬쩍 더 간다"는
+    // 느낌을 준다. easeInOut으로 바꿔 가속·감속이 고르게 보이도록 했다.
+    private static let indicatorAnimation = Animation.easeInOut(duration: 0.22)
     // 메뉴 리스트를 탭 섹션으로 스크롤할 때 쓰는 애니메이션(250~350ms 범위의 ease-in-out).
     private static let listScrollAnimation = Animation.easeInOut(duration: 0.3)
     // 이 거리(화면 높이의 배수)를 넘는 스크롤은 먼저 애니메이션 없이 목표 근처까지 점프한 뒤,
@@ -80,6 +91,7 @@ struct HomeMenuView: View {
     @State private var tabsViewportWidth: CGFloat = 0
     @State private var listViewportHeight: CGFloat = 0
     @State private var bottomOverlayBarHeight: CGFloat = 0
+    @State private var noticeHeight: CGFloat = 0
     @State private var router = HomeRouter()
     @State private var cart = CartStore()
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -380,8 +392,15 @@ struct HomeMenuView: View {
                                 }
 
                                 // 마지막 섹션이 리스트 뷰포트보다 짧아도 탭 바로 아래까지 스크롤할 수
-                                // 있도록, 모자란 만큼 빈 공간을 둔다.
-                                Color.clear.frame(height: bottomInset)
+                                // 있도록, 모자란 만큼의 공간을 빈 칸으로 두지 않고 유의사항으로 채운다.
+                                // 유의사항 자체가 bottomInset보다 짧으면 남는 만큼만 빈 공간을 추가한다.
+                                noticeSection
+                                    .background(
+                                        GeometryReader { geometry in
+                                            Color.clear.preference(key: NoticeHeightKey.self, value: geometry.size.height)
+                                        }
+                                    )
+                                Color.clear.frame(height: max(bottomInset - noticeHeight, 0))
                             }
                         }
                         .coordinateSpace(name: "menuScroll")
@@ -394,6 +413,7 @@ struct HomeMenuView: View {
                             updateCurrentSectionFromScroll()
                         }
                         .onPreferenceChange(SectionHeightKey.self) { sectionHeights = $0 }
+                        .onPreferenceChange(NoticeHeightKey.self) { noticeHeight = $0 }
                         // 사용자가 리스트를 직접 드래그하기 시작하면, 탭 클릭으로 시작된 프로그램
                         // 스크롤이 아직 "끝났다고 확정"되지 않았더라도 즉시 scroll-spy로 돌아간다.
                         .simultaneousGesture(
@@ -568,6 +588,9 @@ struct HomeMenuView: View {
                                 .fill(Colors.textPrimary)
                                 .frame(width: max(frame.width - Spacing.spacing12 * 2, 0), height: 3)
                                 .offset(x: frame.minX + Spacing.spacing12)
+                                // 밑줄의 위치·너비만 여기서 따로 애니메이션한다(라벨 폰트 교체는
+                                // 즉시 반영돼야 가변 폰트 보간으로 인한 깜빡임이 없다).
+                                .animation(anim(Self.indicatorAnimation), value: section)
                         }
                     }
                     .onPreferenceChange(TabFrameKey.self) { tabFrames = $0 }
@@ -643,9 +666,10 @@ struct HomeMenuView: View {
         let title = viewModel.sectionTitle(section)
 
         return Button(action: {
-            withAnimation(anim(Self.indicatorAnimation)) {
-                viewModel.selectSection(section)
-            }
+            // selectSection 자체는 애니메이션 없이 즉시 반영한다. 라벨 굵기는 바로 바뀌고,
+            // 밑줄만 아래 .animation(value:)로 따로 슬라이드시킨다 — 라벨까지 같은 트랜잭션에
+            // 묶으면 가변 폰트 굵기 보간과 맞물려 깜빡일 여지가 있어 방어적으로 분리해 둔다.
+            viewModel.selectSection(section)
         }) {
             ZStack {
                 // 보이지 않지만 항상 Bold 폭으로 레이아웃을 고정한다. 선택 시 폰트가 Bold로
@@ -659,11 +683,13 @@ struct HomeMenuView: View {
                 Text(title)
                     .font(isSelected ? Typography.bodyLgBold : Typography.bodyLgSemibold)
                     .foregroundStyle(isSelected ? Colors.textPrimary : Colors.textTertiary)
+                    .animation(nil, value: isSelected)
             }
             .padding(.horizontal, Spacing.spacing12)
             .frame(height: 51)
         }
         .buttonStyle(.plain)
+        .transaction { $0.animation = nil }
         .background(
             GeometryReader { geometry in
                 Color.clear.preference(
@@ -797,6 +823,46 @@ struct HomeMenuView: View {
                 .frame(height: 24)
                 .background(badge == .popular ? Colors.fillBrand : Colors.fillSuccess)
                 .clipShape(Capsule())
+        }
+    }
+
+    // 메뉴 리스트 맨 아래, 더 이상 메뉴가 없는 구간을 빈 흰 공백으로 두지 않고 유의사항으로
+    // 채운다. 제목 1줄 + 글머리 기호 4개 자리를 만들어 뒀으니, 실제 문구는 Xcode에서
+    // noticeBulletPoints 배열만 바꾸면 된다.
+    private static let noticeBulletPoints = [
+        "유의사항 1을 입력해 주세요",
+        "유의사항 2를 입력해 주세요",
+        "유의사항 3을 입력해 주세요",
+        "유의사항 4를 입력해 주세요"
+    ]
+
+    private var noticeSection: some View {
+        VStack(alignment: .leading, spacing: Spacing.spacing12) {
+            Text("유의사항")
+                .font(Typography.bodyLgSemibold)
+                .foregroundStyle(Colors.textPrimary)
+
+            VStack(alignment: .leading, spacing: Spacing.spacing8) {
+                ForEach(Array(Self.noticeBulletPoints.enumerated()), id: \.offset) { _, text in
+                    noticeBulletRow(text)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(Spacing.spacing20)
+        .background(Colors.backgroundLower)
+    }
+
+    private func noticeBulletRow(_ text: String) -> some View {
+        HStack(alignment: .top, spacing: Spacing.spacing8) {
+            Text("•")
+                .font(Typography.bodyMdRegular)
+                .foregroundStyle(Colors.textSecondary)
+
+            Text(text)
+                .font(Typography.bodyMdRegular)
+                .foregroundStyle(Colors.textSecondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
