@@ -74,7 +74,7 @@ struct NotificationPermissionSheet: View {
             footer
         }
         .padding(.top, Spacing.spacing12)
-        .padding(.bottom, Spacing.spacing16)
+        .padding(.bottom, Spacing.spacing32)
         .frame(maxWidth: .infinity)
         .background(Colors.backgroundFloated)
         .clipShape(

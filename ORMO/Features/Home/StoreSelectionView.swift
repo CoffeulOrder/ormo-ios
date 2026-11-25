@@ -253,7 +253,7 @@ struct StoreSelectionView: View {
             .buttonStyle(.plain)
             .padding(.horizontal, Spacing.spacing20)
             .padding(.top, Spacing.spacing16)
-            .padding(.bottom, Spacing.spacing20)
+            .padding(.bottom, Spacing.spacing32)
         }
     }
 

@@ -193,7 +193,7 @@ struct PasswordResetCompletionView: View {
             }
             .buttonStyle(.plain)
             .padding(.horizontal, Spacing.spacing20)
-            .padding(.bottom, Spacing.spacing20)
+            .padding(.bottom, Spacing.spacing32)
             .background(Colors.backgroundDefault)
         }
         .keyframeAnimator(initialValue: FadeUpMotion(translateY: 716, opacity: 0), trigger: hasAppeared) { content, motion in
@@ -212,6 +212,7 @@ struct PasswordResetCompletionView: View {
                 LinearKeyframe(1, duration: 0.8)
             }
         }
+        .ignoresSafeArea(edges: .bottom)
     }
 }
 

@@ -99,7 +99,7 @@ struct PaymentExpiredView: View {
             }
             .buttonStyle(.plain)
             .padding(.horizontal, Spacing.spacing20)
-            .padding(.bottom, Spacing.spacing20)
+            .padding(.bottom, Spacing.spacing32)
             .background(Colors.backgroundDefault)
         }
         .keyframeAnimator(initialValue: FadeUpMotion(translateY: 32), trigger: appeared) { content, motion in
@@ -116,6 +116,7 @@ struct PaymentExpiredView: View {
                 LinearKeyframe(1, duration: 0.4, timingCurve: Self.easeOutCurve)
             }
         }
+        .ignoresSafeArea(edges: .bottom)
     }
 
     // "... → 장바구니 → 결제 확인 중 → 주문 만료" 순서로 들어오므로 끝에서 2개만 지우면

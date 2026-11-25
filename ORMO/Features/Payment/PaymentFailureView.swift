@@ -67,9 +67,10 @@ struct PaymentFailureView: View {
                 }
             }
             .padding(.horizontal, Spacing.spacing20)
-            .padding(.bottom, Spacing.spacing20)
+            .padding(.bottom, Spacing.spacing32)
             .background(Colors.backgroundDefault)
         }
+        .ignoresSafeArea(edges: .bottom)
     }
 
     private enum ActionButtonStyle {
