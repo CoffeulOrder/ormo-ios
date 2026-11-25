@@ -63,7 +63,7 @@ struct MenuSearchView: View {
                     text: $viewModel.query,
                     prompt: Text("메뉴 이름으로 검색해보세요").foregroundStyle(Colors.textTertiary)
                 )
-                .font(Typography.bodyMdRegular)
+                .typography(Typography.bodyMdRegular)
                 .foregroundStyle(Colors.textPrimary)
                 .focused($isSearchFieldFocused)
                 .submitLabel(.search)
@@ -95,7 +95,7 @@ struct MenuSearchView: View {
         Group {
             if !viewModel.recentSearches.isEmpty {
                 Text("최근 검색")
-                    .font(Typography.bodyLgSemibold)
+                    .typography(Typography.bodyLgSemibold)
                     .foregroundStyle(Colors.textPrimary)
                     .padding(.horizontal, Spacing.spacing20)
                     .padding(.vertical, Spacing.spacing12)
@@ -113,7 +113,7 @@ struct MenuSearchView: View {
         HStack(spacing: Spacing.spacing8) {
             Button(action: { viewModel.recentSearchTapped(term) }) {
                 Text(term)
-                    .font(Typography.bodyMdMedium)
+                    .typography(Typography.bodyMdMedium)
                     .foregroundStyle(Colors.textPrimary)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -133,7 +133,7 @@ struct MenuSearchView: View {
 
     private var resultCountLabel: some View {
         Text("메뉴 \(viewModel.results.count)개")
-            .font(Typography.bodyMdMedium)
+            .typography(Typography.bodyMdMedium)
             .foregroundStyle(Colors.textSecondary)
             .padding(.horizontal, Spacing.spacing20)
             .padding(.top, Spacing.spacing16)
@@ -145,15 +145,15 @@ struct MenuSearchView: View {
             VStack(alignment: .leading, spacing: Spacing.spacing8) {
                 VStack(alignment: .leading, spacing: 0) {
                     highlightedName(item.name, query: viewModel.query)
-                        .font(Typography.bodyLgSemibold)
+                        .typography(Typography.bodyLgSemibold)
 
                     Text("\(item.price.formatted())원")
-                        .font(Typography.bodyMdSemibold)
+                        .typography(Typography.bodyMdSemibold)
                         .foregroundStyle(Colors.textPrimary)
                 }
 
                 Text(item.description)
-                    .font(Typography.bodySmRegular)
+                    .typography(Typography.bodySmRegular)
                     .foregroundStyle(Colors.textSecondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -189,7 +189,7 @@ struct MenuSearchView: View {
                 thickDivider
 
                 Text("인기 메뉴")
-                    .font(Typography.bodyLgSemibold)
+                    .typography(Typography.bodyLgSemibold)
                     .foregroundStyle(Colors.textPrimary)
                     .padding(.horizontal, Spacing.spacing20)
                     .padding(.top, Spacing.spacing12)
@@ -209,14 +209,14 @@ struct MenuSearchView: View {
             VStack(alignment: .leading, spacing: Spacing.spacing8) {
                 VStack(alignment: .leading, spacing: 0) {
                     Text(item.name)
-                        .font(Typography.bodyLgSemibold)
+                        .typography(Typography.bodyLgSemibold)
                         .foregroundStyle(Colors.textPrimary)
                     Text("\(item.price.formatted())원")
-                        .font(Typography.bodyMdSemibold)
+                        .typography(Typography.bodyMdSemibold)
                         .foregroundStyle(Colors.textPrimary)
                 }
                 Text(item.description)
-                    .font(Typography.bodySmRegular)
+                    .typography(Typography.bodySmRegular)
                     .foregroundStyle(Colors.textSecondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)

@@ -147,11 +147,11 @@ struct PasswordResetCompletionView: View {
     private var stackView: some View {
         VStack(spacing: Spacing.spacing12) {
             Text("비밀번호를 변경했어요")
-                .font(Typography.displayXsSemibold)
+                .typography(Typography.displayXsSemibold)
                 .foregroundStyle(Colors.textPrimary)
 
             Text("새 비밀번호로 로그인해주세요")
-                .font(Typography.bodyMdMedium)
+                .typography(Typography.bodyMdMedium)
                 .foregroundStyle(Colors.textSecondary)
         }
         .multilineTextAlignment(.center)
@@ -184,7 +184,7 @@ struct PasswordResetCompletionView: View {
 
             Button(action: onLoginTapped) {
                 Text("로그인하기")
-                    .font(Typography.bodyLgSemibold)
+                    .typography(Typography.bodyLgSemibold)
                     .foregroundStyle(Colors.textOnFill)
                     .frame(maxWidth: .infinity)
                     .frame(height: 56)

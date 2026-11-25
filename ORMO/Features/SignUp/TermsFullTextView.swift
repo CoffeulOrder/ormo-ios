@@ -12,11 +12,11 @@ struct TermsFullTextView: View {
                     ForEach(document.articles, id: \.heading) { article in
                         VStack(alignment: .leading, spacing: Spacing.spacing8) {
                             Text(article.heading)
-                                .font(Typography.bodyMdSemibold)
+                                .typography(Typography.bodyMdSemibold)
                                 .foregroundStyle(Colors.textPrimary)
 
                             Text(article.body)
-                                .font(Typography.bodyMdRegular)
+                                .typography(Typography.bodyMdRegular)
                                 .foregroundStyle(Colors.textSecondary)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -48,7 +48,7 @@ struct TermsFullTextView: View {
             .padding(.horizontal, Spacing.spacing8)
 
             Text(document.title)
-                .font(Typography.bodyLgSemibold)
+                .typography(Typography.bodyLgSemibold)
                 .foregroundStyle(Colors.textStrong)
         }
         .frame(height: 56)

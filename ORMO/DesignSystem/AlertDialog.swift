@@ -27,12 +27,12 @@ struct AlertDialog: View {
         VStack(alignment: .leading, spacing: Spacing.spacing24) {
             VStack(alignment: .leading, spacing: Spacing.spacing8) {
                 Text(title)
-                    .font(Typography.bodyXlBold)
+                    .typography(Typography.bodyXlBold)
                     .foregroundStyle(Colors.textStrong)
                     .frame(maxWidth: .infinity, alignment: .leading)
 
                 Text(message)
-                    .font(Typography.bodyMdRegular)
+                    .typography(Typography.bodyMdRegular)
                     .foregroundStyle(Colors.textSecondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -41,7 +41,7 @@ struct AlertDialog: View {
                 HStack(spacing: Spacing.spacing8) {
                     Button(action: secondaryAction) {
                         Text(secondaryTitle)
-                            .font(Typography.bodyMdSemibold)
+                            .typography(Typography.bodyMdSemibold)
                             .foregroundStyle(Colors.textPrimary)
                             .frame(maxWidth: .infinity)
                             .frame(height: 48)
@@ -52,7 +52,7 @@ struct AlertDialog: View {
 
                     Button(action: primaryAction) {
                         Text(primaryTitle)
-                            .font(Typography.bodyMdSemibold)
+                            .typography(Typography.bodyMdSemibold)
                             .foregroundStyle(Colors.textOnFill)
                             .frame(maxWidth: .infinity)
                             .frame(height: 48)
@@ -64,7 +64,7 @@ struct AlertDialog: View {
             } else {
                 Button(action: primaryAction) {
                     Text(primaryTitle)
-                        .font(Typography.bodyMdSemibold)
+                        .typography(Typography.bodyMdSemibold)
                         .foregroundStyle(Colors.textOnFill)
                         .frame(maxWidth: .infinity)
                         .frame(height: 48)

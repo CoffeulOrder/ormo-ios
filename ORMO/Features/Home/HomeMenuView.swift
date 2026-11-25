@@ -126,6 +126,7 @@ struct HomeMenuView: View {
                         MenuOptionsView(
                             item: item,
                             cart: cart,
+                            searchableMenuItems: searchableMenuItems,
                             onAddedToCart: { router.path.removeLast() },
                             onOrderNow: { router.path.append(HomeRoute.cart) }
                         )
@@ -285,11 +286,11 @@ struct HomeMenuView: View {
         Button(action: cartBarTapped) {
             HStack(spacing: Spacing.spacing8) {
                 Text("\(cart.totalPrice.formatted())원 보기")
-                    .font(Typography.bodyLgSemibold)
+                    .typography(Typography.bodyLgSemibold)
                     .foregroundStyle(Colors.textOnFill)
 
                 Text("\(cart.totalQuantity)")
-                    .font(Typography.bodySmBold)
+                    .typography(Typography.bodySmBold)
                     .foregroundStyle(Colors.textBrand)
                     .padding(.horizontal, Spacing.spacing8)
                     .frame(minWidth: 24)
@@ -315,7 +316,7 @@ struct HomeMenuView: View {
                 .frame(width: 24, height: 24)
 
             Text(viewModel.cartSnackbarMessage)
-                .font(Typography.bodyMdSemibold)
+                .typography(Typography.bodyMdSemibold)
                 .foregroundStyle(Colors.textOnFill)
         }
         .padding(.leading, Spacing.spacing16)
@@ -517,7 +518,7 @@ struct HomeMenuView: View {
                 .frame(width: 20, height: 20)
 
             Text(message)
-                .font(Typography.bodySmSemibold)
+                .typography(Typography.bodySmSemibold)
                 .foregroundStyle(Colors.textPrimary)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -535,7 +536,7 @@ struct HomeMenuView: View {
             Button(action: storeSelectionTapped) {
                 HStack(spacing: Spacing.spacing8) {
                     Text(viewModel.storeName)
-                        .font(Typography.bodyXlSemibold)
+                        .typography(Typography.bodyXlSemibold)
                         .foregroundStyle(Colors.textPrimary)
 
                     Image(.chevronDown)
@@ -693,12 +694,12 @@ struct HomeMenuView: View {
                 // 바뀌면서 탭 너비(= 밑줄 좌표 기준)가 흔들려, 밑줄이 전환 도중 잘못된
                 // 위치로 스냅되던 문제의 원인이었다.
                 Text(title)
-                    .font(Typography.bodyLgBold)
+                    .typography(Typography.bodyLgBold)
                     .opacity(0)
                     .accessibilityHidden(true)
 
                 Text(title)
-                    .font(isSelected ? Typography.bodyLgBold : Typography.bodyLgSemibold)
+                    .typography(isSelected ? Typography.bodyLgBold : Typography.bodyLgSemibold)
                     .foregroundStyle(isSelected ? Colors.textPrimary : Colors.textTertiary)
                     .animation(nil, value: isSelected)
             }
@@ -789,7 +790,7 @@ struct HomeMenuView: View {
 
     private func categoryLabel(_ title: String) -> some View {
         Text(title)
-            .font(Typography.bodyLgBold)
+            .typography(Typography.bodyLgBold)
             .foregroundStyle(Colors.textPrimary)
             .padding(.horizontal, Spacing.spacing20)
             .padding(.top, Spacing.spacing12)
@@ -817,16 +818,16 @@ struct HomeMenuView: View {
 
                     VStack(alignment: .leading, spacing: 0) {
                         Text(item.name)
-                            .font(Typography.bodyLgSemibold)
+                            .typography(Typography.bodyLgSemibold)
                             .foregroundStyle(Colors.textPrimary)
                         Text("\(item.price.formatted())원")
-                            .font(Typography.bodyMdSemibold)
+                            .typography(Typography.bodyMdSemibold)
                             .foregroundStyle(Colors.textPrimary)
                     }
                 }
 
                 Text(item.description)
-                    .font(Typography.bodySmRegular)
+                    .typography(Typography.bodySmRegular)
                     .foregroundStyle(Colors.textSecondary)
                     .lineLimit(2)
             }
@@ -842,7 +843,7 @@ struct HomeMenuView: View {
     private func menuBadge(_ item: MenuItem) -> some View {
         if item.isSoldOut {
             Text("품절")
-                .font(Typography.bodyXsMedium)
+                .typography(Typography.bodyXsMedium)
                 .foregroundStyle(Colors.textSecondary)
                 .padding(.horizontal, Spacing.spacing8)
                 .frame(height: 24)
@@ -850,7 +851,7 @@ struct HomeMenuView: View {
                 .clipShape(Capsule())
         } else if let badge = item.badge {
             Text(badge == .popular ? "인기" : "신규")
-                .font(Typography.bodyXsBold)
+                .typography(Typography.bodyXsBold)
                 .foregroundStyle(Colors.textOnFill)
                 .padding(.horizontal, Spacing.spacing8)
                 .frame(height: 24)
@@ -872,7 +873,7 @@ struct HomeMenuView: View {
     private var noticeSection: some View {
         VStack(alignment: .leading, spacing: Spacing.spacing12) {
             Text("유의사항")
-                .font(Typography.bodyLgSemibold)
+                .typography(Typography.bodyLgSemibold)
                 .foregroundStyle(Colors.textPrimary)
 
             VStack(alignment: .leading, spacing: Spacing.spacing8) {
@@ -889,11 +890,11 @@ struct HomeMenuView: View {
     private func noticeBulletRow(_ text: String) -> some View {
         HStack(alignment: .top, spacing: Spacing.spacing8) {
             Text("•")
-                .font(Typography.bodyMdRegular)
+                .typography(Typography.bodyMdRegular)
                 .foregroundStyle(Colors.textSecondary)
 
             Text(text)
-                .font(Typography.bodyMdRegular)
+                .typography(Typography.bodyMdRegular)
                 .foregroundStyle(Colors.textSecondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }

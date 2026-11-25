@@ -82,7 +82,7 @@ struct SignUpProfileView: View {
 
     private var titleView: some View {
         Text(titleText)
-            .font(Typography.displayXsSemibold)
+            .typography(Typography.displayXsSemibold)
             .foregroundStyle(Colors.textPrimary)
             .padding(.horizontal, Spacing.spacing20)
             .padding(.vertical, 10) // Figma 원본값이 10px (spacing 토큰 중 일치 항목 없음)
@@ -124,7 +124,7 @@ struct SignUpProfileView: View {
     private func nameField(isActive: Bool) -> some View {
         VStack(alignment: .leading, spacing: Spacing.spacing8) {
             Text("이름")
-                .font(Typography.bodySmSemibold)
+                .typography(Typography.bodySmSemibold)
                 .foregroundStyle(Colors.textSecondary)
 
             Group {
@@ -144,7 +144,7 @@ struct SignUpProfileView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
-            .font(Typography.bodyMdRegular)
+            .typography(Typography.bodyMdRegular)
             .foregroundStyle(Colors.textPrimary)
             .padding(.horizontal, Spacing.spacing16)
             .frame(height: 56)
@@ -166,7 +166,7 @@ struct SignUpProfileView: View {
     private func passwordGroup(isActive: Bool) -> some View {
         VStack(alignment: .leading, spacing: Spacing.spacing8) {
             Text("비밀번호")
-                .font(Typography.bodySmSemibold)
+                .typography(Typography.bodySmSemibold)
                 .foregroundStyle(Colors.textSecondary)
 
             passwordDisplay(isActive: isActive)
@@ -200,7 +200,7 @@ struct SignUpProfileView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
-            .font(Typography.bodyMdRegular)
+            .typography(Typography.bodyMdRegular)
             .foregroundStyle(Colors.textPrimary)
             .submitLabel(.next)
             .onSubmit(confirmTapped)
@@ -225,7 +225,7 @@ struct SignUpProfileView: View {
                 .frame(width: 20, height: 20)
 
             Text(title)
-                .font(Typography.bodySmMedium)
+                .typography(Typography.bodySmMedium)
                 .foregroundStyle(isSatisfied ? Colors.textBrand : Colors.textTertiary)
         }
     }
@@ -233,7 +233,7 @@ struct SignUpProfileView: View {
     private var passwordConfirmationField: some View {
         VStack(alignment: .leading, spacing: Spacing.spacing8) {
             Text("비밀번호 확인")
-                .font(Typography.bodySmSemibold)
+                .typography(Typography.bodySmSemibold)
                 .foregroundStyle(Colors.textSecondary)
 
             HStack(spacing: Spacing.spacing8) {
@@ -244,7 +244,7 @@ struct SignUpProfileView: View {
                         SecureField("", text: $viewModel.passwordConfirmation)
                     }
                 }
-                .font(Typography.bodyMdRegular)
+                .typography(Typography.bodyMdRegular)
                 .foregroundStyle(Colors.textPrimary)
                 .submitLabel(.done)
                 .onSubmit(confirmTapped)
@@ -282,7 +282,7 @@ struct SignUpProfileView: View {
                 .frame(width: 16, height: 16)
 
             Text(message)
-                .font(Typography.bodySmRegular)
+                .typography(Typography.bodySmRegular)
                 .foregroundStyle(Colors.textDanger)
         }
     }
@@ -298,7 +298,7 @@ struct SignUpProfileView: View {
 
             Button(action: confirmTapped) {
                 Text("확인")
-                    .font(Typography.bodyLgSemibold)
+                    .typography(Typography.bodyLgSemibold)
                     .foregroundStyle(viewModel.isCurrentStepValid ? Colors.textOnFill : Colors.textQuaternary)
                     .frame(maxWidth: .infinity)
                     .frame(height: 56)

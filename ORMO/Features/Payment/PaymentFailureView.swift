@@ -30,7 +30,7 @@ struct PaymentFailureView: View {
     private var textStack: some View {
         VStack(spacing: Spacing.spacing12) {
             Text(isLimitExceeded ? "더 이상 결제할 수 없어요" : "결제하지 못했어요")
-                .font(Typography.displayXsSemibold)
+                .typography(Typography.displayXsSemibold)
                 .foregroundStyle(Colors.textPrimary)
 
             Group {
@@ -42,7 +42,7 @@ struct PaymentFailureView: View {
                     Text("다른 결제수단을 선택해주세요")
                 }
             }
-            .font(Typography.bodyMdMedium)
+            .typography(Typography.bodyMdMedium)
             .foregroundStyle(Colors.textSecondary)
         }
         .multilineTextAlignment(.center)
@@ -80,7 +80,7 @@ struct PaymentFailureView: View {
     private func actionButton(_ title: String, style: ActionButtonStyle, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(title)
-                .font(Typography.bodyLgSemibold)
+                .typography(Typography.bodyLgSemibold)
                 .foregroundStyle(style == .solid ? Colors.textOnFill : Colors.textBrand)
                 .frame(maxWidth: .infinity)
                 .frame(height: 56)

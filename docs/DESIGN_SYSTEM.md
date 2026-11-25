@@ -372,27 +372,85 @@ Figma Variables → `Color` 컬렉션 (모드: Light / Dark). `Base/*` 147개. �
 
 ### 1.2 Typography
 
-크기(Display 2xl ~ Body xs)와 굵기(Regular · Medium · Semibold · Bold)만 고르면 되는 단순한 구조. 모든 스타일의 서체·굵기·크기·행간이 **Typography 변수**에 연결돼 있어 `Font Family/Base` 값 하나만 바꾸면 전체 서체가 바뀐다. 서체는 **Pretendard**.
+크기(Display 2xl ~ Body xs)와 굵기(Regular · Medium · Semibold · Bold)만 고르면 되는 단순한 구조. 모든 스타일의 서체·굵기·크기·**행간**이 **Typography 변수**에 연결돼 있어 `Font Family/Base` 값 하나만 바꾸면 전체 서체가 바뀐다. 서체는 **Pretendard**.
 
-| Style | Size / Line height | 용도 |
-|---|---|---|
-| Display / 2xl | 72 / 90 | 랜딩 히어로 |
-| Display / xl | 60 / 72 | 랜딩 히어로 |
-| Display / lg | 48 / 60 | 큰 숫자 · 마케팅 |
-| Display / md | 36 / 44 | 웹 페이지 제목 |
-| Display / sm | 30 / 38 | 모바일 큰 제목 · 금액 |
-| Display / xs | 24 / 32 | 모바일 화면 제목 |
-| Body / xl | 20 / 30 | 섹션 제목 · 바텀시트 제목 |
-| Body / lg | 18 / 28 | 카드 제목 · XL 버튼 |
-| Body / md | 16 / 24 | 본문 · 리스트 제목 · 입력값 |
-| Body / sm | 14 / 20 | 보조 본문 · 라벨 · S 버튼 |
-| Body / xs | 12 / 18 | 캡션 · 배지 · 메타 정보 |
+#### 1.2.1 스케일과 행간
 
-각 스타일은 Regular / Medium / Semibold / Bold 4가지 굵기 (예: `Body md/Semibold`). 총 11 × 4 = 44개 텍스트 스타일.
+크기마다 행간(line height)이 **px 고정값 한 쌍**으로 정해져 있다 (`Font Size/*` ↔ `Line Height/*`).
+
+| Style | Font size | Line height | 행간 비율 | 행간 − 크기 | 용도 |
+|---|---|---|---|---|---|
+| Display / 2xl | 72 | 90 | 1.25 | +18 | 랜딩 히어로 |
+| Display / xl | 60 | 72 | 1.20 | +12 | 랜딩 히어로 |
+| Display / lg | 48 | 60 | 1.25 | +12 | 큰 숫자 · 마케팅 |
+| Display / md | 36 | 44 | 1.22 | +8 | 웹 페이지 제목 |
+| Display / sm | 30 | 38 | 1.27 | +8 | 모바일 큰 제목 · 금액 |
+| Display / xs | 24 | 32 | 1.33 | +8 | 모바일 화면 제목 |
+| Body / xl | 20 | 30 | 1.50 | +10 | 섹션 제목 · 바텀시트 제목 |
+| Body / lg | 18 | 28 | 1.56 | +10 | 카드 제목 · XL 버튼 |
+| Body / md | 16 | 24 | 1.50 | +8 | 본문 · 리스트 제목 · 입력값 |
+| Body / sm | 14 | 20 | 1.43 | +6 | 보조 본문 · 라벨 · S 버튼 |
+| Body / xs | 12 | 18 | 1.50 | +6 | 캡션 · 배지 · 메타 정보 |
+
+> 행간 비율 · 행간 − 크기 열은 Figma 값(size, line height)에서 계산한 파생값이다 (비율은 소수 셋째 자리에서 반올림).
+
+**행간 규칙 (Figma 텍스트 스타일 44개를 확인한 결과)**
+- 행간은 **px 고정값**이다 (Auto / 퍼센트 아님). 스타일 설명에도 `72px / 90px · Regular` 형식으로 적혀 있다.
+- 행간은 **굵기와 무관**하다. Regular · Medium · Semibold · Bold 4가지가 같은 크기에서 같은 행간을 쓴다 (예: Body md 네 굵기 모두 16 / 24).
+- **자간(letter spacing)은 전 스타일 0%**.
+- 크기 단계는 두 구간으로 나뉜다.
+  - **Display (24 이상)**: 비율 1.20 ~ 1.33으로 촘촘하다 (제목·숫자용).
+  - **Body (20 이하)**: 비율 1.43 ~ 1.56으로 여유 있다 (여러 줄로 읽는 글용).
+- 행간은 모두 짝수 px이다. 크기 대비 추가분은 Body 구간 +6 ~ +10, Display 구간 +8 ~ +18.
+- 한 줄짜리 텍스트의 높이는 곧 행간이다. 컴포넌트 높이는 "행간 + 위아래 여백"으로 맞춘다 (아래 1.2.3).
+
+#### 1.2.2 텍스트 스타일 이름과 굵기
+
+각 스타일은 Regular / Medium / Semibold / Bold 4가지 굵기로, 이름은 `크기/굵기` 형식이다 (예: `Body md/Semibold`). 총 11 × 4 = **44개 텍스트 스타일**. 모든 스타일의 letter spacing은 0%.
+
+| Style | Regular | Medium | Semibold | Bold |
+|---|---|---|---|---|
+| Display 2xl | 72 / 90 | 72 / 90 | 72 / 90 | 72 / 90 |
+| Display xl | 60 / 72 | 60 / 72 | 60 / 72 | 60 / 72 |
+| Display lg | 48 / 60 | 48 / 60 | 48 / 60 | 48 / 60 |
+| Display md | 36 / 44 | 36 / 44 | 36 / 44 | 36 / 44 |
+| Display sm | 30 / 38 | 30 / 38 | 30 / 38 | 30 / 38 |
+| Display xs | 24 / 32 | 24 / 32 | 24 / 32 | 24 / 32 |
+| Body xl | 20 / 30 | 20 / 30 | 20 / 30 | 20 / 30 |
+| Body lg | 18 / 28 | 18 / 28 | 18 / 28 | 18 / 28 |
+| Body md | 16 / 24 | 16 / 24 | 16 / 24 | 16 / 24 |
+| Body sm | 14 / 20 | 14 / 20 | 14 / 20 | 14 / 20 |
+| Body xs | 12 / 18 | 12 / 18 | 12 / 18 | 12 / 18 |
+
+(표 값은 `font size / line height`, px)
 
 > 가이드: 본문은 Body md(16/24)를 기본으로, 보조 설명은 Body sm(14/20)으로 한 단계 낮춘다. 숫자와 금액은 Semibold 이상으로 강조한다.
 
-**Typography 변수 (27개)**: `Font Family/Base` = Pretendard · `Font Weight/{Regular, Medium, Semibold, Bold}` · `Font Size/*` · `Line Height/*` (11단계, 위 표의 값)
+#### 1.2.3 컴포넌트에서의 행간
+
+각 컴포넌트 스펙에 적힌 텍스트 스타일을 행간 기준으로 묶은 것. 한 줄 텍스트의 높이가 이 값이다.
+
+| Line height | Style | 쓰는 곳 (컴포넌트 스펙 기준) |
+|---|---|---|
+| 18 | Body xs | Badge M · Count Badge S, Segmented S 라벨 |
+| 20 | Body sm | Badge L · Count Badge M, Chip, Action Button S, Callout, Field 라벨·도움말·오류, Segmented M 라벨, Text Input M, List 설명, Snackbar 액션 |
+| 24 | Body md | Action Button M · L, List 제목, Text Input L · Textarea, Snackbar 메시지, Menu 라벨, Alert Dialog 설명, Result 설명, Quantity Picker 수량, Top Navigation 텍스트 액션 |
+| 28 | Body lg | Action Button XL, Top Navigation 제목, Tabs L, Result 제목, List Header Large |
+| 30 | Body xl | Alert Dialog 제목, Bottom Sheet 제목 |
+| 32 | Display xs | Top Navigation 큰 제목(Large) |
+
+**버튼 높이와 행간 (산출)** — 컨테이너 높이 − 행간 = 위아래 합계 여백:
+
+| Size | 높이 | 텍스트 스타일 | 행간 | 위아래 여백 합 |
+|---|---|---|---|---|
+| S | 32 | Body sm/Semibold | 20 | 12 (각 6) |
+| M | 40 | Body md/Semibold | 24 | 16 (각 8) |
+| L | 48 | Body md/Semibold | 24 | 24 (각 12) |
+| XL | 56 | Body lg/Semibold | 28 | 28 (각 14) |
+
+**Typography 변수 (27개)**: `Font Family/Base` = Pretendard · `Font Weight/{Regular, Medium, Semibold, Bold}` · `Font Size/*` (11단계) · `Line Height/*` (11단계, 1.2.1 표의 값)
+
+**iOS 구현**: `ORMO/DesignSystem/Typography.swift`의 `TypographyStyle`이 크기·굵기·행간을 한 번에 들고 있고, `View.typography(_:)`가 `.font()` + `.lineSpacing()` + 위아래 패딩으로 위 표의 고정 행간을 그대로 반영한다(이 패딩이 없으면 시스템 폰트의 기본 줄 간격이 Figma 값보다 좁아 행간·텍스트 사이 여백이 부족해 보인다). 화면 코드에서는 `.font(Typography.X)` 대신 `.typography(Typography.X)`를 쓴다.
 
 ### 1.3 Spacing, Radius & Size
 

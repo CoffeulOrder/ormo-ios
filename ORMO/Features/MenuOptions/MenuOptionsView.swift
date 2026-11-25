@@ -2,19 +2,23 @@ import SwiftUI
 
 struct MenuOptionsView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(HomeRouter.self) private var router
     @State private var viewModel: MenuOptionsViewModel
 
+    let searchableMenuItems: [MenuItem]
     let onAddedToCart: () -> Void
     let onOrderNow: () -> Void
 
     init(
         item: MenuItem,
         cart: CartStore,
+        searchableMenuItems: [MenuItem] = [],
         menuRepository: MenuRepository = MockMenuRepository(),
         onAddedToCart: @escaping () -> Void,
         onOrderNow: @escaping () -> Void
     ) {
         _viewModel = State(initialValue: MenuOptionsViewModel(item: item, cart: cart, menuRepository: menuRepository))
+        self.searchableMenuItems = searchableMenuItems
         self.onAddedToCart = onAddedToCart
         self.onOrderNow = onOrderNow
     }
@@ -78,7 +82,7 @@ struct MenuOptionsView: View {
             Spacer()
 
             HStack(spacing: 0) {
-                Button(action: {}) {
+                Button(action: searchTapped) {
                     Image(.searchIcon)
                         .resizable()
                         .scaledToFit()
@@ -87,7 +91,7 @@ struct MenuOptionsView: View {
                 }
                 .buttonStyle(.plain)
 
-                Button(action: {}) {
+                Button(action: myPageTapped) {
                     Image(.userIcon)
                         .resizable()
                         .scaledToFit()
@@ -105,16 +109,16 @@ struct MenuOptionsView: View {
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: Spacing.spacing16) {
             Text(viewModel.item.name)
-                .font(Typography.bodyXlSemibold)
+                .typography(Typography.bodyXlSemibold)
                 .foregroundStyle(Colors.textPrimary)
 
             Text(viewModel.item.description)
-                .font(Typography.bodyMdMedium)
+                .typography(Typography.bodyMdMedium)
                 .foregroundStyle(Colors.textSecondary)
 
             HStack(spacing: 10) {
                 Text("\(viewModel.item.price.formatted())원")
-                    .font(Typography.bodyXlBold)
+                    .typography(Typography.bodyXlBold)
                     .foregroundStyle(Colors.textPrimary)
                     .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -135,7 +139,7 @@ struct MenuOptionsView: View {
                 .frame(width: 1, height: 16)
 
             Text("\(viewModel.quantity)")
-                .font(Typography.bodyMdMedium)
+                .typography(Typography.bodyMdMedium)
                 .foregroundStyle(Colors.textStrong)
                 .frame(minWidth: 36)
                 .padding(.horizontal, Spacing.spacing8)
@@ -179,7 +183,7 @@ struct MenuOptionsView: View {
     private func groupHeaderRow(_ group: MenuOptionGroup) -> some View {
         HStack(spacing: Spacing.spacing8) {
             Text(group.name)
-                .font(Typography.bodyLgSemibold)
+                .typography(Typography.bodyLgSemibold)
                 .foregroundStyle(Colors.textPrimary)
             badge(for: group)
         }
@@ -193,7 +197,7 @@ struct MenuOptionsView: View {
         let background = group.isRequired ? Colors.fillDangerWeak : Colors.fillBrandWeak
         let foreground = group.isRequired ? Colors.textDanger : Colors.textBrand
         return Text(group.isRequired ? "필수" : "선택")
-            .font(Typography.bodyXsMedium)
+            .typography(Typography.bodyXsMedium)
             .foregroundStyle(foreground)
             .padding(.horizontal, Spacing.spacing8)
             .frame(height: 24)
@@ -218,13 +222,13 @@ struct MenuOptionsView: View {
                 selectionControl(choice, in: group)
 
                 Text(choice.name)
-                    .font(Typography.bodyLgRegular)
+                    .typography(Typography.bodyLgRegular)
                     .foregroundStyle(choice.isSoldOut ? Colors.textQuaternary : Colors.textPrimary)
 
                 Spacer()
 
                 Text(choice.isSoldOut ? "품절" : "+\(choice.priceDelta.formatted())원")
-                    .font(Typography.bodyMdRegular)
+                    .typography(Typography.bodyMdRegular)
                     .foregroundStyle(Colors.textSecondary)
             }
         }
@@ -282,7 +286,7 @@ struct MenuOptionsView: View {
             HStack(spacing: Spacing.spacing8) {
                 Button(action: orderNowTapped) {
                     Text("바로 주문")
-                        .font(Typography.bodyLgSemibold)
+                        .typography(Typography.bodyLgSemibold)
                         .foregroundStyle(Colors.textBrand)
                         .frame(maxWidth: .infinity)
                         .frame(height: 56)
@@ -293,7 +297,7 @@ struct MenuOptionsView: View {
 
                 Button(action: { viewModel.addToCart() }) {
                     Text("\(viewModel.totalPrice.formatted())원 담기")
-                        .font(Typography.bodyLgSemibold)
+                        .typography(Typography.bodyLgSemibold)
                         .foregroundStyle(Colors.textOnFill)
                         .frame(width: 200, height: 56)
                         .background(Colors.fillBrand)
@@ -309,7 +313,7 @@ struct MenuOptionsView: View {
 
     private var snackbar: some View {
         Text(viewModel.snackbarMessage)
-            .font(Typography.bodyMdSemibold)
+            .typography(Typography.bodyMdSemibold)
             .foregroundStyle(Colors.textOnFill)
             .padding(.horizontal, Spacing.spacing20)
             .padding(.vertical, Spacing.spacing12)
@@ -321,6 +325,14 @@ struct MenuOptionsView: View {
         guard viewModel.orderNow() else { return }
         onOrderNow()
     }
+
+    private func searchTapped() {
+        router.path.append(HomeRoute.search(searchableMenuItems))
+    }
+
+    private func myPageTapped() {
+        router.path.append(HomeRoute.myInfo)
+    }
 }
 
 #Preview {
@@ -330,4 +342,5 @@ struct MenuOptionsView: View {
         onAddedToCart: {},
         onOrderNow: {}
     )
+    .environment(HomeRouter())
 }

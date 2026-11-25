@@ -197,10 +197,10 @@ struct PaymentProcessingView: View {
     private var textView: some View {
         VStack(spacing: Spacing.spacing12) {
             Text("결제를 확인하고 있어요")
-                .font(Typography.displayXsSemibold)
+                .typography(Typography.displayXsSemibold)
                 .foregroundStyle(Colors.textPrimary)
             Text("잠시만 기다려주세요")
-                .font(Typography.bodyMdMedium)
+                .typography(Typography.bodyMdMedium)
                 .foregroundStyle(Colors.textSecondary)
         }
         .keyframeAnimator(initialValue: TextMotion(), repeating: true) { content, motion in

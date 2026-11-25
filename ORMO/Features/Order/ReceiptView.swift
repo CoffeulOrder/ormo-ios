@@ -28,7 +28,7 @@ struct ReceiptView: View {
     private var topNavigationBar: some View {
         ZStack {
             Text("영수증")
-                .font(Typography.bodyLgSemibold)
+                .typography(Typography.bodyLgSemibold)
                 .foregroundStyle(Colors.textStrong)
 
             HStack(spacing: 0) {
@@ -110,14 +110,14 @@ struct ReceiptView: View {
     private var receiptHeader: some View {
         VStack(alignment: .leading, spacing: Spacing.spacing8) {
             Text(storeName)
-                .font(Typography.bodyLgMedium)
+                .typography(Typography.bodyLgMedium)
                 .foregroundStyle(Colors.textSecondary)
 
             HStack(spacing: Spacing.spacing4) {
                 Text("\(pickupNumber)번 |")
                 Text("\(totalPrice.formatted())원")
             }
-            .font(Typography.displayXsSemibold)
+            .typography(Typography.displayXsSemibold)
             .foregroundStyle(Colors.textPrimary)
         }
     }
@@ -127,7 +127,7 @@ struct ReceiptView: View {
             itemTableRow("아메리카노", "2,500", "1", "2,500", font: Typography.bodyMdRegular, color: Colors.textPrimary, nameFont: Typography.bodyMdSemibold)
 
             Text("M / ICE")
-                .font(Typography.bodySmRegular)
+                .typography(Typography.bodySmRegular)
                 .foregroundStyle(Colors.textTertiary)
 
             itemTableRow("(+) 샷추가", "500", "1", "500", font: Typography.bodySmRegular, color: Colors.textTertiary)
@@ -139,13 +139,13 @@ struct ReceiptView: View {
         _ price: String,
         _ quantity: String,
         _ amount: String,
-        font: Font,
+        font: TypographyStyle,
         color: Color,
-        nameFont: Font? = nil
+        nameFont: TypographyStyle? = nil
     ) -> some View {
         HStack(spacing: Spacing.spacing8) {
             Text(name)
-                .font(nameFont ?? font)
+                .typography(nameFont ?? font)
                 .foregroundStyle(color)
                 .frame(maxWidth: .infinity, alignment: .leading)
             Text(price)
@@ -155,7 +155,7 @@ struct ReceiptView: View {
             Text(amount)
                 .frame(width: 64, alignment: .trailing)
         }
-        .font(font)
+        .typography(font)
         .foregroundStyle(color)
     }
 
@@ -168,24 +168,24 @@ struct ReceiptView: View {
         }
     }
 
-    private func totalRow(_ label: String, _ amount: String, font: Font = Typography.bodySmRegular, color: Color = Colors.textSecondary) -> some View {
+    private func totalRow(_ label: String, _ amount: String, font: TypographyStyle = Typography.bodySmRegular, color: Color = Colors.textSecondary) -> some View {
         HStack(spacing: Spacing.spacing16) {
             Text(label)
             Text(amount)
                 .frame(maxWidth: .infinity, alignment: .trailing)
         }
-        .font(font)
+        .typography(font)
         .foregroundStyle(color)
     }
 
     private func receiptRow(_ label: String, _ value: String) -> some View {
         HStack(alignment: .top, spacing: Spacing.spacing16) {
             Text(label)
-                .font(Typography.bodySmRegular)
+                .typography(Typography.bodySmRegular)
                 .foregroundStyle(Colors.textTertiary)
                 .fixedSize()
             Text(value)
-                .font(Typography.bodySmMedium)
+                .typography(Typography.bodySmMedium)
                 .foregroundStyle(Colors.textPrimary)
                 .multilineTextAlignment(.trailing)
                 .frame(maxWidth: .infinity, alignment: .trailing)

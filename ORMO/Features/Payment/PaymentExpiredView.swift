@@ -52,14 +52,14 @@ struct PaymentExpiredView: View {
     private var textStack: some View {
         VStack(spacing: Spacing.spacing12) {
             Text("결제 가능 시간이 지났어요")
-                .font(Typography.displayXsSemibold)
+                .typography(Typography.displayXsSemibold)
                 .foregroundStyle(Colors.textPrimary)
 
             Group {
                 Text("결제가 완료되지 않았어요")
                 Text("장바구니에서 다시 주문해주세요")
             }
-            .font(Typography.bodyMdMedium)
+            .typography(Typography.bodyMdMedium)
             .foregroundStyle(Colors.textSecondary)
         }
         .multilineTextAlignment(.center)
@@ -90,7 +90,7 @@ struct PaymentExpiredView: View {
 
             Button(action: backToCartTapped) {
                 Text("다시 주문하기")
-                    .font(Typography.bodyLgSemibold)
+                    .typography(Typography.bodyLgSemibold)
                     .foregroundStyle(Colors.textOnFill)
                     .frame(maxWidth: .infinity)
                     .frame(height: 56)

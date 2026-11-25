@@ -66,7 +66,7 @@ struct PasswordResetEmailView: View {
 
     private var titleView: some View {
         Text("가입한 학교 이메일을\n입력해주세요")
-            .font(Typography.displayXsSemibold)
+            .typography(Typography.displayXsSemibold)
             .foregroundStyle(Colors.textPrimary)
             .padding(.horizontal, Spacing.spacing20)
             .padding(.vertical, 10) // Figma 원본값이 10px (spacing 토큰 중 일치 항목 없음)
@@ -78,7 +78,7 @@ struct PasswordResetEmailView: View {
     private var fieldsView: some View {
         VStack(alignment: .leading, spacing: Spacing.spacing8) {
             Text("이메일")
-                .font(Typography.bodySmSemibold)
+                .typography(Typography.bodySmSemibold)
                 .foregroundStyle(Colors.textSecondary)
 
             HStack(spacing: Spacing.spacing8) {
@@ -106,7 +106,7 @@ struct PasswordResetEmailView: View {
                     .buttonStyle(.plain)
                 }
             }
-            .font(Typography.bodyMdRegular)
+            .typography(Typography.bodyMdRegular)
             .padding(.horizontal, Spacing.spacing16)
             .frame(height: 56)
             .overlay(
@@ -132,7 +132,7 @@ struct PasswordResetEmailView: View {
 
             Button(action: requestVerificationCode) {
                 Text("인증코드 받기")
-                    .font(Typography.bodyLgSemibold)
+                    .typography(Typography.bodyLgSemibold)
                     .foregroundStyle(viewModel.isEmailValid ? Colors.textOnFill : Colors.textQuaternary)
                     .frame(maxWidth: .infinity)
                     .frame(height: 56)

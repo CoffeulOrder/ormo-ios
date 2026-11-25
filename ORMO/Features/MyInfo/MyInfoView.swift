@@ -55,7 +55,7 @@ struct MyInfoView: View {
     private var topNavigationBar: some View {
         ZStack {
             Text("내 정보")
-                .font(Typography.bodyLgSemibold)
+                .typography(Typography.bodyLgSemibold)
                 .foregroundStyle(Colors.textStrong)
 
             HStack(spacing: 0) {
@@ -79,13 +79,13 @@ struct MyInfoView: View {
     private var profileCard: some View {
         VStack(alignment: .leading, spacing: Spacing.spacing4) {
             Text(viewModel.profile?.name ?? "")
-                .font(Typography.bodyXlSemibold)
+                .typography(Typography.bodyXlSemibold)
                 .foregroundStyle(Colors.textPrimary)
             Text(viewModel.profile?.email ?? "")
-                .font(Typography.bodyMdRegular)
+                .typography(Typography.bodyMdRegular)
                 .foregroundStyle(Colors.textSecondary)
             Text(viewModel.profile?.schoolName ?? "")
-                .font(Typography.bodySmRegular)
+                .typography(Typography.bodySmRegular)
                 .foregroundStyle(Colors.textTertiary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -106,7 +106,7 @@ struct MyInfoView: View {
         Button(action: action) {
             HStack(spacing: Spacing.spacing12) {
                 Text(title)
-                    .font(Typography.bodyMdMedium)
+                    .typography(Typography.bodyMdMedium)
                     .foregroundStyle(textColor)
                     .frame(maxWidth: .infinity, alignment: .leading)
 

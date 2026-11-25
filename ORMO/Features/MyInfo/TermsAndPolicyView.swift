@@ -20,7 +20,7 @@ struct TermsAndPolicyView: View {
     private var topNavigationBar: some View {
         ZStack {
             Text("약관 및 정책")
-                .font(Typography.bodyLgSemibold)
+                .typography(Typography.bodyLgSemibold)
                 .foregroundStyle(Colors.textStrong)
 
             HStack(spacing: 0) {
@@ -45,7 +45,7 @@ struct TermsAndPolicyView: View {
         Button(action: action) {
             HStack(spacing: Spacing.spacing12) {
                 Text(title)
-                    .font(Typography.bodyMdMedium)
+                    .typography(Typography.bodyMdMedium)
                     .foregroundStyle(Colors.textPrimary)
                     .frame(maxWidth: .infinity, alignment: .leading)
 

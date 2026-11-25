@@ -48,17 +48,17 @@ struct LiveOrderBarView: View {
                 RoundedRectangle(cornerRadius: Radius.lg)
                     .fill(isReady ? Colors.backgroundDefault : Colors.fillBrandWeak)
                 Text("\(order.pickupNumber)")
-                    .font(Typography.bodyXlBold)
+                    .typography(Typography.bodyXlBold)
                     .foregroundStyle(Colors.textBrand)
             }
             .frame(width: 48, height: 48)
 
             VStack(alignment: .leading, spacing: 0) {
                 Text(titleText)
-                    .font(Typography.bodyLgSemibold)
+                    .typography(Typography.bodyLgSemibold)
                     .foregroundStyle(isReady ? Colors.textOnFill : Colors.textPrimary)
                 Text(subtitleText)
-                    .font(Typography.bodySmRegular)
+                    .typography(Typography.bodySmRegular)
                     .foregroundStyle(isReady ? Colors.textOnFill.opacity(0.85) : Colors.textSecondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -121,7 +121,7 @@ struct LiveOrderBarView: View {
         }
 
         return Text(title)
-            .font(isActive ? Typography.bodyXsSemibold : Typography.bodyXsMedium)
+            .typography(isActive ? Typography.bodyXsSemibold : Typography.bodyXsMedium)
             .foregroundStyle(color)
             .frame(maxWidth: .infinity)
     }
