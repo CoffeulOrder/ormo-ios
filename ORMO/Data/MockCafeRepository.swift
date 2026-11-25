@@ -50,7 +50,7 @@ struct MockCafeRepository: CafeRepository {
             Store(
                 id: "bagaegwan",
                 name: "을지대학교 박애관 카페",
-                status: .open,
+                status: .paused(resumesAtText: "14:30"),
                 address: address,
                 distanceText: "1.2km",
                 walkTimeText: "20분",

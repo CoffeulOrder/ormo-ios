@@ -9,7 +9,7 @@ struct TermsAgreementSheet: View {
             Text("서비스 이용에\n필요한 동의만 추렸어요")
                 .typography(Typography.bodyXlBold)
                 .foregroundStyle(Colors.textStrong)
-                .padding(.horizontal, Spacing.spacing24)
+                .padding(.horizontal, Spacing.spacing20)
                 .padding(.vertical, Spacing.spacing16)
 
             VStack(spacing: 0) {
@@ -24,7 +24,7 @@ struct TermsAgreementSheet: View {
                 }
             }
             .padding(Spacing.spacing16)
-            .padding(.horizontal, Spacing.spacing24)
+            .padding(.horizontal, Spacing.spacing20)
 
             Button(action: viewModel.submitTapped) {
                 Text("동의하고 가입하기")

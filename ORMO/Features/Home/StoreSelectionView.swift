@@ -96,9 +96,9 @@ struct StoreSelectionView: View {
                         Text(store.name)
                             .typography(Typography.bodyMdSemibold)
                             .foregroundStyle(Colors.textPrimary)
-                        Text(store.status == .open ? "영업 중" : "영업 종료")
+                        Text(statusText(for: store.status))
                             .typography(Typography.bodySmMedium)
-                            .foregroundStyle(store.status == .open ? Colors.textBrand : Colors.textTertiary)
+                            .foregroundStyle(statusColor(for: store.status))
                     }
 
                     Text(store.address)
@@ -122,6 +122,23 @@ struct StoreSelectionView: View {
             .background(Colors.backgroundDefault)
         }
         .buttonStyle(.plain)
+    }
+
+    // 잠시 쉬어요(브레이크타임)는 영업 종료와 달리 메뉴를 계속 볼 수 있어, 흐리게 처리하지 않는다.
+    private func statusText(for status: StoreOperatingStatus) -> String {
+        switch status {
+        case .open: "영업 중"
+        case .paused(let resumesAtText): "잠시 쉬어요 · \(resumesAtText) 재개"
+        case .closed: "영업 종료"
+        }
+    }
+
+    private func statusColor(for status: StoreOperatingStatus) -> Color {
+        switch status {
+        case .open: Colors.textBrand
+        case .paused: Colors.textWarning
+        case .closed: Colors.textTertiary
+        }
     }
 
     private func metaItem(icon: ImageResource, text: String) -> some View {
@@ -192,7 +209,7 @@ struct StoreSelectionView: View {
                     .typography(Typography.bodyMdRegular)
                     .foregroundStyle(Colors.textPrimary)
             }
-            .padding(.horizontal, Spacing.spacing24)
+            .padding(.horizontal, Spacing.spacing20)
 
             VStack(alignment: .leading, spacing: Spacing.spacing4) {
                 sheetSectionTitle("운영시간")
@@ -203,7 +220,7 @@ struct StoreSelectionView: View {
                 }
                 .padding(.top, Spacing.spacing8)
             }
-            .padding(.horizontal, Spacing.spacing24)
+            .padding(.horizontal, Spacing.spacing20)
             .padding(.top, Spacing.spacing16)
 
             HStack(alignment: .top, spacing: Spacing.spacing8) {
@@ -221,7 +238,7 @@ struct StoreSelectionView: View {
             .padding(.vertical, Spacing.spacing12)
             .background(Colors.fillWarningWeak)
             .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
-            .padding(.horizontal, Spacing.spacing24)
+            .padding(.horizontal, Spacing.spacing20)
             .padding(.top, Spacing.spacing12)
 
             Button(action: { confirmStoreChange(store) }) {

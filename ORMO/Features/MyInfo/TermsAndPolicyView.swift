@@ -56,7 +56,7 @@ struct TermsAndPolicyView: View {
                     .frame(width: 20, height: 20)
                     .foregroundStyle(Colors.iconTertiary)
             }
-            .padding(.horizontal, Spacing.spacing24)
+            .padding(.horizontal, Spacing.spacing20)
             .padding(.vertical, Spacing.spacing12)
         }
         .buttonStyle(.plain)

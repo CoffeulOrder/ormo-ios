@@ -47,7 +47,7 @@ struct StoreInfoView: View {
                 }
 
                 disclaimerBox
-                    .padding(.horizontal, Spacing.spacing24)
+                    .padding(.horizontal, Spacing.spacing20)
                     .padding(.top, Spacing.spacing8)
             }
             .padding(.bottom, Spacing.spacing24)
@@ -89,18 +89,26 @@ struct StoreInfoView: View {
                 .typography(Typography.bodyXlBold)
                 .foregroundStyle(Colors.textStrong)
 
-            if store.status == .open {
-                Text("영업 중")
+            if store.status != .closed {
+                Text(statusBadgeText)
                     .typography(Typography.bodyXsMedium)
-                    .foregroundStyle(Colors.textBrand)
+                    .foregroundStyle(store.status == .open ? Colors.textBrand : Colors.textWarning)
                     .padding(.horizontal, Spacing.spacing8)
                     .frame(height: 24)
-                    .background(Colors.fillBrandWeak)
+                    .background(store.status == .open ? Colors.fillBrandWeak : Colors.fillWarningWeak)
                     .clipShape(Capsule())
             }
         }
-        .padding(.horizontal, Spacing.spacing24)
+        .padding(.horizontal, Spacing.spacing20)
         .padding(.vertical, Spacing.spacing8)
+    }
+
+    private var statusBadgeText: String {
+        switch store.status {
+        case .open: "영업 중"
+        case .paused(let resumesAtText): "잠시 쉬어요 · \(resumesAtText) 재개"
+        case .closed: ""
+        }
     }
 
     private func section(title: String, @ViewBuilder content: () -> some View) -> some View {
@@ -110,7 +118,7 @@ struct StoreInfoView: View {
                 .foregroundStyle(Colors.textPrimary)
             content()
         }
-        .padding(.horizontal, Spacing.spacing24)
+        .padding(.horizontal, Spacing.spacing20)
         .padding(.vertical, Spacing.spacing16)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
