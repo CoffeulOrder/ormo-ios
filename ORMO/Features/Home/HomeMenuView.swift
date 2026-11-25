@@ -92,6 +92,7 @@ struct HomeMenuView: View {
     @State private var listViewportHeight: CGFloat = 0
     @State private var bottomOverlayBarHeight: CGFloat = 0
     @State private var noticeHeight: CGFloat = 0
+    @State private var scrollSpyDebounceToken = 0
     @State private var router = HomeRouter()
     @State private var cart = CartStore()
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -392,15 +393,17 @@ struct HomeMenuView: View {
                                 }
 
                                 // 마지막 섹션이 리스트 뷰포트보다 짧아도 탭 바로 아래까지 스크롤할 수
-                                // 있도록, 모자란 만큼의 공간을 빈 칸으로 두지 않고 유의사항으로 채운다.
-                                // 유의사항 자체가 bottomInset보다 짧으면 남는 만큼만 빈 공간을 추가한다.
+                                // 있도록, 유의사항 영역 전체를 유의사항 자체 높이의 2배로 고정해 둔다
+                                // (bottomInset이 그보다 크게 필요한 경우에만 그만큼 더 늘어난다).
+                                // 이 영역은 끝까지 흰 여백 없이 전부 회색(backgroundLower)으로 통일한다.
                                 noticeSection
                                     .background(
                                         GeometryReader { geometry in
                                             Color.clear.preference(key: NoticeHeightKey.self, value: geometry.size.height)
                                         }
                                     )
-                                Color.clear.frame(height: max(bottomInset - noticeHeight, 0))
+                                    .frame(minHeight: max(noticeHeight * 2, bottomInset), alignment: .top)
+                                    .background(Colors.backgroundLower)
                             }
                         }
                         .coordinateSpace(name: "menuScroll")
@@ -744,18 +747,34 @@ struct HomeMenuView: View {
 
     // "메뉴 1.3개 정도" 보일 때 다음 섹션으로 하이라이트를 넘긴다: 섹션 상단이 화면 위로
     // (첫 카드 높이 × 1.3)만큼 더 지나가야 그 섹션을 "현재"로 인정한다.
-    private func updateCurrentSectionFromScroll() {
-        let current = sectionTopOffsets
+    private func currentSectionFromScrollPosition() -> HomeMenuViewModel.Section? {
+        sectionTopOffsets
             .filter { section, minY in
                 let itemHeight = sectionFirstItemHeights[section] ?? 0
                 return minY - itemHeight * Self.sectionActivationItemCount <= 0
             }
             .max { $0.value < $1.value }?
             .key
-        if let current {
+            ?? viewModel.sections.first
+    }
+
+    // 탭 클릭으로 시작한 프로그램 스크롤이 (타임아웃이나 드래그 시작으로) 보호가 풀린 직후에도
+    // 관성으로 몇 프레임 더 움직이는 경우가 있다. 그 몇 프레임 동안 onPreferenceChange가 연달아
+    // 여러 섹션을 "현재"로 보고하면, 보호가 풀리자마자 그 중간 섹션들로 탭이 순간적으로
+    // 전부 튀어 보인다(실측 확인 — 드래그 직후 한 탭 틱 사이에 5개 섹션을 연쇄적으로 거침).
+    // 여기서 매번 바로 반영하지 않고 짧게(80ms) 묶어서, 그 사이 또 바뀌면 타이머를 다시
+    // 시작한다 — 연쇄가 멈추고 실제로 자리 잡은 마지막 섹션 하나만 반영된다. 정상적인 손가락
+    // 스크롤은 계속 새 값을 보고하므로 체감 지연이 없고, 멈췄을 때만 이 지연이 적용된다.
+    private static let scrollSpySettleDelay: Duration = .milliseconds(80)
+
+    private func updateCurrentSectionFromScroll() {
+        guard let current = currentSectionFromScrollPosition() else { return }
+        scrollSpyDebounceToken += 1
+        let token = scrollSpyDebounceToken
+        Task {
+            try? await Task.sleep(for: Self.scrollSpySettleDelay)
+            guard token == scrollSpyDebounceToken else { return }
             viewModel.updateSelectedSectionFromScroll(current)
-        } else if let first = viewModel.sections.first {
-            viewModel.updateSelectedSectionFromScroll(first)
         }
     }
 
