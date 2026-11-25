@@ -442,9 +442,10 @@ struct CartView: View {
                 .buttonStyle(.plain)
                 .padding(.top, Spacing.spacing4)
             }
-            .padding(.bottom, Spacing.spacing20)
+            .padding(.bottom, Spacing.spacing32)
             .background(Colors.backgroundDefault)
         }
+        .ignoresSafeArea(edges: .bottom)
     }
 
     // 이 체크박스는 안 골랐을 때도 체크 표시가 보인다: 안 고르면 회색 원, 고르면 파란 원(흰 체크는 항상 그대로).
