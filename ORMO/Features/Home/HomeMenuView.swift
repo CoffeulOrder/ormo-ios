@@ -349,23 +349,25 @@ struct HomeMenuView: View {
 
             Spacer()
 
-            Button(action: searchTapped) {
-                Image(.searchIcon)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 24, height: 24)
-                    .frame(width: 40, height: 40)
-            }
-            .buttonStyle(.plain)
+            HStack(spacing: 0) {
+                Button(action: searchTapped) {
+                    Image(.searchIcon)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 24, height: 24)
+                        .frame(width: 40, height: 40)
+                }
+                .buttonStyle(.plain)
 
-            Button(action: myPageTapped) {
-                Image(.userIcon)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 24, height: 24)
-                    .frame(width: 40, height: 40)
+                Button(action: myPageTapped) {
+                    Image(.userIcon)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 24, height: 24)
+                        .frame(width: 40, height: 40)
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
         }
         .padding(.horizontal, Spacing.spacing20)
         .padding(.vertical, Spacing.spacing8)
