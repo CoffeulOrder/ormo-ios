@@ -10,7 +10,7 @@ struct StoreInfoView: View {
                 storeTitleRow
                 section(title: "위치") {
                     Text(store.location)
-                        .font(Typography.bodyMdRegular)
+                        .typography(Typography.bodyMdRegular)
                         .foregroundStyle(Colors.textPrimary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
@@ -24,7 +24,7 @@ struct StoreInfoView: View {
                 if let notice = store.notice {
                     section(title: "공지") {
                         Text(notice)
-                            .font(Typography.bodyMdRegular)
+                            .typography(Typography.bodyMdRegular)
                             .foregroundStyle(Colors.textPrimary)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
@@ -76,7 +76,7 @@ struct StoreInfoView: View {
             .padding(.horizontal, Spacing.spacing8)
 
             Text("매장 정보")
-                .font(Typography.bodyLgSemibold)
+                .typography(Typography.bodyLgSemibold)
                 .foregroundStyle(Colors.textStrong)
         }
         .frame(height: 56)
@@ -86,12 +86,12 @@ struct StoreInfoView: View {
     private var storeTitleRow: some View {
         HStack(spacing: Spacing.spacing8) {
             Text(store.name)
-                .font(Typography.bodyXlBold)
+                .typography(Typography.bodyXlBold)
                 .foregroundStyle(Colors.textStrong)
 
             if store.status == .open {
                 Text("영업 중")
-                    .font(Typography.bodyXsMedium)
+                    .typography(Typography.bodyXsMedium)
                     .foregroundStyle(Colors.textBrand)
                     .padding(.horizontal, Spacing.spacing8)
                     .frame(height: 24)
@@ -106,7 +106,7 @@ struct StoreInfoView: View {
     private func section(title: String, @ViewBuilder content: () -> some View) -> some View {
         VStack(alignment: .leading, spacing: Spacing.spacing8) {
             Text(title)
-                .font(Typography.bodyLgSemibold)
+                .typography(Typography.bodyLgSemibold)
                 .foregroundStyle(Colors.textPrimary)
             content()
         }
@@ -118,11 +118,11 @@ struct StoreInfoView: View {
     private func infoRow(label: String, value: String) -> some View {
         HStack(spacing: Spacing.spacing16) {
             Text(label)
-                .font(Typography.bodyMdRegular)
+                .typography(Typography.bodyMdRegular)
                 .foregroundStyle(Colors.textSecondary)
             Spacer()
             Text(value)
-                .font(Typography.bodyMdRegular)
+                .typography(Typography.bodyMdRegular)
                 .foregroundStyle(Colors.textPrimary)
         }
     }
@@ -130,11 +130,11 @@ struct StoreInfoView: View {
     private func sellerInfoRow(label: String, value: String) -> some View {
         HStack(alignment: .top, spacing: Spacing.spacing16) {
             Text(label)
-                .font(Typography.bodyMdRegular)
+                .typography(Typography.bodyMdRegular)
                 .foregroundStyle(Colors.textSecondary)
                 .frame(width: 144, alignment: .leading)
             Text(value)
-                .font(Typography.bodyMdRegular)
+                .typography(Typography.bodyMdRegular)
                 .foregroundStyle(Colors.textPrimary)
                 .multilineTextAlignment(.trailing)
                 .frame(maxWidth: .infinity, alignment: .trailing)
@@ -143,7 +143,7 @@ struct StoreInfoView: View {
 
     private var disclaimerBox: some View {
         Text("ORMO는 통신판매중개자로 주문과 결제를 중개해요. 음료와 환불에 대한 책임은 판매자에게 있어요.")
-            .font(Typography.bodySmRegular)
+            .typography(Typography.bodySmRegular)
             .foregroundStyle(Colors.textTertiary)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, Spacing.spacing16)

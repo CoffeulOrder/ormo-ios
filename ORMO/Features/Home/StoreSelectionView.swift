@@ -67,10 +67,10 @@ struct StoreSelectionView: View {
     private var titleView: some View {
         VStack(alignment: .leading, spacing: Spacing.spacing4) {
             Text("어느 카페에서 주문할까요?")
-                .font(Typography.displayXsSemibold)
+                .typography(Typography.displayXsSemibold)
                 .foregroundStyle(Colors.textPrimary)
             Text(viewModel.campusName)
-                .font(Typography.bodyMdMedium)
+                .typography(Typography.bodyMdMedium)
                 .foregroundStyle(Colors.textSecondary)
         }
         .padding(.horizontal, Spacing.spacing20)
@@ -94,15 +94,15 @@ struct StoreSelectionView: View {
                     // 맞춰 정렬돼야 한다.
                     HStack(alignment: .firstTextBaseline, spacing: Spacing.spacing8) {
                         Text(store.name)
-                            .font(Typography.bodyMdSemibold)
+                            .typography(Typography.bodyMdSemibold)
                             .foregroundStyle(Colors.textPrimary)
                         Text(store.status == .open ? "영업 중" : "영업 종료")
-                            .font(Typography.bodySmMedium)
+                            .typography(Typography.bodySmMedium)
                             .foregroundStyle(store.status == .open ? Colors.textBrand : Colors.textTertiary)
                     }
 
                     Text(store.address)
-                        .font(Typography.bodySmRegular)
+                        .typography(Typography.bodySmRegular)
                         .foregroundStyle(Colors.textSecondary)
 
                     HStack(spacing: Spacing.spacing12) {
@@ -131,7 +131,7 @@ struct StoreSelectionView: View {
                 .scaledToFit()
                 .frame(width: 20, height: 20)
             Text(text)
-                .font(Typography.bodySmRegular)
+                .typography(Typography.bodySmRegular)
                 .foregroundStyle(Colors.textTertiary)
         }
     }
@@ -166,7 +166,7 @@ struct StoreSelectionView: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: Spacing.spacing8) {
                 Text(store.name)
-                    .font(Typography.bodyXlBold)
+                    .typography(Typography.bodyXlBold)
                     .foregroundStyle(Colors.textStrong)
 
                 if store.status == .open {
@@ -189,7 +189,7 @@ struct StoreSelectionView: View {
             VStack(alignment: .leading, spacing: Spacing.spacing4) {
                 sheetSectionTitle("위치")
                 Text(store.location)
-                    .font(Typography.bodyMdRegular)
+                    .typography(Typography.bodyMdRegular)
                     .foregroundStyle(Colors.textPrimary)
             }
             .padding(.horizontal, Spacing.spacing24)
@@ -213,7 +213,7 @@ struct StoreSelectionView: View {
                     .frame(width: 20, height: 20)
 
                 Text("매장을 변경하면 장바구니의 메뉴가 삭제돼요")
-                    .font(Typography.bodySmRegular)
+                    .typography(Typography.bodySmRegular)
                     .foregroundStyle(Colors.textSecondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -226,7 +226,7 @@ struct StoreSelectionView: View {
 
             Button(action: { confirmStoreChange(store) }) {
                 Text("주문하기")
-                    .font(Typography.bodyLgSemibold)
+                    .typography(Typography.bodyLgSemibold)
                     .foregroundStyle(Colors.textOnFill)
                     .frame(maxWidth: .infinity)
                     .frame(height: 56)
@@ -242,7 +242,7 @@ struct StoreSelectionView: View {
 
     private var statusBadge: some View {
         Text("영업 중")
-            .font(Typography.bodyXsMedium)
+            .typography(Typography.bodyXsMedium)
             .foregroundStyle(Colors.textBrand)
             .padding(.horizontal, Spacing.spacing8)
             .frame(height: 24)
@@ -252,7 +252,7 @@ struct StoreSelectionView: View {
 
     private func sheetSectionTitle(_ title: String) -> some View {
         Text(title)
-            .font(Typography.bodyLgSemibold)
+            .typography(Typography.bodyLgSemibold)
             .foregroundStyle(Colors.textPrimary)
             .padding(.top, Spacing.spacing8)
     }
@@ -260,11 +260,11 @@ struct StoreSelectionView: View {
     private func operatingHoursRow(day: String, hours: String) -> some View {
         HStack {
             Text(day)
-                .font(Typography.bodyMdRegular)
+                .typography(Typography.bodyMdRegular)
                 .foregroundStyle(Colors.textSecondary)
             Spacer()
             Text(hours)
-                .font(Typography.bodyMdRegular)
+                .typography(Typography.bodyMdRegular)
                 .foregroundStyle(Colors.textPrimary)
         }
     }

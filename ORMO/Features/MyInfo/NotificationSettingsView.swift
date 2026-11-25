@@ -74,7 +74,7 @@ struct NotificationSettingsView: View {
     private var topNavigationBar: some View {
         ZStack {
             Text("권한 설정")
-                .font(Typography.bodyLgSemibold)
+                .typography(Typography.bodyLgSemibold)
                 .foregroundStyle(Colors.textStrong)
 
             HStack(spacing: 0) {
@@ -105,10 +105,10 @@ struct NotificationSettingsView: View {
 
                 VStack(alignment: .leading, spacing: Spacing.spacing2) {
                     Text(title)
-                        .font(Typography.bodySmBold)
+                        .typography(Typography.bodySmBold)
                         .foregroundStyle(Colors.textWarning)
                     Text(message)
-                        .font(Typography.bodySmRegular)
+                        .typography(Typography.bodySmRegular)
                         .foregroundStyle(Colors.textSecondary)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -126,7 +126,7 @@ struct NotificationSettingsView: View {
 
     private func sectionHeader(_ title: String) -> some View {
         Text(title)
-            .font(Typography.bodyLgSemibold)
+            .typography(Typography.bodyLgSemibold)
             .foregroundStyle(Colors.textSecondary)
             .padding(.horizontal, Spacing.spacing24)
             .padding(.top, Spacing.spacing16)
@@ -137,10 +137,10 @@ struct NotificationSettingsView: View {
         HStack(spacing: Spacing.spacing12) {
             VStack(alignment: .leading, spacing: Spacing.spacing2) {
                 Text(title)
-                    .font(Typography.bodyMdMedium)
+                    .typography(Typography.bodyMdMedium)
                     .foregroundStyle(isDisabled ? Colors.textQuaternary : Colors.textPrimary)
                 Text(description)
-                    .font(Typography.bodySmRegular)
+                    .typography(Typography.bodySmRegular)
                     .foregroundStyle(isDisabled ? Colors.textQuaternary : Colors.textTertiary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)

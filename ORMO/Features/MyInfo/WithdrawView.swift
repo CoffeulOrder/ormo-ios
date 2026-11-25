@@ -41,7 +41,7 @@ struct WithdrawView: View {
 
     private var titleView: some View {
         Text("탈퇴하기 전에\n확인해주세요")
-            .font(Typography.displayXsSemibold)
+            .typography(Typography.displayXsSemibold)
             .foregroundStyle(Colors.textPrimary)
             .padding(.horizontal, Spacing.spacing20)
             .padding(.vertical, 10) // Figma 원본값이 10px (spacing 토큰 중 일치 항목 없음)
@@ -51,7 +51,7 @@ struct WithdrawView: View {
     private var passwordField: some View {
         VStack(alignment: .leading, spacing: Spacing.spacing8) {
             Text("비밀번호")
-                .font(Typography.bodySmSemibold)
+                .typography(Typography.bodySmSemibold)
                 .foregroundStyle(Colors.textSecondary)
 
             HStack(spacing: Spacing.spacing8) {
@@ -62,7 +62,7 @@ struct WithdrawView: View {
                         SecureField("", text: $viewModel.password)
                     }
                 }
-                .font(Typography.bodyMdRegular)
+                .typography(Typography.bodyMdRegular)
                 .foregroundStyle(Colors.textPrimary)
                 .submitLabel(.done)
 
@@ -103,7 +103,7 @@ struct WithdrawView: View {
                 .frame(width: 16, height: 16)
 
             Text(message)
-                .font(Typography.bodySmRegular)
+                .typography(Typography.bodySmRegular)
                 .foregroundStyle(Colors.textDanger)
         }
     }
@@ -126,7 +126,7 @@ struct WithdrawView: View {
                 .padding(.top, 8)
 
             Text(text)
-                .font(Typography.bodySmRegular)
+                .typography(Typography.bodySmRegular)
                 .foregroundStyle(Colors.textTertiary)
         }
     }
@@ -142,7 +142,7 @@ struct WithdrawView: View {
 
             Button(action: withdrawTapped) {
                 Text("탈퇴하기")
-                    .font(Typography.bodyLgSemibold)
+                    .typography(Typography.bodyLgSemibold)
                     .foregroundStyle(viewModel.isFormValid ? Colors.textOnFill : Colors.textQuaternary)
                     .frame(maxWidth: .infinity)
                     .frame(height: 56)

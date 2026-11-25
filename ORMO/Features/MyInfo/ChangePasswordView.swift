@@ -50,7 +50,7 @@ struct ChangePasswordView: View {
 
     private var titleView: some View {
         Text("비밀번호를 변경해주세요")
-            .font(Typography.displayXsSemibold)
+            .typography(Typography.displayXsSemibold)
             .foregroundStyle(Colors.textPrimary)
             .padding(.horizontal, Spacing.spacing20)
             .padding(.vertical, 10) // Figma 원본값이 10px (spacing 토큰 중 일치 항목 없음)
@@ -76,7 +76,7 @@ struct ChangePasswordView: View {
     private var newPasswordField: some View {
         VStack(alignment: .leading, spacing: Spacing.spacing8) {
             Text("새 비밀번호")
-                .font(Typography.bodySmSemibold)
+                .typography(Typography.bodySmSemibold)
                 .foregroundStyle(Colors.textSecondary)
 
             HStack(spacing: Spacing.spacing8) {
@@ -87,7 +87,7 @@ struct ChangePasswordView: View {
                         SecureField("", text: $viewModel.password)
                     }
                 }
-                .font(Typography.bodyMdRegular)
+                .typography(Typography.bodyMdRegular)
                 .foregroundStyle(Colors.textPrimary)
                 .submitLabel(.next)
 
@@ -129,7 +129,7 @@ struct ChangePasswordView: View {
                 .frame(width: 20, height: 20)
 
             Text(title)
-                .font(Typography.bodySmMedium)
+                .typography(Typography.bodySmMedium)
                 .foregroundStyle(isSatisfied ? Colors.textBrand : Colors.textTertiary)
         }
     }
@@ -137,7 +137,7 @@ struct ChangePasswordView: View {
     private var passwordConfirmationField: some View {
         VStack(alignment: .leading, spacing: Spacing.spacing8) {
             Text("새 비밀번호 확인")
-                .font(Typography.bodySmSemibold)
+                .typography(Typography.bodySmSemibold)
                 .foregroundStyle(Colors.textSecondary)
 
             HStack(spacing: Spacing.spacing8) {
@@ -148,7 +148,7 @@ struct ChangePasswordView: View {
                         SecureField("", text: $viewModel.passwordConfirmation)
                     }
                 }
-                .font(Typography.bodyMdRegular)
+                .typography(Typography.bodyMdRegular)
                 .foregroundStyle(Colors.textPrimary)
                 .submitLabel(.done)
                 .onSubmit(confirmTapped)
@@ -186,7 +186,7 @@ struct ChangePasswordView: View {
                 .frame(width: 16, height: 16)
 
             Text(message)
-                .font(Typography.bodySmRegular)
+                .typography(Typography.bodySmRegular)
                 .foregroundStyle(Colors.textDanger)
         }
     }
@@ -202,7 +202,7 @@ struct ChangePasswordView: View {
 
             Button(action: confirmTapped) {
                 Text("변경하기")
-                    .font(Typography.bodyLgSemibold)
+                    .typography(Typography.bodyLgSemibold)
                     .foregroundStyle(viewModel.isFormValid ? Colors.textOnFill : Colors.textQuaternary)
                     .frame(maxWidth: .infinity)
                     .frame(height: 56)

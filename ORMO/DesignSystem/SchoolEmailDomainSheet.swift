@@ -9,11 +9,11 @@ struct SchoolEmailDomainSheet: View {
         VStack(alignment: .leading, spacing: 0) {
             VStack(alignment: .leading, spacing: Spacing.spacing4) {
                 Text("학교 이메일을 골라주세요")
-                    .font(Typography.bodyXlBold)
+                    .typography(Typography.bodyXlBold)
                     .foregroundStyle(Colors.textStrong)
 
                 Text("학교에서 받은 메일 주소를 골라요")
-                    .font(Typography.bodyMdRegular)
+                    .typography(Typography.bodyMdRegular)
                     .foregroundStyle(Colors.textTertiary)
             }
             .padding(.horizontal, Spacing.spacing24)
@@ -26,7 +26,7 @@ struct SchoolEmailDomainSheet: View {
                     } label: {
                         HStack(spacing: Spacing.spacing8) {
                             Text("@\(domain)")
-                                .font(Typography.bodyMdMedium)
+                                .typography(Typography.bodyMdMedium)
                                 .foregroundStyle(Colors.textPrimary)
                                 .frame(maxWidth: .infinity, alignment: .leading)
 

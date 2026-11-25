@@ -70,7 +70,7 @@ struct SignUpEmailView: View {
 
     private var titleView: some View {
         Text("학교 이메일을 입력해주세요")
-            .font(Typography.displayXsSemibold)
+            .typography(Typography.displayXsSemibold)
             .foregroundStyle(Colors.textPrimary)
             .padding(.horizontal, Spacing.spacing20)
             .padding(.vertical, 10) // Figma 원본값이 10px (spacing 토큰 중 일치 항목 없음)
@@ -82,7 +82,7 @@ struct SignUpEmailView: View {
     private var fieldsView: some View {
         VStack(alignment: .leading, spacing: Spacing.spacing8) {
             Text("이메일")
-                .font(Typography.bodySmSemibold)
+                .typography(Typography.bodySmSemibold)
                 .foregroundStyle(Colors.textSecondary)
 
             HStack(spacing: Spacing.spacing8) {
@@ -112,7 +112,7 @@ struct SignUpEmailView: View {
                     .buttonStyle(.plain)
                 }
             }
-            .font(Typography.bodyMdRegular)
+            .typography(Typography.bodyMdRegular)
             .padding(.horizontal, Spacing.spacing16)
             .frame(height: 56)
             .overlay(
@@ -124,7 +124,7 @@ struct SignUpEmailView: View {
                 errorFooter(fieldErrorMessage)
             } else {
                 Text("학교 메일로 재학생인지 확인해요")
-                    .font(Typography.bodySmRegular)
+                    .typography(Typography.bodySmRegular)
                     .foregroundStyle(Colors.textSecondary)
             }
         }
@@ -147,7 +147,7 @@ struct SignUpEmailView: View {
                 .frame(width: 16, height: 16)
 
             Text(message)
-                .font(Typography.bodySmRegular)
+                .typography(Typography.bodySmRegular)
                 .foregroundStyle(Colors.textDanger)
         }
     }
@@ -172,7 +172,7 @@ struct SignUpEmailView: View {
                             .tint(Colors.textOnFill)
                     } else {
                         Text(viewModel.isAlreadyRegistered ? "로그인하기" : "인증코드 받기")
-                            .font(Typography.bodyLgSemibold)
+                            .typography(Typography.bodyLgSemibold)
                             .foregroundStyle(isCTAEnabled ? Colors.textOnFill : Colors.textQuaternary)
                     }
                 }

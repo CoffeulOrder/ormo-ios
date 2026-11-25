@@ -179,7 +179,7 @@ struct LoginView: View {
                 .frame(width: 24, height: 24)
 
             Text(viewModel.snackbarMessage)
-                .font(Typography.bodyMdSemibold)
+                .typography(Typography.bodyMdSemibold)
                 .foregroundStyle(Colors.textOnFill)
         }
         .padding(.leading, Spacing.spacing16)
@@ -198,7 +198,7 @@ struct LoginView: View {
 
     private var titleView: some View {
         Text("학교 이메일로\n로그인해 주세요")
-            .font(Typography.displayXsSemibold)
+            .typography(Typography.displayXsSemibold)
             .foregroundStyle(Colors.textPrimary)
             .padding(.horizontal, Spacing.spacing20)
             .padding(.vertical, 10) // Figma 원본값이 10px (spacing 토큰 중 일치 항목 없음)
@@ -218,7 +218,7 @@ struct LoginView: View {
     private var emailField: some View {
         VStack(alignment: .leading, spacing: Spacing.spacing8) {
             Text("이메일")
-                .font(Typography.bodySmSemibold)
+                .typography(Typography.bodySmSemibold)
                 .foregroundStyle(Colors.textSecondary)
 
             HStack(spacing: Spacing.spacing8) {
@@ -246,7 +246,7 @@ struct LoginView: View {
                     .buttonStyle(.plain)
                 }
             }
-            .font(Typography.bodyMdRegular)
+            .typography(Typography.bodyMdRegular)
             .padding(.horizontal, Spacing.spacing16)
             .frame(height: 56)
             .overlay(
@@ -277,7 +277,7 @@ struct LoginView: View {
     private var passwordField: some View {
         VStack(alignment: .leading, spacing: Spacing.spacing8) {
             Text("비밀번호")
-                .font(Typography.bodySmSemibold)
+                .typography(Typography.bodySmSemibold)
                 .foregroundStyle(Colors.textSecondary)
 
             SecureField(
@@ -286,7 +286,7 @@ struct LoginView: View {
                 prompt: Text("비밀번호를 입력해 주세요").foregroundStyle(Colors.textQuaternary)
             )
             .focused($focusedField, equals: .password)
-            .font(Typography.bodyMdRegular)
+            .typography(Typography.bodyMdRegular)
             .padding(.horizontal, Spacing.spacing16)
             .frame(height: 56)
             .overlay(
@@ -333,7 +333,7 @@ struct LoginView: View {
                 .frame(width: 16, height: 16)
 
             Text(message)
-                .font(Typography.bodySmRegular)
+                .typography(Typography.bodySmRegular)
                 .foregroundStyle(Colors.textDanger)
         }
     }
@@ -350,7 +350,7 @@ struct LoginView: View {
             VStack(spacing: 0) {
                 Button(action: viewModel.loginTapped) {
                     Text(viewModel.isLockedOut ? viewModel.lockoutCountdownText : "로그인")
-                        .font(Typography.bodyLgSemibold)
+                        .typography(Typography.bodyLgSemibold)
                         .foregroundStyle(viewModel.isLockedOut ? Colors.textQuaternary : Colors.textOnFill)
                         .frame(maxWidth: .infinity)
                         .frame(height: 56)
@@ -364,18 +364,18 @@ struct LoginView: View {
                 HStack(spacing: Spacing.spacing4) {
                     Button(action: viewModel.forgotPasswordTapped) {
                         Text(viewModel.isLockedOut ? "비밀번호 재설정하기" : "비밀번호 찾기")
-                            .font(Typography.bodyMdMedium)
+                            .typography(Typography.bodyMdMedium)
                             .foregroundStyle(Colors.textTertiary)
                     }
                     .buttonStyle(.plain)
 
                     Text("|")
-                        .font(Typography.bodyMdMedium)
+                        .typography(Typography.bodyMdMedium)
                         .foregroundStyle(Colors.textTertiary)
 
                     Button(action: { signUpRouter.push(.email) }) {
                         Text("회원가입")
-                            .font(Typography.bodyMdMedium)
+                            .typography(Typography.bodyMdMedium)
                             .foregroundStyle(Colors.textTertiary)
                     }
                     .buttonStyle(.plain)

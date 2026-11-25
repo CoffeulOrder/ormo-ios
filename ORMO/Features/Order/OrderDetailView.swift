@@ -125,7 +125,7 @@ struct OrderDetailView: View {
     private var topNavigationBar: some View {
         ZStack {
             Text("주문 상세")
-                .font(Typography.bodyLgSemibold)
+                .typography(Typography.bodyLgSemibold)
                 .foregroundStyle(Colors.textStrong)
 
             HStack(spacing: 0) {
@@ -149,12 +149,12 @@ struct OrderDetailView: View {
     private var statusHeader: some View {
         VStack(alignment: .leading, spacing: Spacing.spacing12) {
             Text(statusTitle)
-                .font(Typography.displayXsSemibold)
+                .typography(Typography.displayXsSemibold)
                 .foregroundStyle(Colors.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)
 
             Text("\(viewModel.order.storeName) ∙ \(Self.dateFormatter.string(from: viewModel.order.paidAt))")
-                .font(Typography.bodyMdRegular)
+                .typography(Typography.bodyMdRegular)
                 .foregroundStyle(Colors.textSecondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -187,7 +187,7 @@ struct OrderDetailView: View {
                 .scaledToFit()
                 .frame(width: 20, height: 20)
             Text(text)
-                .font(Typography.bodySmRegular)
+                .typography(Typography.bodySmRegular)
                 .foregroundStyle(Colors.textSecondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -214,11 +214,11 @@ struct OrderDetailView: View {
                 ForEach(Array(steps.enumerated()), id: \.offset) { _, step in
                     VStack(spacing: 0) {
                         Text(step.label)
-                            .font(Typography.bodySmMedium)
+                            .typography(Typography.bodySmMedium)
                             .foregroundStyle(step.color)
                         if let time = step.time {
                             Text(Self.timeFormatter.string(from: time))
-                                .font(Typography.bodyXsMedium)
+                                .typography(Typography.bodyXsMedium)
                                 .foregroundStyle(Colors.textTertiary)
                         }
                     }
@@ -354,7 +354,7 @@ struct OrderDetailView: View {
     private var orderItemsSection: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text("주문 내역")
-                .font(Typography.bodyLgSemibold)
+                .typography(Typography.bodyLgSemibold)
                 .foregroundStyle(Colors.textPrimary)
                 .padding(.horizontal, Spacing.spacing20)
                 .padding(.vertical, Spacing.spacing12)
@@ -364,14 +364,14 @@ struct OrderDetailView: View {
                     VStack(alignment: .leading, spacing: Spacing.spacing8) {
                         HStack(spacing: Spacing.spacing4) {
                             Text(item.name)
-                                .font(Typography.bodyMdSemibold)
+                                .typography(Typography.bodyMdSemibold)
                                 .foregroundStyle(Colors.textPrimary)
                             Text("\(item.quantity)개")
-                                .font(Typography.bodySmMedium)
+                                .typography(Typography.bodySmMedium)
                                 .foregroundStyle(Colors.textSecondary)
                         }
                         Text(item.optionsSummary)
-                            .font(Typography.bodySmRegular)
+                            .typography(Typography.bodySmRegular)
                             .foregroundStyle(Colors.textSecondary)
                     }
                 }
@@ -386,7 +386,7 @@ struct OrderDetailView: View {
     private var paymentInfoSection: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text("결제 정보")
-                .font(Typography.bodyLgSemibold)
+                .typography(Typography.bodyLgSemibold)
                 .foregroundStyle(Colors.textPrimary)
                 .padding(.vertical, Spacing.spacing12)
 
@@ -405,7 +405,7 @@ struct OrderDetailView: View {
                 Spacer()
                 Text("\(viewModel.order.subtotalPrice.formatted())원")
             }
-            .font(Typography.bodyLgBold)
+            .typography(Typography.bodyLgBold)
             .foregroundStyle(Colors.textPrimary)
             .padding(.top, Spacing.spacing16)
         }
@@ -419,7 +419,7 @@ struct OrderDetailView: View {
             Spacer()
             Text(value).foregroundStyle(Colors.textPrimary)
         }
-        .font(Typography.bodyMdRegular)
+        .typography(Typography.bodyMdRegular)
     }
 
     private var thinDivider: some View {
@@ -473,7 +473,7 @@ struct OrderDetailView: View {
     private func actionButton(_ title: String, textColor: Color, background: Color, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(title)
-                .font(Typography.bodyLgSemibold)
+                .typography(Typography.bodyLgSemibold)
                 .foregroundStyle(textColor)
                 .frame(maxWidth: .infinity)
                 .frame(height: 56)

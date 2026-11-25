@@ -148,7 +148,7 @@ struct CartView: View {
     private var topNavigationBar: some View {
         ZStack {
             Text("장바구니")
-                .font(Typography.bodyLgSemibold)
+                .typography(Typography.bodyLgSemibold)
                 .foregroundStyle(Colors.textStrong)
 
             HStack(spacing: 0) {
@@ -173,17 +173,17 @@ struct CartView: View {
         VStack(alignment: .leading, spacing: 0) {
             VStack(alignment: .leading, spacing: 0) {
                 Text("수령 방법")
-                    .font(Typography.bodyLgSemibold)
+                    .typography(Typography.bodyLgSemibold)
                     .foregroundStyle(Colors.textPrimary)
                     .padding(.vertical, Spacing.spacing12)
 
                 VStack(alignment: .leading, spacing: Spacing.spacing8) {
                     Text(viewModel.store?.name ?? "")
-                        .font(Typography.bodyMdSemibold)
+                        .typography(Typography.bodyMdSemibold)
                         .foregroundStyle(Colors.textPrimary)
                     if let address = viewModel.store?.address {
                         Text(address)
-                            .font(Typography.bodySmRegular)
+                            .typography(Typography.bodySmRegular)
                             .foregroundStyle(Colors.textSecondary)
                     }
                 }
@@ -207,7 +207,7 @@ struct CartView: View {
             HStack(spacing: Spacing.spacing12) {
                 radioControl(isSelected: viewModel.pickupMethod == method)
                 Text(title)
-                    .font(Typography.bodyMdRegular)
+                    .typography(Typography.bodyMdRegular)
                     .foregroundStyle(Colors.textPrimary)
                 Spacer()
             }
@@ -218,7 +218,7 @@ struct CartView: View {
     private var orderMenuSection: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text("주문 메뉴")
-                .font(Typography.bodyLgSemibold)
+                .typography(Typography.bodyLgSemibold)
                 .foregroundStyle(Colors.textPrimary)
                 .padding(.horizontal, Spacing.spacing20)
                 .padding(.vertical, Spacing.spacing12)
@@ -234,12 +234,12 @@ struct CartView: View {
         VStack(alignment: .leading, spacing: Spacing.spacing4) {
             HStack(spacing: Spacing.spacing8) {
                 Text(item.menuItemName)
-                    .font(Typography.bodyMdSemibold)
+                    .typography(Typography.bodyMdSemibold)
                     .foregroundStyle(item.isSoldOut ? Colors.textQuaternary : Colors.textPrimary)
 
                 if item.isSoldOut {
                     Text("품절")
-                        .font(Typography.bodyXsMedium)
+                        .typography(Typography.bodyXsMedium)
                         .foregroundStyle(Colors.textSecondary)
                         .padding(.horizontal, Spacing.spacing8)
                         .frame(height: 24)
@@ -249,12 +249,12 @@ struct CartView: View {
             }
 
             Text(item.optionsSummary)
-                .font(Typography.bodySmMedium)
+                .typography(Typography.bodySmMedium)
                 .foregroundStyle(item.isSoldOut ? Colors.textQuaternary : Colors.textSecondary)
 
             HStack(spacing: 10) {
                 Text("\(item.totalPrice.formatted())원")
-                    .font(Typography.bodyMdSemibold)
+                    .typography(Typography.bodyMdSemibold)
                     .foregroundStyle(item.isSoldOut ? Colors.textQuaternary : Colors.textPrimary)
                     .strikethrough(item.isSoldOut)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -298,7 +298,7 @@ struct CartView: View {
                 .frame(width: 1, height: 16)
 
             Text("\(item.quantity)")
-                .font(Typography.bodyMdMedium)
+                .typography(Typography.bodyMdMedium)
                 .foregroundStyle(item.isSoldOut ? Colors.textQuaternary : Colors.textStrong)
                 .frame(minWidth: 36)
                 .padding(.horizontal, Spacing.spacing8)
@@ -338,7 +338,7 @@ struct CartView: View {
     private var paymentSection: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text("결제수단")
-                .font(Typography.bodyLgSemibold)
+                .typography(Typography.bodyLgSemibold)
                 .foregroundStyle(Colors.textPrimary)
                 .padding(.horizontal, Spacing.spacing20)
                 .padding(.top, Spacing.spacing12)
@@ -359,7 +359,7 @@ struct CartView: View {
             HStack(spacing: Spacing.spacing12) {
                 radioControl(isSelected: viewModel.paymentMethod == method)
                 Text(title)
-                    .font(Typography.bodyMdRegular)
+                    .typography(Typography.bodyMdRegular)
                     .foregroundStyle(Colors.textPrimary)
                 Spacer()
             }
@@ -410,7 +410,7 @@ struct CartView: View {
                     HStack(spacing: Spacing.spacing12) {
                         checkboxControl(isSelected: viewModel.hasAgreedToNoCancellation)
                         Text("매장이 주문을 받은 뒤에는 취소할 수 없어요")
-                            .font(Typography.bodyMdRegular)
+                            .typography(Typography.bodyMdRegular)
                             .foregroundStyle(Colors.textPrimary)
                         Spacer()
                     }
@@ -422,7 +422,7 @@ struct CartView: View {
 
                 Button(action: { viewModel.checkoutTapped() }) {
                     Text("\(viewModel.checkoutTotalPrice.formatted())원 결제하기")
-                        .font(Typography.bodyLgSemibold)
+                        .typography(Typography.bodyLgSemibold)
                         .foregroundStyle(viewModel.isCheckoutEnabled ? Colors.textOnFill : Colors.textQuaternary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 56)
@@ -435,7 +435,7 @@ struct CartView: View {
 
                 Button(action: { dismiss() }) {
                     Text("메뉴 추가하기")
-                        .font(Typography.bodyMdSemibold)
+                        .typography(Typography.bodyMdSemibold)
                         .foregroundStyle(Colors.textTertiary)
                         .frame(height: 40)
                 }
@@ -466,12 +466,12 @@ struct CartView: View {
     private func removalSnackbar(_ message: String) -> some View {
         HStack(spacing: Spacing.spacing12) {
             Text(message)
-                .font(Typography.bodyMdSemibold)
+                .typography(Typography.bodyMdSemibold)
                 .foregroundStyle(Colors.textOnFill)
 
             Button(action: { viewModel.cart.undoRemove() }) {
                 Text("되돌리기")
-                    .font(Typography.bodySmSemibold)
+                    .typography(Typography.bodySmSemibold)
                     .foregroundStyle(Colors.textOnFill)
                     .padding(.horizontal, Spacing.spacing12)
                     .padding(.vertical, Spacing.spacing4)

@@ -58,7 +58,7 @@ struct OrderHistoryView: View {
     private var topNavigationBar: some View {
         ZStack {
             Text("주문 내역")
-                .font(Typography.bodyLgSemibold)
+                .typography(Typography.bodyLgSemibold)
                 .foregroundStyle(Colors.textStrong)
 
             HStack(spacing: 0) {
@@ -95,7 +95,7 @@ struct OrderHistoryView: View {
             Button(action: { headerTapped(order) }) {
                 HStack(spacing: Spacing.spacing8) {
                     Text("\(order.storeName) ∙ \(Self.dateFormatter.string(from: order.paidAt))")
-                        .font(Typography.bodySmMedium)
+                        .typography(Typography.bodySmMedium)
                         .foregroundStyle(Colors.textSecondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -115,14 +115,14 @@ struct OrderHistoryView: View {
                     VStack(alignment: .leading, spacing: Spacing.spacing8) {
                         HStack(spacing: Spacing.spacing4) {
                             Text(item.name)
-                                .font(Typography.bodyMdSemibold)
+                                .typography(Typography.bodyMdSemibold)
                                 .foregroundStyle(Colors.textPrimary)
                             Text("\(item.quantity)개")
-                                .font(Typography.bodySmMedium)
+                                .typography(Typography.bodySmMedium)
                                 .foregroundStyle(Colors.textSecondary)
                         }
                         Text(item.optionsSummary)
-                            .font(Typography.bodySmRegular)
+                            .typography(Typography.bodySmRegular)
                             .foregroundStyle(Colors.textSecondary)
                     }
                 }
@@ -135,18 +135,18 @@ struct OrderHistoryView: View {
                     if order.status == .cancelled {
                         Text("\(order.subtotalPrice.formatted())원")
                             .strikethrough()
-                            .font(Typography.bodyMdSemibold)
+                            .typography(Typography.bodyMdSemibold)
                             .foregroundStyle(Colors.textQuaternary)
                     } else {
                         Text("\(order.subtotalPrice.formatted())원")
-                            .font(Typography.bodyMdSemibold)
+                            .typography(Typography.bodyMdSemibold)
                             .foregroundStyle(Colors.textPrimary)
                     }
 
                     Spacer()
 
                     Text(order.status == .cancelled ? "매장 주문 취소" : "픽업 완료")
-                        .font(Typography.bodySmMedium)
+                        .typography(Typography.bodySmMedium)
                         .foregroundStyle(Colors.textSecondary)
                 }
             }
@@ -163,7 +163,7 @@ struct OrderHistoryView: View {
         if order.status == .cancelled {
             Button(action: { browseMenuTapped() }) {
                 Text("메뉴 보러 가기")
-                    .font(Typography.bodyMdSemibold)
+                    .typography(Typography.bodyMdSemibold)
                     .foregroundStyle(Colors.textOnFill)
                     .frame(maxWidth: .infinity)
                     .frame(height: 48)
@@ -174,7 +174,7 @@ struct OrderHistoryView: View {
         } else {
             Button(action: { reorderTapped(order) }) {
                 Text("재주문하기")
-                    .font(Typography.bodyMdSemibold)
+                    .typography(Typography.bodyMdSemibold)
                     .foregroundStyle(Colors.textOnFill)
                     .frame(maxWidth: .infinity)
                     .frame(height: 48)

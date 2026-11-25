@@ -14,7 +14,7 @@ struct Snackbar: View {
         HStack(spacing: Spacing.spacing12) {
             icon
             Text(message)
-                .font(Typography.bodyMdSemibold)
+                .typography(Typography.bodyMdSemibold)
                 .foregroundStyle(Colors.textOnFill)
         }
         .padding(.leading, Spacing.spacing16)

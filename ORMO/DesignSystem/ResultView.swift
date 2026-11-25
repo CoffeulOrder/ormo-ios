@@ -22,11 +22,11 @@ struct ResultView: View {
             VStack(spacing: Spacing.spacing16) {
                 VStack(spacing: Spacing.spacing4) {
                     Text(title)
-                        .font(Typography.bodyLgSemibold)
+                        .typography(Typography.bodyLgSemibold)
                         .foregroundStyle(Colors.textStrong)
                     if let message {
                         Text(message)
-                            .font(Typography.bodyMdRegular)
+                            .typography(Typography.bodyMdRegular)
                             .foregroundStyle(Colors.textSecondary)
                     }
                 }
@@ -35,7 +35,7 @@ struct ResultView: View {
                 if let buttonTitle, let action {
                     Button(action: action) {
                         Text(buttonTitle)
-                            .font(Typography.bodyMdSemibold)
+                            .typography(Typography.bodyMdSemibold)
                             .foregroundStyle(Colors.textOnFill)
                             .padding(.horizontal, Spacing.spacing16)
                             .frame(height: 38)

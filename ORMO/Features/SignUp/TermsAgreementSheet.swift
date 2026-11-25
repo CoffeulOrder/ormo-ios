@@ -7,7 +7,7 @@ struct TermsAgreementSheet: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text("서비스 이용에\n필요한 동의만 추렸어요")
-                .font(Typography.bodyXlBold)
+                .typography(Typography.bodyXlBold)
                 .foregroundStyle(Colors.textStrong)
                 .padding(.horizontal, Spacing.spacing24)
                 .padding(.vertical, Spacing.spacing16)
@@ -28,7 +28,7 @@ struct TermsAgreementSheet: View {
 
             Button(action: viewModel.submitTapped) {
                 Text("동의하고 가입하기")
-                    .font(Typography.bodyLgSemibold)
+                    .typography(Typography.bodyLgSemibold)
                     .foregroundStyle(viewModel.canSubmit ? Colors.textOnFill : Colors.textQuaternary)
                     .frame(maxWidth: .infinity)
                     .frame(height: 56)
@@ -48,7 +48,7 @@ struct TermsAgreementSheet: View {
                 checkbox(isAgreed: viewModel.isAllAgreed)
 
                 Text("전체 동의")
-                    .font(Typography.bodyMdRegular)
+                    .typography(Typography.bodyMdRegular)
                     .foregroundStyle(Colors.textPrimary)
             }
             .frame(height: 48)
@@ -64,7 +64,7 @@ struct TermsAgreementSheet: View {
                     checkbox(isAgreed: item.isAgreed)
 
                     Text(item.title)
-                        .font(Typography.bodyMdRegular)
+                        .typography(Typography.bodyMdRegular)
                         .foregroundStyle(Colors.textPrimary)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)

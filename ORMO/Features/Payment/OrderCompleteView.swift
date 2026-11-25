@@ -93,10 +93,10 @@ struct OrderCompleteView: View {
     private var pickupNumberLabel: some View {
         VStack(spacing: 0) {
             Text("픽업 번호")
-                .font(Typography.bodyXlRegular)
+                .typography(Typography.bodyXlRegular)
                 .foregroundStyle(Colors.textTertiary)
             Text("\(pickupNumber)")
-                .font(Typography.display2xlSemibold)
+                .typography(Typography.display2xlSemibold)
                 .foregroundStyle(Colors.textPrimary)
         }
         .keyframeAnimator(initialValue: FadeUpMotion(translateY: 16), trigger: appeared) { content, motion in
@@ -151,7 +151,7 @@ struct OrderCompleteView: View {
             Text(value)
                 .foregroundStyle(Colors.textPrimary)
         }
-        .font(Typography.bodyMdRegular)
+        .typography(Typography.bodyMdRegular)
     }
 
     private func bottomCTA(scale: CGFloat) -> some View {
@@ -166,7 +166,7 @@ struct OrderCompleteView: View {
             VStack(spacing: Spacing.spacing8) {
                 Button(action: orderStatusTapped) {
                     Text("주문 상태 보기")
-                        .font(Typography.bodyLgSemibold)
+                        .typography(Typography.bodyLgSemibold)
                         .foregroundStyle(Colors.textOnFill)
                         .frame(maxWidth: .infinity)
                         .frame(height: 56)
@@ -177,7 +177,7 @@ struct OrderCompleteView: View {
 
                 Button(action: addMoreOrderTapped) {
                     Text("추가 주문하기")
-                        .font(Typography.bodyLgSemibold)
+                        .typography(Typography.bodyLgSemibold)
                         .foregroundStyle(Colors.textBrand)
                         .frame(maxWidth: .infinity)
                         .frame(height: 56)

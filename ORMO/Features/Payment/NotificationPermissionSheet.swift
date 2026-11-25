@@ -101,10 +101,10 @@ struct NotificationPermissionSheet: View {
     private var header: some View {
         VStack(spacing: Spacing.spacing4) {
             Text("음료가 준비되면 바로 알려드려요")
-                .font(Typography.bodyXlBold)
+                .typography(Typography.bodyXlBold)
                 .foregroundStyle(Colors.textStrong)
             Text("알림을 켜면 주문 진행 상황을 바로 알 수 있어요")
-                .font(Typography.bodyMdRegular)
+                .typography(Typography.bodyMdRegular)
                 .foregroundStyle(Colors.textTertiary)
         }
         .multilineTextAlignment(.center)
@@ -153,7 +153,7 @@ struct NotificationPermissionSheet: View {
         HStack(spacing: Spacing.spacing8) {
             Button(action: onSkip) {
                 Text("다음에")
-                    .font(Typography.bodyLgSemibold)
+                    .typography(Typography.bodyLgSemibold)
                     .foregroundStyle(Colors.textPrimary)
                     .frame(maxWidth: .infinity)
                     .frame(height: 56)
@@ -164,7 +164,7 @@ struct NotificationPermissionSheet: View {
 
             Button(action: onAllow) {
                 Text("알림 받기")
-                    .font(Typography.bodyLgSemibold)
+                    .typography(Typography.bodyLgSemibold)
                     .foregroundStyle(Colors.textOnFill)
                     .frame(maxWidth: .infinity)
                     .frame(height: 56)
