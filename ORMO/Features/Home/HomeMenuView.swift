@@ -51,15 +51,6 @@ private struct SectionHeightKey: PreferenceKey {
     }
 }
 
-// 메뉴 리스트가 실제로 보이는 뷰포트 크기. 장바구니 바 등 위에 뜨는 오버레이의 높이는
-// 뺀 뒤 쓴다.
-private struct ListViewportHeightKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = nextValue()
-    }
-}
-
 // 메뉴 리스트 위에 떠 있는 하단 바(장바구니 바·실시간 주문 바)의 높이. 0이면 아무것도
 // 떠 있지 않다는 뜻이다.
 private struct BottomOverlayBarHeightKey: PreferenceKey {
@@ -349,74 +340,83 @@ struct HomeMenuView: View {
             if let notice = viewModel.unavailableNotice {
                 unavailableNoticeBanner(notice)
             }
-            ZStack(alignment: .bottom) {
-                ScrollViewReader { proxy in
-                    ScrollView {
-                        LazyVStack(spacing: 0) {
-                            ForEach(Array(viewModel.sections.enumerated()), id: \.element) { index, section in
-                                // 디바이더는 탭 스크롤 앵커(.id) 밖에 둔다. 탭을 눌렀을 때 디바이더가
-                                // 화면 맨 위에 걸치는 게 아니라, 그 아래 메뉴 내용이 바로 보여야 한다.
-                                if index > 0 {
-                                    thickDivider
+            // .background(GeometryReader{...})를 ScrollView에 붙이는 방식은 이 화면에서
+            // 뷰포트 크기를 0으로 보고하는 경우가 있었다(레이아웃 해석 순서 문제로 추정).
+            // GeometryReader를 ScrollView의 직계 부모로 직접 감싸면 제안받은 크기를
+            // 그대로 읽어서 훨씬 안정적으로 측정된다.
+            GeometryReader { listGeometry in
+                ZStack(alignment: .bottom) {
+                    ScrollViewReader { proxy in
+                        ScrollView {
+                            // LazyVStack을 쓰면 아직 스크롤로 지나간 적 없는 섹션(예: 맨 아래 "음료")의
+                            // GeometryReader가 렌더되지 않아 높이·오프셋이 비어 있는 채로 남는다.
+                            // 그 상태에서 하단 여백(bottomInset)·긴 거리 사전 점프(sectionBeforeTarget)
+                            // 계산이 그 섹션을 한 번도 안 본 상태로는 틀어져, 처음 탭했을 때 리스트가
+                            // 안 움직이거나 중간 점프가 생략되는 버그로 이어졌다. 메뉴 항목 수가
+                            // 적어(총 10여 개) 레이지 로딩이 꼭 필요하지 않으므로 일반 VStack으로 바꿔
+                            // 모든 섹션의 지오메트리가 처음부터 안정적으로 잡히게 한다.
+                            VStack(spacing: 0) {
+                                ForEach(Array(viewModel.sections.enumerated()), id: \.element) { index, section in
+                                    // 디바이더는 탭 스크롤 앵커(.id) 밖에 둔다. 탭을 눌렀을 때 디바이더가
+                                    // 화면 맨 위에 걸치는 게 아니라, 그 아래 메뉴 내용이 바로 보여야 한다.
+                                    if index > 0 {
+                                        thickDivider
+                                    }
+                                    sectionView(section)
+                                        .id(section)
+                                        .background(
+                                            GeometryReader { geometry in
+                                                Color.clear
+                                                    .preference(
+                                                        key: SectionTopOffsetKey.self,
+                                                        value: [section: geometry.frame(in: .named("menuScroll")).minY]
+                                                    )
+                                                    .preference(
+                                                        key: SectionHeightKey.self,
+                                                        value: [section: geometry.size.height]
+                                                    )
+                                            }
+                                        )
                                 }
-                                sectionView(section)
-                                    .id(section)
-                                    .background(
-                                        GeometryReader { geometry in
-                                            Color.clear
-                                                .preference(
-                                                    key: SectionTopOffsetKey.self,
-                                                    value: [section: geometry.frame(in: .named("menuScroll")).minY]
-                                                )
-                                                .preference(
-                                                    key: SectionHeightKey.self,
-                                                    value: [section: geometry.size.height]
-                                                )
-                                        }
-                                    )
+
+                                // 마지막 섹션이 리스트 뷰포트보다 짧아도 탭 바로 아래까지 스크롤할 수
+                                // 있도록, 모자란 만큼 빈 공간을 둔다.
+                                Color.clear.frame(height: bottomInset)
                             }
+                        }
+                        .coordinateSpace(name: "menuScroll")
+                        .onPreferenceChange(SectionTopOffsetKey.self) { offsets in
+                            sectionTopOffsets = offsets
+                            updateCurrentSectionFromScroll()
+                        }
+                        .onPreferenceChange(SectionFirstItemHeightKey.self) { heights in
+                            sectionFirstItemHeights = heights
+                            updateCurrentSectionFromScroll()
+                        }
+                        .onPreferenceChange(SectionHeightKey.self) { sectionHeights = $0 }
+                        // 사용자가 리스트를 직접 드래그하기 시작하면, 탭 클릭으로 시작된 프로그램
+                        // 스크롤이 아직 "끝났다고 확정"되지 않았더라도 즉시 scroll-spy로 돌아간다.
+                        .simultaneousGesture(
+                            DragGesture(minimumDistance: 1)
+                                .onChanged { _ in viewModel.userDidStartDragging() }
+                        )
+                        .onChange(of: viewModel.scrollTarget) {
+                            guard let section = viewModel.scrollTarget else { return }
+                            scrollToSection(section, proxy: proxy)
+                        }
+                    }
 
-                            // 마지막 섹션이 리스트 뷰포트보다 짧아도 탭 바로 아래까지 스크롤할 수
-                            // 있도록, 모자란 만큼 빈 공간을 둔다.
-                            Color.clear.frame(height: bottomInset)
-                        }
-                    }
-                    .coordinateSpace(name: "menuScroll")
-                    .background(
-                        GeometryReader { geometry in
-                            Color.clear.preference(key: ListViewportHeightKey.self, value: geometry.size.height)
-                        }
+                    LinearGradient(
+                        colors: [Colors.backgroundDefault.opacity(0), Colors.backgroundDefault],
+                        startPoint: .top,
+                        endPoint: .bottom
                     )
-                    .onPreferenceChange(ListViewportHeightKey.self) { listViewportHeight = $0 }
-                    .onPreferenceChange(SectionTopOffsetKey.self) { offsets in
-                        sectionTopOffsets = offsets
-                        updateCurrentSectionFromScroll()
-                    }
-                    .onPreferenceChange(SectionFirstItemHeightKey.self) { heights in
-                        sectionFirstItemHeights = heights
-                        updateCurrentSectionFromScroll()
-                    }
-                    .onPreferenceChange(SectionHeightKey.self) { sectionHeights = $0 }
-                    // 사용자가 리스트를 직접 드래그하기 시작하면, 탭 클릭으로 시작된 프로그램
-                    // 스크롤이 아직 "끝났다고 확정"되지 않았더라도 즉시 scroll-spy로 돌아간다.
-                    .simultaneousGesture(
-                        DragGesture(minimumDistance: 1)
-                            .onChanged { _ in viewModel.userDidStartDragging() }
-                    )
-                    .onChange(of: viewModel.scrollTarget) {
-                        guard let section = viewModel.scrollTarget else { return }
-                        scrollToSection(section, proxy: proxy)
-                    }
+                    .frame(height: Spacing.spacing40)
+                    .ignoresSafeArea(edges: .bottom)
+                    .allowsHitTesting(false)
                 }
-
-                LinearGradient(
-                    colors: [Colors.backgroundDefault.opacity(0), Colors.backgroundDefault],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .frame(height: Spacing.spacing40)
-                .ignoresSafeArea(edges: .bottom)
-                .allowsHitTesting(false)
+                .onAppear { listViewportHeight = listGeometry.size.height }
+                .onChange(of: listGeometry.size.height) { _, newValue in listViewportHeight = newValue }
             }
         }
     }
