@@ -52,14 +52,18 @@ struct OrderDetailView: View {
         return formatter
     }()
 
-    init(pickupNumber: Int, storeName: String) {
+    let cart: CartStore
+
+    init(pickupNumber: Int, storeName: String, cart: CartStore) {
         _viewModel = State(initialValue: OrderDetailViewModel(pickupNumber: pickupNumber, storeName: storeName))
+        self.cart = cart
     }
 
     // 특정 상태를 고정해서 보여준다. 주문 내역(완료·취소된 지난 주문)에서 상세로 들어갈 때처럼,
     // 실시간 진행 상태를 처음부터 다시 재생하면 안 되는 곳에서 쓴다.
-    init(order: Order) {
+    init(order: Order, cart: CartStore) {
         _viewModel = State(initialValue: OrderDetailViewModel(order: order))
+        self.cart = cart
     }
 
     var body: some View {
@@ -541,7 +545,16 @@ struct OrderDetailView: View {
     }
 
     private func reorderTapped() {
-        router.path.append(HomeRoute.cart)
+        Task {
+            guard let lineItems = await viewModel.reorderLineItems() else {
+                showToast(message: "메뉴가 모두 품절이에요", tone: .critical)
+                return
+            }
+            for lineItem in lineItems {
+                cart.addSilently(lineItem)
+            }
+            router.path.append(HomeRoute.cart)
+        }
     }
 
     private func viewReceiptTapped() {
@@ -587,56 +600,56 @@ private func previewOrder(status: OrderStatus) -> Order {
 
 #Preview("주문 확인 중") {
     NavigationStack {
-        OrderDetailView(order: previewOrder(status: .confirming))
+        OrderDetailView(order: previewOrder(status: .confirming), cart: CartStore())
     }
     .environment(HomeRouter())
 }
 
 #Preview("만드는 중") {
     NavigationStack {
-        OrderDetailView(order: previewOrder(status: .making))
+        OrderDetailView(order: previewOrder(status: .making), cart: CartStore())
     }
     .environment(HomeRouter())
 }
 
 #Preview("픽업 대기") {
     NavigationStack {
-        OrderDetailView(order: previewOrder(status: .waitingPickup))
+        OrderDetailView(order: previewOrder(status: .waitingPickup), cart: CartStore())
     }
     .environment(HomeRouter())
 }
 
 #Preview("매장 취소") {
     NavigationStack {
-        OrderDetailView(order: previewOrder(status: .cancelled))
+        OrderDetailView(order: previewOrder(status: .cancelled), cart: CartStore())
     }
     .environment(HomeRouter())
 }
 
 #Preview("픽업 완료") {
     NavigationStack {
-        OrderDetailView(order: previewOrder(status: .pickedUp))
+        OrderDetailView(order: previewOrder(status: .pickedUp), cart: CartStore())
     }
     .environment(HomeRouter())
 }
 
 #Preview("주문 취소") {
     NavigationStack {
-        OrderDetailView(order: previewOrder(status: .userCancelled))
+        OrderDetailView(order: previewOrder(status: .userCancelled), cart: CartStore())
     }
     .environment(HomeRouter())
 }
 
 #Preview("환불 완료") {
     NavigationStack {
-        OrderDetailView(order: previewOrder(status: .refunded))
+        OrderDetailView(order: previewOrder(status: .refunded), cart: CartStore())
     }
     .environment(HomeRouter())
 }
 
 #Preview("미수령") {
     NavigationStack {
-        OrderDetailView(order: previewOrder(status: .unclaimed))
+        OrderDetailView(order: previewOrder(status: .unclaimed), cart: CartStore())
     }
     .environment(HomeRouter())
 }

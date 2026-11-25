@@ -68,9 +68,9 @@ struct HomeMenuView: View {
                     case .orderComplete(let pickupNumber, let storeName, let queueCount):
                         OrderCompleteView(pickupNumber: pickupNumber, storeName: storeName, queueCount: queueCount)
                     case .orderDetail(let pickupNumber, let storeName):
-                        OrderDetailView(pickupNumber: pickupNumber, storeName: storeName)
+                        OrderDetailView(pickupNumber: pickupNumber, storeName: storeName, cart: cart)
                     case .orderDetailHistory(let order):
-                        OrderDetailView(order: order)
+                        OrderDetailView(order: order, cart: cart)
                     case .receipt(let pickupNumber, let storeName, let totalPrice, let paidAt):
                         ReceiptView(pickupNumber: pickupNumber, storeName: storeName, totalPrice: totalPrice, paidAt: paidAt)
                     case .myInfo:
