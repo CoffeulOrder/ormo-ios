@@ -74,11 +74,11 @@ struct NotificationPermissionSheet: View {
             footer
         }
         .padding(.top, Spacing.spacing12)
-        .padding(.bottom, Spacing.spacing32)
+        .padding(.bottom, Spacing.spacing16)
         .frame(maxWidth: .infinity)
         .background(Colors.backgroundFloated)
         .clipShape(
-            UnevenRoundedRectangle(topLeadingRadius: Radius.sheet, bottomLeadingRadius: 0, bottomTrailingRadius: 0, topTrailingRadius: Radius.sheet)
+            UnevenRoundedRectangle(topLeadingRadius: Radius.xl, bottomLeadingRadius: 0, bottomTrailingRadius: 0, topTrailingRadius: Radius.xl)
         )
         .shadow(color: Colors.shadowMedium, radius: 32, x: 0, y: 8)
         .keyframeAnimator(initialValue: SheetMotion(), trigger: appeared) { content, motion in
@@ -108,7 +108,7 @@ struct NotificationPermissionSheet: View {
                 .foregroundStyle(Colors.textTertiary)
         }
         .multilineTextAlignment(.center)
-        .padding(.horizontal, Spacing.spacing24)
+        .padding(.horizontal, Spacing.spacing20)
         .padding(.vertical, Spacing.spacing16)
     }
 

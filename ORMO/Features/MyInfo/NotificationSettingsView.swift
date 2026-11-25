@@ -128,7 +128,7 @@ struct NotificationSettingsView: View {
         Text(title)
             .typography(Typography.bodyLgSemibold)
             .foregroundStyle(Colors.textSecondary)
-            .padding(.horizontal, Spacing.spacing24)
+            .padding(.horizontal, Spacing.spacing20)
             .padding(.top, Spacing.spacing16)
             .padding(.bottom, Spacing.spacing8)
     }
@@ -150,7 +150,7 @@ struct NotificationSettingsView: View {
                 .tint(Colors.fillBrand)
                 .disabled(isDisabled)
         }
-        .padding(.horizontal, Spacing.spacing24)
+        .padding(.horizontal, Spacing.spacing20)
         .padding(.vertical, Spacing.spacing16)
     }
 }

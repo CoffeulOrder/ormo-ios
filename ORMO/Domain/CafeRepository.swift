@@ -2,6 +2,8 @@ import Foundation
 
 enum StoreOperatingStatus: Hashable {
     case open
+    // 브레이크타임처럼 같은 날 잠깐 주문만 중지. 다시 받는 시각 안내(예: "14:30").
+    case paused(resumesAtText: String)
     case closed
 }
 

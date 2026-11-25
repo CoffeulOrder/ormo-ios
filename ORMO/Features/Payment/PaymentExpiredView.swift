@@ -99,7 +99,7 @@ struct PaymentExpiredView: View {
             }
             .buttonStyle(.plain)
             .padding(.horizontal, Spacing.spacing20)
-            .padding(.bottom, Spacing.spacing32)
+            .padding(.bottom, Spacing.spacing20)
             .background(Colors.backgroundDefault)
         }
         .keyframeAnimator(initialValue: FadeUpMotion(translateY: 32), trigger: appeared) { content, motion in

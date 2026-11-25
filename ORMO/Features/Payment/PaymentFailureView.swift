@@ -67,7 +67,7 @@ struct PaymentFailureView: View {
                 }
             }
             .padding(.horizontal, Spacing.spacing20)
-            .padding(.bottom, Spacing.spacing32)
+            .padding(.bottom, Spacing.spacing20)
             .background(Colors.backgroundDefault)
         }
     }

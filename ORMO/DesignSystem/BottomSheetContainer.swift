@@ -53,10 +53,10 @@ struct BottomSheetContainer<Content: View>: View {
         .background(Colors.backgroundFloated)
         .clipShape(
             UnevenRoundedRectangle(
-                topLeadingRadius: Radius.sheet,
+                topLeadingRadius: Radius.xl,
                 bottomLeadingRadius: 0,
                 bottomTrailingRadius: 0,
-                topTrailingRadius: Radius.sheet
+                topTrailingRadius: Radius.xl
             )
         )
         .compositingGroup()

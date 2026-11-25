@@ -5,8 +5,9 @@ ORSO의 대학 내 카페 모바일 오더 서비스 **ORMO**의 디자인 시�
 - **원본**: [Figma · Design System](https://www.figma.com/design/EM9tNGNPK7FxUAvzS9909M/Design-System?node-id=0-1)
 - **서체**: Pretendard
 - **기반**: TDS(앱인토스) 구조 — Base 팔레트 + Semantic 토큰 2단 컬러, Light / Dark 모드. Blue 팔레트만 ORSO Blue(`#298DFF`) 계열.
-- **플랫폼**: Mobile(터치, 기준 폭 375) · Web(마우스). 컴포넌트 문서마다 지원 플랫폼과 버전을 적었다.
+- **플랫폼**: Mobile(터치, 기준 폭 375) · Web(마우스) · iPad(Owner App 전용). 컴포넌트 문서마다 지원 플랫폼과 버전을 적었다.
 - **표기**: `백틱` = 토큰/변수 이름, `Text/Primary` 같은 슬래시 이름 = Semantic 컬러 토큰, `Body md/Semibold` = 텍스트 스타일 (크기/굵기).
+- **컴포넌트**: 34종 (기본 27 + 모바일 전용 Store Card·Menu Card 2 + Owner App(iPad) 5)
 - **Figma 변수 컬렉션**: Color 189개(Base 147 · Semantic 42, Light/Dark) · Tokens 73개 · Typography 27개.
 
 ## 목차
@@ -14,11 +15,12 @@ ORSO의 대학 내 카페 모바일 오더 서비스 **ORMO**의 디자인 시�
 1. [Foundation](#1-foundation) — Colors · Typography · Spacing/Radius/Size · Effects · Icons
 2. [Actions](#2-actions) — Action Button · Bottom CTA · Top Navigation
 3. [Inputs](#3-inputs) — Checkbox · Radio · Switch · Chip · Segmented Control · Field · Text Input & Textarea · Quantity Picker
-4. [Data Display](#4-data-display) — Badge · Count Badge · Image Frame · List · Divider
+4. [Data Display](#4-data-display) — Badge · Count Badge · Image Frame · List · Divider · Store Card · Menu Card
 5. [Feedback](#5-feedback) — Callout · Snackbar · Result · Skeleton · Content Placeholder · Progress Circle · Scroll Fog · Alert Dialog
 6. [Overlays](#6-overlays) — Bottom Sheet · Menu
 7. [Navigation](#7-navigation) — Tabs
-8. [부록: 원본 문서의 불일치](#8-부록-원본-문서의-불일치)
+8. [Owner App · iPad](#8-owner-app--ipad) — Top Bar · Column Head · Order Card · PIN Pad · Table
+9. [부록: 원본 문서의 불일치](#9-부록-원본-문서의-불일치)
 
 ---
 
@@ -630,14 +632,20 @@ Figma Variables → `Color` 컬렉션 (모드: Light / Dark). `Base/*` 147개. �
 
 그림자는 아껴 쓴다. 면의 구분은 배경색(Background/Lower ↔ Default) 차이로 먼저 하고, **떠 있는 요소에만** 그림자를 쓴다.
 
-| Style | 쓰는 곳 | 값 |
-|---|---|---|
-| Shadow/Small | 카드 · 작은 떠 있는 요소 | `0 1 4 / 6%` + `0 2 8 / 6%` |
-| Shadow/Medium | 메뉴 · 스낵바 · FAB | `0 4 16 / 10%` |
-| Shadow/Large | 다이얼로그 · 바텀시트 | `0 8 32 / 14%` |
-| Focus/Ring | 웹 키보드 포커스 | `0 0 0 3` · Blue 35% |
+**Figma 효과 스타일 (6개)** — 스타일에 실제로 들어 있는 값:
 
-(그림자 색은 Semantic `Shadow/Tiny · Weak · Medium` 변수에 연결 — 1.1.1 참고. Blur/Toast는 Snackbar가 사용하는 블러 스타일.)
+| Style | 쓰는 곳 | 효과 | 색 |
+|---|---|---|---|
+| Shadow/Small | 카드 · 작은 떠 있는 요소 | Drop shadow `0 1 / blur 4` + `0 2 / blur 8` | `#001B37` @10% |
+| Shadow/Medium | 메뉴 · 스낵바 · FAB | Drop shadow `0 4 / blur 16` | `#001B37` @10% |
+| Shadow/Large | 다이얼로그 · 바텀시트 | Drop shadow `0 8 / blur 32` | `#001D3A` @18% |
+| Focus/Ring | 키보드 포커스 링 (웹) | Drop shadow `0 0 / blur 0 / spread 3` | `#298DFF` @47% (설명: "ORSO Blue 35%") |
+| Blur/Toast | 토스트 배경 흐림 | Background blur 30 | — |
+| Blur/Toast Top | 상단 토스트 | Background blur 30 + Drop shadow `0 2 / blur 30` | `#001B37` @10% |
+
+그림자 색은 Semantic `Shadow/*` 변수에 연결돼 있다: Shadow/Small → `Shadow/Tiny`, Shadow/Medium → `Shadow/Weak`, Shadow/Large → `Shadow/Medium` (1.1.1 참고). Light 값은 위 표, Dark 값은 모두 `#000000` @50%.
+
+> Effects 문서 페이지에는 투명도가 Small 6% · Medium 10% · Large 14% · Focus Blue 35%로 적혀 있어 실제 스타일 값(위 표)과 다르다. 부록 참고.
 
 ### 1.5 Icons
 
@@ -1200,6 +1208,58 @@ Radius: `radius-full`
 - 섹션 사이는 Thick로 크게 끊는다. 여백만으로 구분되면 선을 생략.
 - 메타 정보(지역·시간·조회수) 사이는 Vertical 또는 Tag Group의 구분점.
 
+### 4.6 Store Card
+
+매장 목록에서 매장 하나를 보여주는 카드. 이름·영업 상태·주소·거리와 도보 시간·사진을 한 줄에 담는다. · **Mobile 전용** · v1.0 (UIUX 1.1.1에서 옮겨 옴)
+
+**Variants**: State(영업중 · 잠시 쉬어요 · 영업 종료) = 3
+
+| Part | 값 |
+|---|---|
+| 패딩 / 간격 | 16 / 20 · 간격 12 |
+| 사진 | 90 · `radius-sm` |
+| 영업중 | Text/Brand |
+| 잠시 쉬어요 | Text/Warning (재개 시각 표시) |
+| 영업 종료 | 내용 50% 흐리게 (메뉴는 볼 수 있음) |
+
+**Properties**
+
+| Property | Type | Default / Values | 설명 |
+|---|---|---|---|
+| State | Variant | 영업중 · 잠시 쉬어요 · 영업 종료 | 영업 상태 |
+| Store Name | Text | 을지대학교 범석관 카페 | 매장 이름 |
+| Address | Text | (예: 경기도 성남시 …) | 주소, 최대 2줄 |
+| Distance · Walk Time | Text | 910m · 14분 | 거리 · 도보 시간 |
+| Show Distance | Boolean | true | 위치 권한이 없으면 끈다 |
+| Show Image | Boolean | true | 매장 사진이 없으면 끈다 (글자 영역이 넓어짐) |
+
+**Usage**
+- 카드 전체가 버튼 하나다 → 누르면 그 매장 메뉴 홈. 장바구니에 다른 매장 메뉴가 있으면 매장 변경 시트를 먼저 띄운다.
+- 영업 종료 매장도 목록에서 빼지 않고 흐리게 보여준다 (메뉴는 볼 수 있음).
+- 상태는 색만이 아니라 글자로도 알린다 (영업중 · 잠시 쉬어요 · 영업 종료).
+- 카드 사이는 Divider(Hairline)로 나눈다.
+
+### 4.7 Menu Card
+
+메뉴 목록에서 메뉴 하나를 보여주는 카드. 뱃지·이름·가격·설명을 담고, 사진은 MVP 여유가 있을 때만 켠다. · **Mobile 전용** · v1.0 (UIUX 2.1.1에서 옮겨 옴)
+
+**Variants**: Image(False · True) × State(Default · Sold Out) = 4
+
+| Part | 값 |
+|---|---|
+| 패딩 / 간격 | 20 / 12 |
+| 사진 (Image=True) | 오른쪽 108 · `radius-14` |
+| Sold Out | 내용 50% 흐리게 + 품절 뱃지, 누를 수 없음 |
+| 설명 | 최대 2줄, 넘으면 … |
+
+**Properties**: Menu Name (아메리카노) · Price (4,000원) · Description (깔끔하고 산뜻한 기본 커피에요) · Show Badge (Boolean, true — Badge 인스턴스가 노출돼 카드에서 바로 Tone·글자 변경) · Image (False 기본 · True) · State
+
+**Usage**
+- 카드 전체가 버튼 하나다 → 누르면 옵션 선택(2.2.1). 옵션 없는 메뉴는 바로 담고 토스트.
+- 뱃지는 하나만: 품절 > 품절 임박 > 신규 > 인기.
+- 사진 모드는 매장 메뉴에 사진이 모두 있을 때만 (일부만 있으면 전부 사진 없이).
+- 카드 사이는 Divider(Hairline)로 나눈다.
+
 ---
 
 ## 5. Feedback
@@ -1464,7 +1524,128 @@ Tone: Neutral(Brand Solid) · Critical(Critical Solid, 되돌릴 수 없는 행�
 
 ---
 
-## 8. 부록: 원본 문서의 불일치
+## 8. Owner App · iPad
+
+사장님 앱(iPad) 전용 컴포넌트. 모두 **iPad 전용 · v1.0**이고 UIUX 사장님 앱 v3에서 옮겨 왔다.
+
+### 8.1 Top Bar
+
+사장님 앱 모든 화면 맨 위 바. 매장 이름 · 영업 상태 · 탭 5개 · 소리 · 시각을 한 줄(높이 64)에 담는다.
+
+**구성**: Top Bar (Tab 5 variants) · `.primitive / Top Bar / Store Status` (Status 3 variants — Top Bar 안에서만 쓰는 보조 부품)
+
+| Part | 값 |
+|---|---|
+| Top Bar | 높이 64 · Fill/Neutral |
+| 영업 상태 버튼 | 높이 36 · 누르면 DS Menu가 바로 아래로 열림 |
+| 탭 | 5개, 가운데 배치 · 선택은 글자색만(고른 탭만 흰 글자, 밑줄·알약 없음) |
+
+**Properties**
+
+| Property | Type | Default / Values | 설명 |
+|---|---|---|---|
+| Tab | Variant | 주문 · 오늘 내역 · 메뉴 관리 · 매출 · 설정 | 선택된 탭 |
+| Store | Text | 범석관 카페 | 매장 이름 |
+| Time | Text | 13:05 | 현재 시각 |
+| Show Count | Boolean | true | 접수 대기 건수 (DS Count Badge). 0이면 끈다 |
+| Store Status › Status | Variant | 영업 중 · 잠시 중지 · 마감 | 영업 상태 |
+
+**Usage**
+- 모든 화면 맨 위에 하나. 탭을 누르면 그 화면으로 바로 간다 (매출·메뉴 수정은 2차 비밀번호 먼저).
+- 영업 상태 버튼을 누르면 DS Menu가 바로 아래로 열린다.
+- 소리가 꺼지면 스피커 아이콘이 `volume-off`로 바뀐다.
+
+### 8.2 Column Head
+
+주문 보드 칸반 레인의 제목. 제목(Body xl/Bold 20) + 레인 전체 건수.
+
+**Variants**: Tone(Brand · Neutral) = 2 — Brand: 손이 가야 하는 접수 대기 1건 이상 · Neutral: 그 외 (0이면 회색)
+
+**Properties**: Title (접수 대기) · Count (2) · Show Count (Boolean, true — 불러오는 중이면 건수 숨김) · Tone
+
+**Usage**
+- 레인마다 맨 위에 하나. 레인을 스크롤해도 제목은 고정.
+- 숫자는 레인 전체 건수다 (화면에 안 보이는 카드 포함).
+
+### 8.3 Order Card
+
+주문 한 건을 보여주는 카드 (레인 안 폭 340). 번호 · 수령 방법 · 이름 · 상태 + 메뉴 줄 + 버튼.
+
+**구성**: Order Card (Stage × State, 5 variants) · `.primitive / Order Card / Item` (메뉴 ×수량 Body lg/Semibold + 옵션 `ㄴ ` Body md/Regular)
+
+**타이포그래피**
+
+| 위치 | 스타일 |
+|---|---|
+| 번호 | Display md/Bold 36 |
+| 수령 방법 | Body lg/Bold |
+| 이름 | Body sm/Regular |
+| 오른쪽 상태 | Body md/Medium |
+| 버튼 | Action Button L(48) 그대로, 글자만 Body lg/Semibold 18 |
+
+**Properties**
+
+| Property | Type | Default / Values | 설명 |
+|---|---|---|---|
+| Stage | Variant | 접수 대기 · 제조중 · 픽업 대기 | 접수 대기(거절·수락) / 제조중(조리 완료) / 픽업 대기(정리하기·픽업 완료) |
+| State | Variant | Default · Alert | Alert = 시간이 넘음: 오른쪽 글자만 Text/Danger |
+| Number · Pickup · Name | Text | 31 · 테이크아웃 · 가을 | 번호 · 수령 방법 · 이름 |
+| Show Item 2 ~ 5 | Boolean | false | 메뉴 줄 예시 (5줄까지) |
+| Show Actions | Boolean | true | 버튼 줄 |
+
+예시 조합: 접수 대기 · 제조중 · 픽업 대기, 접수 대기 · Alert (자동 취소 2분 전), 픽업 대기 · Alert (픽업 예정 지남).
+
+**Usage**
+- 수락하면 제조중 맨 아래로, 조리 완료·픽업 완료는 15초 되돌리기.
+- 고객 취소·자동 취소는 오른쪽 상태 글자 + 메뉴 취소선, 버튼 숨김.
+- 정리 가능 시간 전에는 남은 시간 안내 없이 [픽업 완료]만 보인다.
+- 메뉴 줄은 개수와 상관없이 카드 안에 계속 쌓는다 ("외 N개"로 줄이지 않음. 컴포넌트에는 5줄까지 예시).
+- 카드는 테두리로 강조하지 않는다 (11/22 Highlight 삭제). 수락한 주문은 카드에서 취소할 수 없다 (11/22 ⋯ · 1.4.4 삭제).
+- 상태는 색만이 아니라 글자로도 알린다.
+
+### 8.4 PIN Pad
+
+2차 비밀번호 숫자 4자리를 넣는 키패드. 점 4개 + 숫자 키 + 지우기.
+
+**Variants**: State(Default · Error · Locked) = 3 — Error: 점이 좌우로 흔들리고 비워짐 · Locked: 키가 꺼짐 (30초)
+
+**Usage**
+- 가운데 Dialog(폭 376 · `radius-2xl` 24) 안에 제목과 함께 넣는다.
+- 오류·잠금 문구는 PIN Pad 안이 아니라 창 제목 바로 아래 빨간 글자 (Body md/Medium · Text/Danger).
+- 키 = DS Action Button Ghost XL. 4자리를 다 누르면 바로 확인한다.
+- 처음 정할 때는 "2차 비밀번호를 정해 주세요" → "한 번 더 입력해 주세요" 두 단계.
+
+### 8.5 Table
+
+표 머리 칸과 칸. 오늘 처리 내역처럼 줄이 많은 목록에 쓴다 (관리자 웹에도 사용).
+
+**구성**: Table / Header Cell (Align 2 variants) · Table / Cell (Type × State × Align, 10 variants)
+
+| Part | 값 |
+|---|---|
+| Header Cell | 높이 44 · Background/Upper · 아래 테두리 Border |
+| Cell | 높이 64 · 아래 테두리 Border |
+| Selected | 오른쪽에 상세가 열린 줄 (Fill/Brand Weak). 한 줄의 칸을 모두 Selected로 |
+| 칸 폭 | 표마다 정함 (고정 폭 또는 채우기) |
+
+**Properties**
+
+| Component | Property | Values / Default |
+|---|---|---|
+| Header Cell | Label (머리글) · Align | Left · Right (숫자·금액) |
+| Cell | Type | Text (한 줄, 넘치면 …) · Two Lines (굵은 글 + 보조 글) · Badge (DS Badge 노출, 톤·글자 변경) |
+| Cell | State | Default · Selected |
+| Cell | Align | Left · Right |
+| Cell | Text · Sub Text | 텍스트 · 보조 글 |
+
+**Usage**
+- 숫자·금액 열은 오른쪽 정렬.
+- 줄 = 칸을 가로로 이은 자동 배치 프레임, 표 = 머리 줄 + 줄.
+- 줄이 많으면 표 영역만 세로 스크롤, 머리 칸은 고정.
+
+---
+
+## 9. 부록: 원본 문서의 불일치
 
 Figma 변수 값과 문서 텍스트를 대조하면서 발견한 어긋남이다. 이 md에서는 둘 다 원문 그대로 적었으니, 구현 전에 어느 쪽이 기준인지 확인이 필요하다.
 
@@ -1478,5 +1659,7 @@ Figma 변수 값과 문서 텍스트를 대조하면서 발견한 어긋남이�
 | 6 | Badge 크기 | `badge-height-m` 24 · `badge-height-l` 28 | Badge Size guide는 "L 24 (Mobile) / M 22 (Web)" |
 | 7 | Dark `Border/Default` | `Background/Lower`(`#101013`)를 참조 | Light는 Grey Opacity 200 — 모드 간 참조 방식이 다름 |
 | 8 | 설명 누락 | `Text/On Fill Brand`, `Shadow/Tiny · Weak · Medium`은 변수 description이 비어 있음 | — |
+| 9 | Effects 투명도 | 효과 스타일: Shadow Small `#001B37` 10% · Medium 10% · Large `#001D3A` 18% · Focus Ring `#298DFF` 47% | Effects 문서: 6% · 10% · 14% · Focus "Blue 35%" |
+| 10 | PIN Pad 설명 | — | 컴포넌트 설명 끝에 "잠금 상태에서도 눌려요." 문장이 여러 번 반복돼 있고 잘려 있다. 문서 본문에는 Locked = 키가 꺼짐(30초)이라 적혀 있어 서로 모순돼 보인다 |
 
-**기타**: `z_System Components` 페이지에는 iOS Status bar(iPhone X 이후) 컴포넌트만 있고 문서 텍스트는 없다. Thumbnail 페이지는 표지다.
+**기타**: `z_System Components` 페이지에는 iOS Status bar(iPhone X 이후, Theme Light / Dark) 컴포넌트만 있고 문서 텍스트는 없다. Thumbnail 페이지는 표지다.

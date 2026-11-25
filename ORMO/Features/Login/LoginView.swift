@@ -383,10 +383,10 @@ struct LoginView: View {
                 .padding(.horizontal, Spacing.spacing16)
                 .frame(height: 40)
                 .padding(.top, Spacing.spacing8)
-                .padding(.horizontal, Spacing.spacing24)
+                .padding(.horizontal, Spacing.spacing20)
                 .frame(maxWidth: .infinity)
             }
-            .padding(.bottom, Spacing.spacing32)
+            .padding(.bottom, Spacing.spacing20)
             .background(Colors.backgroundDefault)
         }
         .opacity(isBottomCTAVisible ? 1 : 0)

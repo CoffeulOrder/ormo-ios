@@ -442,7 +442,7 @@ struct CartView: View {
                 .buttonStyle(.plain)
                 .padding(.top, Spacing.spacing4)
             }
-            .padding(.bottom, Spacing.spacing32)
+            .padding(.bottom, Spacing.spacing20)
             .background(Colors.backgroundDefault)
         }
     }
