@@ -28,8 +28,10 @@ final class HomeMenuViewModel {
     var scrollTarget: Section?
     // 탭 클릭으로 시작된 프로그램 스크롤이 진행 중인 동안 true. 이 동안은 scroll-spy가
     // 지나가는 중간 섹션으로 selectedSection을 가로채지 않는다(탭 전환 중 깜빡임 방지).
-    // 스크롤 완료 콜백 또는 타임아웃(§programmaticScrollTimeout)으로 해제되고,
-    // 사용자가 직접 드래그를 시작하면(userDidStartDragging) 즉시 해제된다.
+    // 오직 타임아웃(programmaticScrollTimeout)으로만 해제된다 — ScrollViewReader.scrollTo를
+    // withAnimation(completion:)으로 감지하면 실제 스크롤이 끝나기 한참 전에(수십 ms 안에)
+    // 콜백이 먼저 불려서, 그 틈에 scroll-spy가 깨어나 탭이 좌우로 떠는 버그가 있었다(실측 확인).
+    // 사용자가 직접 드래그를 시작하면(userDidStartDragging) 타임아웃을 기다리지 않고 즉시 해제된다.
     private(set) var isProgrammaticScrollInProgress = false
     private var programmaticScrollTimeoutTask: Task<Void, Never>?
     private static let programmaticScrollTimeout: Duration = .milliseconds(600)

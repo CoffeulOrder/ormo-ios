@@ -452,8 +452,15 @@ struct HomeMenuView: View {
     // 탭을 눌렀을 때 리스트를 해당 섹션으로 스크롤한다. 이동 거리가 뷰포트의
     // longScrollJumpThresholdInViewports배를 넘으면, 먼저 애니메이션 없이 목표 근처(한 화면
     // 앞) 섹션까지 점프한 뒤 마지막 구간만 애니메이션해서 과도하게 긴 스크롤이 "순간이동"처럼
-    // 보이지 않게 한다. 스크롤 애니메이션이 실제로 끝나면(또는 Reduce Motion이면 즉시)
-    // programmaticScrollDidFinish()를 호출해 scroll-spy를 다시 켠다.
+    // 보이지 않게 한다.
+    //
+    // withAnimation(completion:)은 ScrollViewReader.scrollTo에는 믿을 수 없다 — 디버그로 실측한
+    // 결과, 실제 스크롤(수백 ms)이 끝나기 전인 수십 ms 안에 콜백이 먼저 불려서
+    // isProgrammaticScrollInProgress가 너무 일찍 꺼졌다. 그 틈에 scroll-spy가 깨어나 리스트가
+    // 아직 스크롤되는 중간중간의 섹션들을 "현재"로 잘못 인식해, 탭 하이라이트와 탭 줄 스크롤이
+    // 0.3초 안에 몇 번씩 다른 목표로 다시 튀면서 좌우로 떠는 것처럼 보였다(issue였던 "드르륵").
+    // 그래서 완료 콜백은 아예 쓰지 않고, ViewModel의 600ms 타임아웃 하나로만 플래그를 끈다 —
+    // 실제 스크롤(최대 0.3초 + 긴 점프 시 조금 더)보다 넉넉히 길어서 항상 다 끝난 뒤에 풀린다.
     private func scrollToSection(_ target: HomeMenuViewModel.Section, proxy: ScrollViewProxy) {
         guard !reduceMotion else {
             proxy.scrollTo(target, anchor: .top)
@@ -472,10 +479,8 @@ struct HomeMenuView: View {
             }
         }
 
-        withAnimation(Self.listScrollAnimation, completionCriteria: .logicallyComplete) {
+        withAnimation(Self.listScrollAnimation) {
             proxy.scrollTo(target, anchor: .top)
-        } completion: {
-            viewModel.programmaticScrollDidFinish()
         }
     }
 
