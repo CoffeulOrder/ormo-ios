@@ -20,8 +20,8 @@ struct HomeMenuView: View {
     // 다음 카테고리로 하이라이트가 넘어가기까지, 그 카테고리 메뉴가 이 정도(개수) 보여야 한다.
     private static let sectionActivationItemCount: CGFloat = 1.3
     // 카테고리를 전환할 때 탭 밑줄·탭 스크롤·메뉴 스크롤에 공통으로 쓰는 애니메이션.
-    // 뚝뚝 끊기던 easeOut 대신, 끝에서 살짝 튕기는 스프링으로 부드럽게 넘어가게 한다.
-    private static let categoryTransitionAnimation = Animation.bouncy(duration: 0.4, extraBounce: 0.15)
+    // 뚝뚝 끊기던 easeOut 대신 스프링으로 부드럽게 넘어가되, 튕김은 아주 살짝만 느껴지게 한다.
+    private static let categoryTransitionAnimation = Animation.spring(response: 0.35, dampingFraction: 0.85)
 
     @State private var viewModel: HomeMenuViewModel
     @State private var sectionTopOffsets: [HomeMenuViewModel.Section: CGFloat] = [:]
