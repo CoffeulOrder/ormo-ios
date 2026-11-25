@@ -91,7 +91,7 @@ struct OrderHistoryView: View {
     }
 
     private func orderCard(_ order: Order) -> some View {
-        VStack(alignment: .leading, spacing: Spacing.spacing16) {
+        VStack(alignment: .leading, spacing: 0) {
             Button(action: { headerTapped(order) }) {
                 HStack(spacing: Spacing.spacing8) {
                     Text("\(order.storeName) ∙ \(Self.dateFormatter.string(from: order.paidAt))")
@@ -155,6 +155,7 @@ struct OrderHistoryView: View {
                 .padding(.vertical, Spacing.spacing16)
         }
         .padding(.horizontal, Spacing.spacing20)
+        .padding(.vertical, Spacing.spacing12)
     }
 
     @ViewBuilder
