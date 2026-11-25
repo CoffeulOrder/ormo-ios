@@ -436,18 +436,19 @@ struct HomeMenuView: View {
             Text(viewModel.sectionTitle(section))
                 .font(isSelected ? Typography.bodyLgBold : Typography.bodyLgSemibold)
                 .foregroundStyle(isSelected ? Colors.textPrimary : Colors.textTertiary)
-                .overlay(alignment: .bottom) {
-                    if isSelected {
-                        Capsule()
-                            .fill(Colors.textPrimary)
-                            .frame(height: 2)
-                            .offset(y: 8)
-                    }
-                }
                 .padding(.horizontal, Spacing.spacing12)
                 .frame(height: 51)
         }
         .buttonStyle(.plain)
+        // Figma: Indicator는 탭 바닥(bottom-0)에 틈 없이 붙고, 좌우 12px은 탭 자체 패딩과 같다.
+        .overlay(alignment: .bottom) {
+            if isSelected {
+                Capsule()
+                    .fill(Colors.textPrimary)
+                    .frame(height: 2)
+                    .padding(.horizontal, Spacing.spacing12)
+            }
+        }
     }
 
     private func sectionView(_ section: HomeMenuViewModel.Section) -> some View {
