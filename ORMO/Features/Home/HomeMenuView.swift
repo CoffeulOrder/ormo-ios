@@ -268,7 +268,12 @@ struct HomeMenuView: View {
                     ScrollView {
                         LazyVStack(spacing: 0) {
                             ForEach(Array(viewModel.sections.enumerated()), id: \.element) { index, section in
-                                sectionView(section, isFirst: index == 0)
+                                // 디바이더는 탭 스크롤 앵커(.id) 밖에 둔다. 탭을 눌렀을 때 디바이더가
+                                // 화면 맨 위에 걸치는 게 아니라, 그 아래 메뉴 내용이 바로 보여야 한다.
+                                if index > 0 {
+                                    thickDivider
+                                }
+                                sectionView(section)
                                     .id(section)
                                     .background(
                                         GeometryReader { geometry in
@@ -441,12 +446,8 @@ struct HomeMenuView: View {
         .buttonStyle(.plain)
     }
 
-    private func sectionView(_ section: HomeMenuViewModel.Section, isFirst: Bool) -> some View {
+    private func sectionView(_ section: HomeMenuViewModel.Section) -> some View {
         VStack(spacing: 0) {
-            if !isFirst {
-                thickDivider
-            }
-
             if case .category = section {
                 categoryLabel(viewModel.sectionTitle(section))
             }
