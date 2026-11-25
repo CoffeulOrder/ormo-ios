@@ -115,9 +115,9 @@ struct OrderCompleteView: View {
         }
     }
 
-    // Figma 원본 행간은 10px이지만, 더 여유 있게 보이도록 20px(375pt 기준)로 늘리고 화면 폭 비율로 스케일한다.
+    // Figma 원본 행간 10px(375pt 기준)을 화면 폭 비율로 스케일한다.
     private func infoCard(scale: CGFloat) -> some View {
-        VStack(spacing: 20 * scale) {
+        VStack(spacing: 10 * scale) {
             infoRow("매장", storeName)
             infoRow("내 앞 대기", "\(queueCount)건")
             infoRow("현재 상태", "매장에서 확인하고 있어요")
