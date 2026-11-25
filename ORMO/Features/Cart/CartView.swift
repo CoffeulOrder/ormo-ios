@@ -279,7 +279,7 @@ struct CartView: View {
                             .resizable()
                             .scaledToFit()
                             .foregroundStyle(Colors.textStrong)
-                            .frame(width: 18, height: 18)
+                            .frame(width: 16, height: 16)
                     } else {
                         Image(.trashIcon)
                             .renderingMode(.template)
@@ -294,7 +294,7 @@ struct CartView: View {
             .buttonStyle(.plain)
 
             Rectangle()
-                .fill(Colors.fieldBorder)
+                .fill(Colors.fillNeutralWeak)
                 .frame(width: 1, height: 16)
 
             Text("\(item.quantity)")
@@ -304,7 +304,7 @@ struct CartView: View {
                 .padding(.horizontal, Spacing.spacing8)
 
             Rectangle()
-                .fill(Colors.fieldBorder)
+                .fill(Colors.fillNeutralWeak)
                 .frame(width: 1, height: 16)
 
             Button(action: { viewModel.cart.increaseQuantity(item.id) }) {
@@ -313,7 +313,7 @@ struct CartView: View {
                     .resizable()
                     .scaledToFit()
                     .foregroundStyle(canIncrease ? Colors.textStrong : Colors.textQuaternary)
-                    .frame(width: 18, height: 18)
+                    .frame(width: 16, height: 16)
                     .frame(width: 36, height: 36)
             }
             .buttonStyle(.plain)
