@@ -430,11 +430,10 @@ struct OrderDetailView: View {
             .frame(maxWidth: .infinity)
     }
 
-    // 이 화면은 다른 화면들의 섹션 구분선(12px)과 달리 Figma에서 24px로 더 두껍게 쓴다.
     private var thickDivider: some View {
         Rectangle()
             .fill(Colors.backgroundLower)
-            .frame(height: 24)
+            .frame(height: 12)
             .frame(maxWidth: .infinity)
     }
 
