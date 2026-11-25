@@ -121,9 +121,10 @@ struct CartView: View {
                         thickDivider
                         paymentSection
                     }
-                    // 콘텐츠가 하단 CTA 뒤로 지나가며 포그에 자연스럽게 가려지도록, CTA 높이만큼 여백을 둔다.
-                    // 여기에 약간 더 띄워서(spacing8) 마지막 콘텐츠가 포그에 바로 붙어 보이지 않게 한다.
-                    .padding(.bottom, bottomCTAHeight + Spacing.spacing8)
+                    // 콘텐츠가 하단 CTA 뒤로 지나가며 포그에 자연스럽게 가려지도록 CTA 높이만큼 여백을 두되,
+                    // 기존엔 포그(흐림 40pt) 구간까지 통째로 빈 여백으로 남아 결제수단 아래가 과하게 넓어 보였다.
+                    // 포그는 원래 실제 콘텐츠를 흐리게 비쳐 보이게 하려는 것이라, 2/3만 띄워 포그 구간에 콘텐츠가 비치게 한다.
+                    .padding(.bottom, (bottomCTAHeight + Spacing.spacing8) * 2 / 3)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
@@ -228,6 +229,7 @@ struct CartView: View {
                 lineItemRow(item)
             }
         }
+        .padding(.bottom, Spacing.spacing12)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
@@ -301,8 +303,8 @@ struct CartView: View {
             Text("\(item.quantity)")
                 .typography(Typography.bodyMdMedium)
                 .foregroundStyle(item.isSoldOut ? Colors.textQuaternary : Colors.textStrong)
-                .frame(minWidth: 36)
                 .padding(.horizontal, Spacing.spacing8)
+                .frame(minWidth: 36)
 
             Rectangle()
                 .fill(Colors.fillNeutralWeak)
@@ -323,7 +325,7 @@ struct CartView: View {
         .frame(height: 40)
         .overlay(
             RoundedRectangle(cornerRadius: Radius.md)
-                .strokeBorder(Colors.fieldBorder, lineWidth: 1)
+                .strokeBorder(Colors.borderDefault, lineWidth: 1)
         )
         .clipShape(RoundedRectangle(cornerRadius: Radius.md))
     }
@@ -513,4 +515,5 @@ struct CartView: View {
             sellerInfo: SellerInfo(businessName: "", representative: "", registrationNumber: "", address: "", phoneNumber: "", mailOrderNumber: "")
         )
     )
+    .environment(HomeRouter())
 }

@@ -159,7 +159,7 @@ struct MenuOptionsView: View {
 
             quantityButton(isPlus: true)
         }
-        .frame(height: 48)
+        .frame(height: 40)
         .overlay(
             RoundedRectangle(cornerRadius: Radius.md)
                 .strokeBorder(Colors.borderDefault, lineWidth: 1)
