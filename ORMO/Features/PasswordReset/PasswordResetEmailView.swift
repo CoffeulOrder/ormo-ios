@@ -21,6 +21,9 @@ struct PasswordResetEmailView: View {
                 bottomCTA
             }
             .background(Colors.backgroundDefault.ignoresSafeArea())
+            .ignoresSafeArea(.keyboard)
+            .contentShape(Rectangle())
+            .onTapGesture { isEmailFieldFocused = false }
 
             BottomSheetContainer(isPresented: $viewModel.isSchoolEmailDomainSheetVisible) {
                 SchoolEmailDomainSheet(
@@ -91,7 +94,10 @@ struct PasswordResetEmailView: View {
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
                 .keyboardType(.emailAddress)
+                .textContentType(.username)
                 .focused($isEmailFieldFocused)
+                .submitLabel(.done)
+                .onSubmit { isEmailFieldFocused = false }
 
                 Text("@\(viewModel.selectedSchoolEmailDomain)")
                     .foregroundStyle(Colors.textQuaternary)

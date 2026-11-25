@@ -20,6 +20,7 @@ struct PasswordResetCompletionView: View {
         }
         .frame(maxWidth: .infinity)
         .background(Colors.backgroundDefault.ignoresSafeArea())
+        .ignoresSafeArea(.keyboard)
         .navigationBarHidden(true)
         .onAppear { hasAppeared = true }
     }

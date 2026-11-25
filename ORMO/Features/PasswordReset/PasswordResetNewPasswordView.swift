@@ -6,6 +6,7 @@ struct PasswordResetNewPasswordView: View {
     @State private var viewModel: PasswordResetNewPasswordViewModel
     @State private var isTitleVisible = false
     @State private var isBottomCTAVisible = false
+    @FocusState private var isFieldFocused: Bool
 
     init(email: String) {
         _viewModel = State(initialValue: PasswordResetNewPasswordViewModel(email: email))
@@ -23,6 +24,9 @@ struct PasswordResetNewPasswordView: View {
             bottomCTA
         }
         .background(Colors.backgroundDefault.ignoresSafeArea())
+        .ignoresSafeArea(.keyboard)
+        .contentShape(Rectangle())
+        .onTapGesture { isFieldFocused = false }
         .navigationBarHidden(true)
         .onAppear {
             // Figma smart-animate 타이밍: Title 0~17.5%(350ms), Bottom CTA 6~26%(지연 120ms, 400ms), ease-out
@@ -142,8 +146,13 @@ struct PasswordResetNewPasswordView: View {
             .disabled(!isActive)
             .typography(Typography.bodyMdRegular)
             .foregroundStyle(Colors.textPrimary)
+            .textContentType(.newPassword)
+            .focused($isFieldFocused)
             .submitLabel(.next)
-            .onSubmit(confirmTapped)
+            .onSubmit {
+                isFieldFocused = false
+                confirmTapped()
+            }
 
             Button(action: { viewModel.isPasswordVisible.toggle() }) {
                 Image(viewModel.isPasswordVisible ? .eyeIcon : .eyeOffIcon)
@@ -186,8 +195,13 @@ struct PasswordResetNewPasswordView: View {
                 }
                 .typography(Typography.bodyMdRegular)
                 .foregroundStyle(Colors.textPrimary)
+                .textContentType(.newPassword)
+                .focused($isFieldFocused)
                 .submitLabel(.done)
-                .onSubmit(confirmTapped)
+                .onSubmit {
+                    isFieldFocused = false
+                    confirmTapped()
+                }
 
                 Button(action: { viewModel.isPasswordConfirmationVisible.toggle() }) {
                     Image(viewModel.isPasswordConfirmationVisible ? .eyeIcon : .eyeOffIcon)

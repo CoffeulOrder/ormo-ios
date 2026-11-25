@@ -56,6 +56,7 @@ struct MenuOptionsView: View {
             }
         }
         .background(Colors.backgroundDefault.ignoresSafeArea())
+        .ignoresSafeArea(.keyboard)
         .navigationBarHidden(true)
         .animation(.easeOut(duration: 0.2), value: viewModel.isSnackbarVisible)
         .task {

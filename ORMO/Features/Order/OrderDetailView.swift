@@ -118,6 +118,7 @@ struct OrderDetailView: View {
             }
         }
         .background(Colors.backgroundDefault.ignoresSafeArea())
+        .ignoresSafeArea(.keyboard)
         .navigationBarHidden(true)
         .task { viewModel.start() }
     }
