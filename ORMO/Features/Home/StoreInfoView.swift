@@ -124,14 +124,16 @@ struct StoreInfoView: View {
     }
 
     private func infoRow(label: String, value: String) -> some View {
-        HStack(spacing: Spacing.spacing16) {
+        HStack(alignment: .top, spacing: Spacing.spacing16) {
             Text(label)
                 .typography(Typography.bodyMdRegular)
                 .foregroundStyle(Colors.textSecondary)
-            Spacer()
+                .fixedSize()
             Text(value)
                 .typography(Typography.bodyMdRegular)
                 .foregroundStyle(Colors.textPrimary)
+                .multilineTextAlignment(.trailing)
+                .frame(maxWidth: .infinity, alignment: .trailing)
         }
     }
 

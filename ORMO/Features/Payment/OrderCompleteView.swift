@@ -144,12 +144,14 @@ struct OrderCompleteView: View {
     }
 
     private func infoRow(_ label: String, _ value: String) -> some View {
-        HStack {
+        HStack(alignment: .top, spacing: Spacing.spacing16) {
             Text(label)
                 .foregroundStyle(Colors.textTertiary)
-            Spacer()
+                .fixedSize()
             Text(value)
                 .foregroundStyle(Colors.textPrimary)
+                .multilineTextAlignment(.trailing)
+                .frame(maxWidth: .infinity, alignment: .trailing)
         }
         .typography(Typography.bodyMdRegular)
     }

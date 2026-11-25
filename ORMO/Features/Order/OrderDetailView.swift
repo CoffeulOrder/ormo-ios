@@ -157,6 +157,7 @@ struct OrderDetailView: View {
             Text("\(viewModel.order.storeName) ∙ \(Self.dateFormatter.string(from: viewModel.order.paidAt))")
                 .typography(Typography.bodyMdRegular)
                 .foregroundStyle(Colors.textSecondary)
+                .lineLimit(1)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, Spacing.spacing20)
