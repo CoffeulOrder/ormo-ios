@@ -9,6 +9,11 @@ struct MenuOptionsView: View {
     let onAddedToCart: () -> Void
     let onOrderNow: () -> Void
 
+    // 버튼이 1개든 2개든 한 줄(56px 높이)이라 하단 CTA 전체 높이가 항상 같다(포그40+버튼56+하단여백32).
+    // Bottom CTA가 스크롤 영역 위에 떠 있는 오버레이라, 옵션이 적어 내용이 짧을 때도 마지막 항목이
+    // CTA에 가리지 않도록 스크롤 콘텐츠 맨 아래에 이만큼 여백을 미리 둔다.
+    private let bottomCTAHeight: CGFloat = 128
+
     init(
         item: MenuItem,
         cart: CartStore,
@@ -37,6 +42,7 @@ struct MenuOptionsView: View {
                                     .id(group.id)
                             }
                         }
+                        .padding(.bottom, bottomCTAHeight)
                     }
                     .onChange(of: viewModel.scrollTrigger) {
                         guard let groupId = viewModel.scrollTargetGroupId else { return }
@@ -45,13 +51,15 @@ struct MenuOptionsView: View {
                         }
                     }
                 }
-                bottomCTA
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
 
+            bottomCTA
+
             if viewModel.isSnackbarVisible {
                 snackbar
-                    .padding(.bottom, 104)
+                    .padding(.bottom, 97) // 버튼 상단(하단여백32+버튼56=88)에서 9pt 띄움
+                    .ignoresSafeArea(edges: .bottom) // bottomCTA와 같은 기준(화면 끝)으로 맞춰야 버튼과의 9pt 간격이 정확해짐
                     .transition(.opacity)
             }
         }
@@ -142,8 +150,8 @@ struct MenuOptionsView: View {
             Text("\(viewModel.quantity)")
                 .typography(Typography.bodyMdMedium)
                 .foregroundStyle(Colors.textStrong)
-                .frame(minWidth: 36)
                 .padding(.horizontal, Spacing.spacing8)
+                .frame(minWidth: 36)
 
             Rectangle()
                 .fill(Colors.fillNeutralWeak)
@@ -154,7 +162,7 @@ struct MenuOptionsView: View {
         .frame(height: 48)
         .overlay(
             RoundedRectangle(cornerRadius: Radius.md)
-                .strokeBorder(Colors.fieldBorder, lineWidth: 1)
+                .strokeBorder(Colors.borderDefault, lineWidth: 1)
         )
         .clipShape(RoundedRectangle(cornerRadius: Radius.md))
     }
