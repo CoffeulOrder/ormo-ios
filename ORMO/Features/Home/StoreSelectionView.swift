@@ -5,6 +5,10 @@ struct StoreSelectionView: View {
     @Environment(HomeRouter.self) private var router
     @State private var viewModel = StoreSelectionViewModel()
     @State private var isSheetPresented = false
+    // 닫히는 애니메이션이 끝나기 전에 viewModel.storeForChangeConfirmation이 먼저 nil이 되면
+    // 시트 안 글자가 배경보다 먼저 사라져 버린다. 화면 쪽에 따로 캐시해 애니메이션이 끝날 때까지
+    // 내용을 들고 있는다.
+    @State private var sheetStore: Store?
 
     let onStoreConfirmed: (Store) -> Void
 
@@ -29,12 +33,19 @@ struct StoreSelectionView: View {
             await viewModel.load()
         }
         .onChange(of: viewModel.storeForChangeConfirmation) {
-            isSheetPresented = viewModel.storeForChangeConfirmation != nil
+            guard let store = viewModel.storeForChangeConfirmation else { return }
+            sheetStore = store
+            withAnimation(BottomSheetMotion.contentAnimation) {
+                isSheetPresented = true
+            }
         }
         .overlay {
             BottomSheetContainer(isPresented: $isSheetPresented, bottomPadding: 0) {
-                if let store = viewModel.storeForChangeConfirmation {
-                    storeChangeSheetContent(store)
+                // isSheetPresented를 조건으로 써야 닫힐 때 같은 트랜잭션 안에서 .transition이
+                // 걸려 배경과 같은 속도로 사라진다. sheetStore는 그 값을 계속 들고 있기 위한 캐시일 뿐이다.
+                if isSheetPresented, let sheetStore {
+                    storeChangeSheetContent(sheetStore)
+                        .transition(.opacity)
                 }
             }
             .ignoresSafeArea(edges: .bottom)
@@ -93,7 +104,7 @@ struct StoreSelectionView: View {
                     // 매장 이름이 길어 2줄로 접히면, 영업 상태 라벨은 줄 사이가 아니라 첫째 줄에
                     // 맞춰 정렬돼야 한다.
                     HStack(alignment: .firstTextBaseline, spacing: Spacing.spacing8) {
-                        Text(store.name)
+                        Text(hangulWrapping: store.name)
                             .typography(Typography.bodyMdSemibold)
                             .foregroundStyle(Colors.textPrimary)
                         Text(statusText(for: store.status))
@@ -181,14 +192,14 @@ struct StoreSelectionView: View {
 
     private func storeChangeSheetContent(_ store: Store) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: Spacing.spacing8) {
-                Text(store.name)
+            // 매장 이름이 길어 2줄로 접혀도, 상태 태그는 줄 사이가 아니라 첫째 줄 옆 고정된
+            // 자리에 와야 한다.
+            HStack(alignment: .firstTextBaseline, spacing: Spacing.spacing8) {
+                Text(hangulWrapping: store.name)
                     .typography(Typography.bodyXlBold)
                     .foregroundStyle(Colors.textStrong)
 
-                if store.status == .open {
-                    statusBadge
-                }
+                statusBadge(for: store.status)
 
                 Spacer()
 
@@ -257,14 +268,30 @@ struct StoreSelectionView: View {
         }
     }
 
-    private var statusBadge: some View {
-        Text("영업 중")
+    private func statusBadge(for status: StoreOperatingStatus) -> some View {
+        Text(statusText(for: status))
             .typography(Typography.bodyXsMedium)
-            .foregroundStyle(Colors.textBrand)
+            .foregroundStyle(statusBadgeForeground(for: status))
             .padding(.horizontal, Spacing.spacing8)
             .frame(height: 24)
-            .background(Colors.fillBrandWeak)
+            .background(statusBadgeBackground(for: status))
             .clipShape(Capsule())
+    }
+
+    private func statusBadgeForeground(for status: StoreOperatingStatus) -> Color {
+        switch status {
+        case .open: Colors.textBrand
+        case .paused: Colors.textWarning
+        case .closed: Colors.textTertiary
+        }
+    }
+
+    private func statusBadgeBackground(for status: StoreOperatingStatus) -> Color {
+        switch status {
+        case .open: Colors.fillBrandWeak
+        case .paused: Colors.fillWarningWeak
+        case .closed: Colors.fillNeutralWeak
+        }
     }
 
     private func sheetSectionTitle(_ title: String) -> some View {
