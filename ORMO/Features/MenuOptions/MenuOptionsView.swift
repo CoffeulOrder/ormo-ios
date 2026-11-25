@@ -131,7 +131,7 @@ struct MenuOptionsView: View {
             quantityButton(isPlus: false)
 
             Rectangle()
-                .fill(Colors.fieldBorder)
+                .fill(Colors.fillNeutralWeak)
                 .frame(width: 1, height: 16)
 
             Text("\(viewModel.quantity)")
@@ -141,7 +141,7 @@ struct MenuOptionsView: View {
                 .padding(.horizontal, Spacing.spacing8)
 
             Rectangle()
-                .fill(Colors.fieldBorder)
+                .fill(Colors.fillNeutralWeak)
                 .frame(width: 1, height: 16)
 
             quantityButton(isPlus: true)
