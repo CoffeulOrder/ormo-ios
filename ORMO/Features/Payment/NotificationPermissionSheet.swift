@@ -70,9 +70,10 @@ struct NotificationPermissionSheet: View {
             handle
             header
             bellIcon
-                .padding(.vertical, Spacing.spacing8)
+                .padding(.vertical, Spacing.spacing16)
             footer
         }
+        .padding(.top, Spacing.spacing12)
         .padding(.bottom, Spacing.spacing32)
         .frame(maxWidth: .infinity)
         .background(Colors.backgroundFloated)
