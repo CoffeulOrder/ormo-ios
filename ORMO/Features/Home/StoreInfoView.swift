@@ -23,7 +23,7 @@ struct StoreInfoView: View {
                 }
                 if let notice = store.notice {
                     section(title: "공지") {
-                        Text(notice)
+                        Text(hangulWrapping: notice)
                             .typography(Typography.bodyMdRegular)
                             .foregroundStyle(Colors.textPrimary)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -129,7 +129,7 @@ struct StoreInfoView: View {
                 .typography(Typography.bodyMdRegular)
                 .foregroundStyle(Colors.textSecondary)
                 .fixedSize()
-            Text(value)
+            Text(hangulWrapping: value)
                 .typography(Typography.bodyMdRegular)
                 .foregroundStyle(Colors.textPrimary)
                 .multilineTextAlignment(.trailing)
@@ -143,7 +143,7 @@ struct StoreInfoView: View {
                 .typography(Typography.bodyMdRegular)
                 .foregroundStyle(Colors.textSecondary)
                 .frame(width: 144, alignment: .leading)
-            Text(value)
+            Text(hangulWrapping: value)
                 .typography(Typography.bodyMdRegular)
                 .foregroundStyle(Colors.textPrimary)
                 .multilineTextAlignment(.trailing)
