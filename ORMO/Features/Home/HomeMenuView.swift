@@ -441,11 +441,12 @@ struct HomeMenuView: View {
         }
         .buttonStyle(.plain)
         // Figma: Indicator는 탭 바닥(bottom-0)에 틈 없이 붙고, 좌우 12px은 탭 자체 패딩과 같다.
+        // 두께는 사용자 요청으로 Figma 원본 2px의 1.5배인 3px을 쓴다.
         .overlay(alignment: .bottom) {
             if isSelected {
                 Capsule()
                     .fill(Colors.textPrimary)
-                    .frame(height: 2)
+                    .frame(height: 3)
                     .padding(.horizontal, Spacing.spacing12)
             }
         }
