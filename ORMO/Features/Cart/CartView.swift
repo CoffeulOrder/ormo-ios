@@ -216,7 +216,7 @@ struct CartView: View {
     }
 
     private var orderMenuSection: some View {
-        VStack(alignment: .leading, spacing: Spacing.spacing4) {
+        VStack(alignment: .leading, spacing: 0) {
             Text("주문 메뉴")
                 .font(Typography.bodyLgSemibold)
                 .foregroundStyle(Colors.textPrimary)
