@@ -184,10 +184,11 @@ struct ReceiptView: View {
                 .typography(Typography.bodySmRegular)
                 .foregroundStyle(Colors.textTertiary)
                 .fixedSize()
-            Text(value)
+            Text(hangulWrapping: value)
                 .typography(Typography.bodySmMedium)
                 .foregroundStyle(Colors.textPrimary)
                 .multilineTextAlignment(.trailing)
+                .frame(maxWidth: 188, alignment: .trailing)
                 .frame(maxWidth: .infinity, alignment: .trailing)
         }
     }
