@@ -2,7 +2,9 @@ import ActivityKit
 import Foundation
 
 // 주문 상세 화면의 상태 진행(OrderDetailViewModel)에 맞춰 잠금 화면 Live Activity를 시작·갱신·종료한다.
-// "잠금 화면 실시간 현황" 설정이 꺼져 있으면 아예 시작하지 않고, 대신 OrderPushNotifier가 대체 알림을 보낸다.
+// "잠금 화면 실시간 현황"을 켤지 끌지는 기기 설정 앱(Live Activity 권한)이 유일한 기준이다 —
+// 앱이 따로 저장하는 값은 없다. OS가 막고 있으면 아예 시작하지 않고, 대신 OrderPushNotifier가
+// 대체 알림을 보낸다.
 enum OrderLiveActivityController {
     private static let pickupWindowMinutes = 20
     // 픽업 완료 뒤 Figma 명세(15~30분) 안에서 중간값으로 자동으로 사라지게 한다.
@@ -12,11 +14,13 @@ enum OrderLiveActivityController {
         Activity<OrderActivityAttributes>.activities.first { $0.attributes.pickupNumber == pickupNumber }
     }
 
+    // OrderPushNotifier가 "이 주문은 이미 Live Activity로 보여주고 있으니 대체 알림을 또 보낼
+    // 필요는 없다"를 판단하는 데 쓴다.
+    static func isActive(pickupNumber: Int) -> Bool {
+        currentActivity(pickupNumber: pickupNumber) != nil
+    }
+
     static func start(for order: Order, queueCount: Int) async {
-        guard NotificationSettingsViewModel.isLockScreenLiveStatusEnabledSetting else {
-            print("[LiveActivity] 시작 안 함: 설정에서 '잠금 화면 실시간 현황'이 꺼져 있음")
-            return
-        }
         guard ActivityAuthorizationInfo().areActivitiesEnabled else {
             print("[LiveActivity] 시작 안 함: OS가 Live Activity를 허용하지 않음 (ActivityAuthorizationInfo().areActivitiesEnabled == false)")
             return
