@@ -13,35 +13,31 @@ final class MockOrderProgressionScheduler {
     private static let makingDuration: TimeInterval = 10
     private static let waitingPickupDuration: TimeInterval = 8
 
-    private var tasks: [String: Task<Void, Never>] = [:]
+    private var tasks: [Int: Task<Void, Never>] = [:]
 
     private init() {}
 
     // 이미 이 주문을 진행 중이면 아무것도 하지 않는다(홈 화면 폴링·주문 상세 진입 등 여러
     // 곳에서 중복 호출해도 안전). 이미 끝났거나(픽업 완료) 취소·환불된 주문도 대상이 아니다.
     func scheduleIfNeeded(for order: Order) {
-        let key = progressionKey(for: order)
-        guard tasks[key] == nil else { return }
+        let orderId = order.orderId
+        guard tasks[orderId] == nil else { return }
         guard order.status == .confirming || order.status == .making || order.status == .waitingPickup else { return }
 
-        tasks[key] = Task { [weak self] in
-            await self?.runProgression(pickupNumber: order.pickupNumber, storeName: order.storeName, confirmedAt: order.confirmedAt)
-            self?.tasks[key] = nil
+        tasks[orderId] = Task { [weak self] in
+            await self?.runProgression(orderId: orderId, confirmedAt: order.confirmedAt)
+            self?.tasks[orderId] = nil
         }
-    }
-
-    private func progressionKey(for order: Order) -> String {
-        "\(order.pickupNumber)-\(order.storeName)"
     }
 
     // confirmedAt 기준으로 각 단계가 끝나야 할 시각을 미리 계산해두고 그때까지만 잔여 시간을
     // 잔다. 이렇게 하면 앱을 껐다 켜서 이 스케줄러가 뒤늦게 다시 만들어지는 경우에도(주문은
     // LocalStore에 남아있다) 이미 지난 단계는 건너뛰고 올바른 단계부터 바로 이어진다.
-    private func runProgression(pickupNumber: Int, storeName: String, confirmedAt: Date) async {
+    private func runProgression(orderId: Int, confirmedAt: Date) async {
         let confirmingEnd = confirmedAt.addingTimeInterval(Self.confirmingDuration)
         await Self.sleepUntil(confirmingEnd)
         guard !Task.isCancelled,
-              var order = LocalStore.shared.order(pickupNumber: pickupNumber, storeName: storeName),
+              var order = LocalStore.shared.order(orderId: orderId),
               order.status == .confirming else { return }
         order.status = .making
         order.madeAt = confirmingEnd
@@ -51,7 +47,7 @@ final class MockOrderProgressionScheduler {
         let makingEnd = confirmingEnd.addingTimeInterval(Self.makingDuration)
         await Self.sleepUntil(makingEnd)
         guard !Task.isCancelled,
-              var order = LocalStore.shared.order(pickupNumber: pickupNumber, storeName: storeName),
+              var order = LocalStore.shared.order(orderId: orderId),
               order.status == .making else { return }
         order.status = .waitingPickup
         order.waitingAt = makingEnd
@@ -62,7 +58,7 @@ final class MockOrderProgressionScheduler {
         let waitingEnd = makingEnd.addingTimeInterval(Self.waitingPickupDuration)
         await Self.sleepUntil(waitingEnd)
         guard !Task.isCancelled,
-              var order = LocalStore.shared.order(pickupNumber: pickupNumber, storeName: storeName),
+              var order = LocalStore.shared.order(orderId: orderId),
               order.status == .waitingPickup else { return }
         order.status = .pickedUp
         order.pickedUpAt = waitingEnd

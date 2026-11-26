@@ -4,8 +4,10 @@ struct PaymentProcessingView: View {
     @Environment(HomeRouter.self) private var router
     @State private var viewModel: PaymentProcessingViewModel
 
-    init(paymentMethod: PaymentMethod, totalPrice: Int, storeName: String, cart: CartStore) {
+    init(orderId: Int, pgOrderId: String, paymentMethod: PaymentMethod, totalPrice: Int, storeName: String, cart: CartStore) {
         _viewModel = State(initialValue: PaymentProcessingViewModel(
+            orderId: orderId,
+            pgOrderId: pgOrderId,
             paymentMethod: paymentMethod,
             totalPrice: totalPrice,
             storeName: storeName,
@@ -64,13 +66,15 @@ struct PaymentProcessingView: View {
             case .success:
                 if let pickupNumber = viewModel.completedOrderPickupNumber {
                     router.path.append(
-                        HomeRoute.orderComplete(pickupNumber: pickupNumber, storeName: viewModel.storeName, queueCount: 3)
+                        HomeRoute.orderComplete(orderId: viewModel.orderId, pickupNumber: pickupNumber, storeName: viewModel.storeName, queueCount: 3)
                     )
                 }
             case .failure:
                 router.path.append(
                     HomeRoute.paymentFailure(
                         attemptId: UUID(),
+                        orderId: viewModel.orderId,
+                        pgOrderId: viewModel.pgOrderId,
                         paymentMethod: viewModel.paymentMethod,
                         totalPrice: viewModel.totalPrice,
                         storeName: viewModel.storeName
@@ -221,6 +225,6 @@ struct PaymentProcessingView: View {
 }
 
 #Preview {
-    PaymentProcessingView(paymentMethod: .tossPay, totalPrice: 12000, storeName: "을지대학교 범석관 카페", cart: CartStore())
+    PaymentProcessingView(orderId: 1, pgOrderId: "mock-pg-1", paymentMethod: .tossPay, totalPrice: 12000, storeName: "을지대학교 범석관 카페", cart: CartStore())
         .environment(HomeRouter())
 }

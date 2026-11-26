@@ -65,7 +65,7 @@ struct MockLiveOrderRepository: LiveOrderRepository {
                 return nil
             }
 
-            return LiveOrder(pickupNumber: order.pickupNumber, storeName: order.storeName, stage: stage, queueCount: queueCount, pickupDeadlineText: pickupDeadlineText)
+            return LiveOrder(orderId: order.orderId, pickupNumber: order.pickupNumber, storeName: order.storeName, stage: stage, queueCount: queueCount, pickupDeadlineText: pickupDeadlineText)
         }
     }
 }

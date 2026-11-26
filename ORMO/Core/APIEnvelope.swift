@@ -55,4 +55,9 @@ extension APIError {
         if case let .server(code, _, _) = self { return code }
         return nil
     }
+
+    var serverMessage: String? {
+        if case let .server(_, message, _) = self { return message }
+        return nil
+    }
 }

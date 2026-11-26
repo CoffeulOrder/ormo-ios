@@ -19,16 +19,26 @@ final class CartViewModel {
     var orderUnavailableAlert: OrderUnavailableAlert?
     // true가 되면 결제 확인 중 화면으로 넘어가라는 신호. 화면이 소비한 뒤 false로 되돌린다.
     var didStartPayment = false
+    // 결제 확인 중 화면이 결제를 확인할 때 필요한, 방금 만든 주문(PENDING_PAYMENT).
+    private(set) var createdOrder: CreatedOrder?
+    var isCreatingOrder = false
 
     private let cafeRepository: CafeRepository
+    private let orderRepository: OrderRepository
 
-    init(cart: CartStore, store: Store?, cafeRepository: CafeRepository = AppContainer.shared.cafeRepository) {
+    init(
+        cart: CartStore,
+        store: Store?,
+        cafeRepository: CafeRepository = AppContainer.shared.cafeRepository,
+        orderRepository: OrderRepository = AppContainer.shared.orderRepository
+    ) {
         self.cart = cart
         self.store = store
         self.cafeRepository = cafeRepository
+        self.orderRepository = orderRepository
     }
 
-    var isCheckoutEnabled: Bool { hasAgreedToNoCancellation && !cart.isEmpty }
+    var isCheckoutEnabled: Bool { hasAgreedToNoCancellation && !cart.isEmpty && !isCreatingOrder }
     var checkoutTotalPrice: Int { cart.payableTotalPrice }
 
     func checkoutTapped() {
@@ -37,7 +47,7 @@ final class CartViewModel {
             let acceptance = (try? await cafeRepository.fetchOrderAcceptance(storeId: store.id)) ?? .accepting
             switch acceptance {
             case .accepting:
-                didStartPayment = true
+                await createOrderAndStartPayment(store: store)
             case .closedForToday(let reopensAtText):
                 orderUnavailableAlert = OrderUnavailableAlert(
                     title: "오늘 영업이 끝났어요",
@@ -49,6 +59,26 @@ final class CartViewModel {
                     message: "\(resumesAtText)부터 다시 주문할 수 있어요"
                 )
             }
+        }
+    }
+
+    private func createOrderAndStartPayment(store: Store) async {
+        isCreatingOrder = true
+        defer { isCreatingOrder = false }
+
+        do {
+            createdOrder = try await orderRepository.createOrder(
+                storeId: store.id,
+                storeName: store.name,
+                items: cart.items,
+                paymentMethod: paymentMethod,
+                withdrawalLimitAgreed: hasAgreedToNoCancellation
+            )
+            didStartPayment = true
+        } catch let error as APIError {
+            orderUnavailableAlert = OrderUnavailableAlert(title: "주문할 수 없어요", message: error.serverMessage ?? "잠시 후 다시 시도해주세요")
+        } catch {
+            orderUnavailableAlert = OrderUnavailableAlert(title: "주문할 수 없어요", message: "잠시 후 다시 시도해주세요")
         }
     }
 }

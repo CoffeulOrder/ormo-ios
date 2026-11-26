@@ -4,6 +4,7 @@ import UserNotifications
 
 struct OrderCompleteView: View {
     @Environment(HomeRouter.self) private var router
+    let orderId: Int
     let pickupNumber: Int
     let storeName: String
     let queueCount: Int
@@ -214,7 +215,7 @@ struct OrderCompleteView: View {
     // 앱이 따로 저장한 값이 아니라 OS 실제 권한(UNUserNotificationCenter)을 그 자리에서 확인한다.
     private func orderStatusTapped() {
         guard !Self.hasShownNotificationPromptBefore else {
-            router.path.append(HomeRoute.orderDetail(pickupNumber: pickupNumber, storeName: storeName))
+            router.path.append(HomeRoute.orderDetail(orderId: orderId))
             return
         }
         Task {
@@ -227,7 +228,7 @@ struct OrderCompleteView: View {
             }
             guard !isAlreadyOn else {
                 Self.markNotificationPromptShown()
-                router.path.append(HomeRoute.orderDetail(pickupNumber: pickupNumber, storeName: storeName))
+                router.path.append(HomeRoute.orderDetail(orderId: orderId))
                 return
             }
             showNotificationSheet = true
@@ -237,7 +238,7 @@ struct OrderCompleteView: View {
     private func notificationSheetSkipTapped() {
         Self.markNotificationPromptShown()
         showNotificationSheet = false
-        router.path.append(HomeRoute.orderDetail(pickupNumber: pickupNumber, storeName: storeName))
+        router.path.append(HomeRoute.orderDetail(orderId: orderId))
     }
 
     // OS 알림 권한 팝업을 띄운 뒤에는 허용·거부 결과와 무관하게 주문 상세로 넘어간다.
@@ -246,7 +247,7 @@ struct OrderCompleteView: View {
             _ = try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge])
             Self.markNotificationPromptShown()
             showNotificationSheet = false
-            router.path.append(HomeRoute.orderDetail(pickupNumber: pickupNumber, storeName: storeName))
+            router.path.append(HomeRoute.orderDetail(orderId: orderId))
         }
     }
 
@@ -270,6 +271,6 @@ struct OrderCompleteView: View {
 }
 
 #Preview {
-    OrderCompleteView(pickupNumber: 27, storeName: "범석관 카페", queueCount: 3)
+    OrderCompleteView(orderId: 1, pickupNumber: 27, storeName: "범석관 카페", queueCount: 3)
         .environment(HomeRouter())
 }

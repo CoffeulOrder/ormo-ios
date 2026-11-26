@@ -124,7 +124,8 @@ final class MenuOptionsViewModel {
             menuItemName: item.name,
             quantity: quantity,
             unitPrice: unitPrice,
-            optionsSummary: optionsSummary
+            optionsSummary: optionsSummary,
+            optionItemIds: optionGroups.flatMap { selectedChoices(in: $0) }.map(\.id)
         )
     }
 

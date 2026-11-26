@@ -7,6 +7,7 @@ enum OrderStage: Int, Hashable {
 }
 
 struct LiveOrder: Hashable {
+    let orderId: Int
     let pickupNumber: Int
     let storeName: String
     let stage: OrderStage

@@ -54,8 +54,8 @@ struct OrderDetailView: View {
 
     let cart: CartStore
 
-    init(pickupNumber: Int, storeName: String, cart: CartStore) {
-        _viewModel = State(initialValue: OrderDetailViewModel(pickupNumber: pickupNumber, storeName: storeName))
+    init(orderId: Int, cart: CartStore) {
+        _viewModel = State(initialValue: OrderDetailViewModel(orderId: orderId))
         self.cart = cart
     }
 
@@ -570,7 +570,7 @@ struct OrderDetailView: View {
 
 private func previewOrder(status: OrderStatus) -> Order {
     let now = Date()
-    var order = Order.mock(pickupNumber: 27, storeName: "범석관 카페")
+    var order = Order.mock(orderId: 27, pickupNumber: 27, storeName: "범석관 카페")
     order.status = status
     switch status {
     case .confirming:

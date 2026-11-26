@@ -56,19 +56,19 @@ struct LiveOrderHeaderView: View {
 #Preview {
     VStack(alignment: .leading, spacing: Spacing.spacing24) {
         LiveOrderHeaderView(
-            order: LiveOrder(pickupNumber: 27, storeName: "범석관 카페", stage: .confirming, queueCount: 3, pickupDeadlineText: ""),
+            order: LiveOrder(orderId: 1, pickupNumber: 27, storeName: "범석관 카페", stage: .confirming, queueCount: 3, pickupDeadlineText: ""),
             action: {}
         )
         LiveOrderHeaderView(
-            order: LiveOrder(pickupNumber: 27, storeName: "범석관 카페", stage: .making, queueCount: 2, pickupDeadlineText: ""),
+            order: LiveOrder(orderId: 1, pickupNumber: 27, storeName: "범석관 카페", stage: .making, queueCount: 2, pickupDeadlineText: ""),
             action: {}
         )
         LiveOrderHeaderView(
-            order: LiveOrder(pickupNumber: 27, storeName: "범석관 카페", stage: .readyForPickup, queueCount: 0, pickupDeadlineText: "13:30까지 받아주세요"),
+            order: LiveOrder(orderId: 1, pickupNumber: 27, storeName: "범석관 카페", stage: .readyForPickup, queueCount: 0, pickupDeadlineText: "13:30까지 받아주세요"),
             action: {}
         )
         LiveOrderHeaderView(
-            order: LiveOrder(pickupNumber: 27, storeName: "범석관 카페", stage: .making, queueCount: 2, pickupDeadlineText: ""),
+            order: LiveOrder(orderId: 1, pickupNumber: 27, storeName: "범석관 카페", stage: .making, queueCount: 2, pickupDeadlineText: ""),
             additionalCount: 1,
             action: {}
         )

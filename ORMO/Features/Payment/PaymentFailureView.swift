@@ -3,6 +3,8 @@ import SwiftUI
 struct PaymentFailureView: View {
     @Environment(HomeRouter.self) private var router
     let cart: CartStore
+    let orderId: Int
+    let pgOrderId: String
     let paymentMethod: PaymentMethod
     let totalPrice: Int
     let storeName: String
@@ -99,7 +101,7 @@ struct PaymentFailureView: View {
     private func retryTapped() {
         router.path.removeLast(2)
         router.path.append(
-            HomeRoute.paymentProcessing(attemptId: UUID(), paymentMethod: paymentMethod, totalPrice: totalPrice, storeName: storeName)
+            HomeRoute.paymentProcessing(attemptId: UUID(), orderId: orderId, pgOrderId: pgOrderId, paymentMethod: paymentMethod, totalPrice: totalPrice, storeName: storeName)
         )
     }
 
@@ -112,6 +114,6 @@ struct PaymentFailureView: View {
 }
 
 #Preview {
-    PaymentFailureView(cart: CartStore(), paymentMethod: .card, totalPrice: 12000, storeName: "을지대학교 범석관 카페")
+    PaymentFailureView(cart: CartStore(), orderId: 1, pgOrderId: "mock-pg-1", paymentMethod: .card, totalPrice: 12000, storeName: "을지대학교 범석관 카페")
         .environment(HomeRouter())
 }

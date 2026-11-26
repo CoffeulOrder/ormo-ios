@@ -2,33 +2,44 @@ import Foundation
 
 @Observable
 final class PaymentProcessingViewModel {
+    let orderId: Int
     let paymentMethod: PaymentMethod
     let totalPrice: Int
     let storeName: String
     var outcome: PaymentOutcome?
-    // 결제 성공 시 발급되는 픽업 번호. 주문 완료 화면에 넘겨준다.
+    // 결제 성공 시 받아온 주문의 픽업 번호. 주문 완료 화면에 넘겨준다.
     private(set) var completedOrderPickupNumber: Int?
 
+    let pgOrderId: String
     private let cart: CartStore
+    private let orderRepository: OrderRepository
     private let paymentRepository: PaymentRepository
 
     init(
+        orderId: Int,
+        pgOrderId: String,
         paymentMethod: PaymentMethod,
         totalPrice: Int,
         storeName: String,
         cart: CartStore,
+        orderRepository: OrderRepository = AppContainer.shared.orderRepository,
         paymentRepository: PaymentRepository = AppContainer.shared.paymentRepository
     ) {
+        self.orderId = orderId
+        self.pgOrderId = pgOrderId
         self.paymentMethod = paymentMethod
         self.totalPrice = totalPrice
         self.storeName = storeName
         self.cart = cart
+        self.orderRepository = orderRepository
         self.paymentRepository = paymentRepository
     }
 
     func submit() async {
         let previousFailureCount = cart.paymentFailureCount
-        let result = (try? await paymentRepository.submitPayment(
+        let result = (try? await paymentRepository.confirmPayment(
+            orderId: orderId,
+            pgOrderId: pgOrderId,
             method: paymentMethod,
             totalPrice: totalPrice,
             previousFailureCount: previousFailureCount
@@ -36,23 +47,9 @@ final class PaymentProcessingViewModel {
 
         switch result {
         case .success:
-            let pickupNumber = LocalStore.shared.nextPickupNumber()
-            let now = Date()
-            let order = Order(
-                pickupNumber: pickupNumber,
-                storeName: storeName,
-                status: .confirming,
-                items: cart.items.map { OrderItem(name: $0.menuItemName, quantity: $0.quantity, optionsSummary: $0.optionsSummary) },
-                subtotalPrice: totalPrice,
-                paymentMethod: paymentMethod,
-                paidAt: now,
-                confirmedAt: now
-            )
-            LocalStore.shared.addOrder(order)
-            // 주문 상세 화면을 열어보지 않아도(홈 화면만 보고 있어도) 진행되도록, 만든 직후 바로 건다.
-            MockOrderProgressionScheduler.shared.scheduleIfNeeded(for: order)
+            let order = try? await orderRepository.fetchOrder(orderId: orderId)
             cart.clearAfterSuccessfulPayment()
-            completedOrderPickupNumber = pickupNumber
+            completedOrderPickupNumber = order?.pickupNumber ?? 0
         case .failure:
             cart.recordPaymentFailure()
         case .expired:

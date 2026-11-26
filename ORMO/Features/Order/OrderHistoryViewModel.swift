@@ -28,7 +28,7 @@ final class OrderHistoryViewModel {
     // 메뉴별 ID와 품절 여부를 바로 내려주겠지만, 지금은 Mock 메뉴에서 이름으로 맞춘다.
     // 담긴 메뉴가 전부 품절이면 nil을 돌려준다.
     func reorderLineItems(for order: Order) async -> [CartLineItem]? {
-        guard let menu = try? await menuRepository.fetchStoreMenu(storeId: "beomseokgwan") else {
+        guard let menu = try? await menuRepository.fetchStoreMenu(storeId: order.storeId) else {
             return order.items.map { orderItem in
                 CartLineItem(
                     id: UUID().uuidString,
