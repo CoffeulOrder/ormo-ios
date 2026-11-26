@@ -6,7 +6,10 @@ struct MenuSearchView: View {
     @State private var viewModel: MenuSearchViewModel
     @FocusState private var isSearchFieldFocused: Bool
 
-    init(allItems: [MenuItem], initialQuery: String = "") {
+    let storeId: String
+
+    init(storeId: String, allItems: [MenuItem], initialQuery: String = "") {
+        self.storeId = storeId
         let model = MenuSearchViewModel(allItems: allItems)
         model.query = initialQuery
         _viewModel = State(initialValue: model)
@@ -229,7 +232,7 @@ struct MenuSearchView: View {
 
     private func menuItemTapped(_ item: MenuItem) {
         viewModel.resultTapped(item)
-        router.path.append(HomeRoute.menuOptions(item))
+        router.path.append(HomeRoute.menuOptions(storeId: storeId, item: item))
     }
 
     private var thinDivider: some View {
@@ -246,7 +249,7 @@ struct MenuSearchView: View {
 }
 
 #Preview {
-    MenuSearchView(allItems: [
+    MenuSearchView(storeId: "beomseokgwan", allItems: [
         MenuItem(id: "1", name: "아메리카노", price: 4000, description: "깔끔하고 산뜻한 기본 커피예요", badge: .popular, isSoldOut: false),
         MenuItem(id: "2", name: "카페라떼", price: 4500, description: "에스프레소에 부드러운 우유를 더했어요", badge: .popular, isSoldOut: false),
         MenuItem(id: "3", name: "바닐라라테", price: 5000, description: "달콤한 바닐라 시럽이 들어가요", badge: .popular, isSoldOut: false)

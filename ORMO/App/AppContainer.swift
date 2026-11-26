@@ -34,9 +34,9 @@ final class AppContainer {
         // 백엔드에 대응 API가 없어(명세서 43개 중 없음) 당분간 Mock 고정.
         schoolEmailDomainRepository = MockSchoolEmailDomainRepository()
 
-        // 아직 연동 전(Phase 2 이후) — 항상 Mock.
-        cafeRepository = MockCafeRepository()
-        menuRepository = MockMenuRepository()
+        // Phase 2: 매장·메뉴 실서버 연동 완료.
+        cafeRepository = useMock ? MockCafeRepository() : RemoteCafeRepository()
+        menuRepository = useMock ? MockMenuRepository() : RemoteMenuRepository()
 
         orderRepository = MockOrderRepository()
         orderHistoryRepository = MockOrderHistoryRepository()

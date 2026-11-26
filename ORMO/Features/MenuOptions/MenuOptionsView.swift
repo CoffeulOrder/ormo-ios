@@ -15,6 +15,7 @@ struct MenuOptionsView: View {
     private let bottomCTAHeight: CGFloat = 128
 
     init(
+        storeId: String,
         item: MenuItem,
         cart: CartStore,
         searchableMenuItems: [MenuItem] = [],
@@ -22,7 +23,7 @@ struct MenuOptionsView: View {
         onAddedToCart: @escaping () -> Void,
         onOrderNow: @escaping () -> Void
     ) {
-        _viewModel = State(initialValue: MenuOptionsViewModel(item: item, cart: cart, menuRepository: menuRepository))
+        _viewModel = State(initialValue: MenuOptionsViewModel(storeId: storeId, item: item, cart: cart, menuRepository: menuRepository))
         self.searchableMenuItems = searchableMenuItems
         self.onAddedToCart = onAddedToCart
         self.onOrderNow = onOrderNow
@@ -317,7 +318,7 @@ struct MenuOptionsView: View {
     }
 
     private func searchTapped() {
-        router.path.append(HomeRoute.search(searchableMenuItems))
+        router.path.append(HomeRoute.search(storeId: viewModel.storeId, items: searchableMenuItems))
     }
 
     private func myPageTapped() {
@@ -327,6 +328,7 @@ struct MenuOptionsView: View {
 
 #Preview {
     MenuOptionsView(
+        storeId: "beomseokgwan",
         item: MenuItem(id: "coffee-1", name: "아메리카노", price: 4000, description: "산미가 적고 고소한 원두로 내린 기본 커피예요. 진하게 마시려면 샷을 추가해 보세요.", badge: .popular, isSoldOut: false),
         cart: CartStore(),
         onAddedToCart: {},

@@ -3,8 +3,8 @@ import SwiftUI
 enum HomeRoute: Hashable {
     case storeSelection
     case storeInfo(Store)
-    case search([MenuItem])
-    case menuOptions(MenuItem)
+    case search(storeId: String, items: [MenuItem])
+    case menuOptions(storeId: String, item: MenuItem)
     case cart
     // attemptId: 같은 결제수단·금액으로 재시도하면 값이 완전히 같아져서, NavigationPath가
     // "이전 시도와 같은 화면"으로 오인해 이미 결과가 나온 화면을 그대로 재사용해버린다

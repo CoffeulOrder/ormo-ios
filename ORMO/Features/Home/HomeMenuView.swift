@@ -137,10 +137,11 @@ struct HomeMenuView: View {
                         })
                     case .storeInfo(let store):
                         StoreInfoView(store: store)
-                    case .search(let items):
-                        MenuSearchView(allItems: items)
-                    case .menuOptions(let item):
+                    case .search(let storeId, let items):
+                        MenuSearchView(storeId: storeId, allItems: items)
+                    case .menuOptions(let storeId, let item):
                         MenuOptionsView(
+                            storeId: storeId,
                             item: item,
                             cart: cart,
                             searchableMenuItems: searchableMenuItems,
@@ -212,6 +213,9 @@ struct HomeMenuView: View {
         }
     }
 
+    // 이 두 화면은(networkError·serviceUnavailable) 상단 바까지 전부 교체해 보여줄 게 아무것도
+    // 없는 완전한 빈 화면이라, 위쪽에 보이는 헤더가 있다고 가정하는 120pt 오프셋(다른 "목록 비어있음"
+    // 화면들의 패턴) 대신 화면 전체 안에서 실제로 세로 가운데에 와야 한다.
     private var networkErrorView: some View {
         ResultView(
             icon: .wifiOffIcon,
@@ -220,7 +224,7 @@ struct HomeMenuView: View {
             buttonTitle: "다시 시도",
             action: viewModel.retryLoadTapped
         )
-        .padding(.top, 120)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         .background(Colors.backgroundDefault.ignoresSafeArea())
     }
 
@@ -232,7 +236,7 @@ struct HomeMenuView: View {
             buttonTitle: "다시 시도",
             action: viewModel.retryLoadTapped
         )
-        .padding(.top, 120)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         .background(Colors.backgroundDefault.ignoresSafeArea())
     }
 
@@ -1265,7 +1269,7 @@ struct HomeMenuView: View {
     }
 
     private func searchTapped() {
-        router.path.append(HomeRoute.search(searchableMenuItems))
+        router.path.append(HomeRoute.search(storeId: viewModel.currentStoreId, items: searchableMenuItems))
     }
 
     // 최근 주문과 카테고리 메뉴를 합쳐서 검색 대상 목록을 만든다. 같은 메뉴가 최근 주문에도
@@ -1286,7 +1290,7 @@ struct HomeMenuView: View {
     }
 
     private func menuItemTapped(_ item: MenuItem) {
-        router.path.append(HomeRoute.menuOptions(item))
+        router.path.append(HomeRoute.menuOptions(storeId: viewModel.currentStoreId, item: item))
     }
 }
 

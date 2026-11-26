@@ -5,6 +5,7 @@ final class MenuOptionsViewModel {
     static let minQuantity = 1
     static let maxQuantity = 5
 
+    let storeId: String
     let item: MenuItem
     var optionGroups: [MenuOptionGroup] = []
     var quantity = minQuantity
@@ -23,10 +24,12 @@ final class MenuOptionsViewModel {
     private var snackbarTask: Task<Void, Never>?
 
     init(
+        storeId: String,
         item: MenuItem,
         cart: CartStore,
         menuRepository: MenuRepository = AppContainer.shared.menuRepository
     ) {
+        self.storeId = storeId
         self.item = item
         self.cart = cart
         self.menuRepository = menuRepository
@@ -49,7 +52,7 @@ final class MenuOptionsViewModel {
     }
 
     func load() async {
-        guard let detail = try? await menuRepository.fetchItemDetail(itemId: item.id) else { return }
+        guard let detail = try? await menuRepository.fetchItemDetail(storeId: storeId, itemId: item.id) else { return }
         optionGroups = detail.optionGroups
         for group in detail.optionGroups {
             switch group.selectionType {
