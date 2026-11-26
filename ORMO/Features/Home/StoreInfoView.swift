@@ -53,7 +53,7 @@ struct StoreInfoView: View {
             .padding(.bottom, Spacing.spacing24)
         }
         .background(Colors.backgroundDefault.ignoresSafeArea())
-        .navigationBarHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
         .safeAreaInset(edge: .top, spacing: 0) {
             topNavigationBar
         }

@@ -22,7 +22,7 @@ struct WithdrawView: View {
         .ignoresSafeArea(.keyboard)
         .contentShape(Rectangle())
         .onTapGesture { isPasswordFocused = false }
-        .navigationBarHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
     }
 
     private var topNavigationBar: some View {

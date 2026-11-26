@@ -32,7 +32,7 @@ struct SignUpProfileView: View {
             }
             .ignoresSafeArea(edges: .bottom)
         }
-        .navigationBarHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
         .onAppear {
             // Figma smart-animate 타이밍: Title 0~17.5%(350ms), Bottom CTA 6~26%(지연 120ms, 400ms), ease-out
             withAnimation(.easeOut(duration: 0.35)) {

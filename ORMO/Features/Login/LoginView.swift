@@ -171,7 +171,7 @@ struct LoginView: View {
                 viewModel.isPasswordResetRequested = false
             }
         }
-        .navigationBarHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
     }
 
     private var snackbar: some View {

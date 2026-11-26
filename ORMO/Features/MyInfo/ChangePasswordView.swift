@@ -31,7 +31,7 @@ struct ChangePasswordView: View {
         .ignoresSafeArea(.keyboard)
         .contentShape(Rectangle())
         .onTapGesture { focusedField = nil }
-        .navigationBarHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
         .onChange(of: viewModel.isCompleted) {
             if viewModel.isCompleted {
                 onLogout("비밀번호를 변경했어요")

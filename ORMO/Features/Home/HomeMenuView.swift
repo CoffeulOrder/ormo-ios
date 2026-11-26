@@ -107,6 +107,9 @@ struct HomeMenuView: View {
     @State private var isLivePanelExpanded = false
     // topBar(매장 이름/Live Order Header 줄)의 실제 높이 — 그 바로 아래에 패널을 앉히는 데 쓴다.
     @State private var topBarHeight: CGFloat = 0
+    // 화면 본문(content) 컨테이너의 실측 높이 — UIScreen.main.bounds(세이프에리어와 무관한 전역값) 대신
+    // topBarHeight와 같은 좌표계(로컬 GeometryReader)로 재서 livePanelHeight 계산에 쓴다.
+    @State private var screenHeight: CGFloat = 0
     @State private var router = HomeRouter()
     @State private var cart = CartStore()
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -300,7 +303,8 @@ struct HomeMenuView: View {
             }
         }
         .background(Colors.backgroundDefault.ignoresSafeArea())
-        .navigationBarHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
+        .onGeometryChange(for: CGFloat.self, of: \.size.height) { screenHeight = $0 }
         .animation(.easeOut(duration: 0.2), value: viewModel.isCartSnackbarVisible)
         .animation(.easeOut(duration: 0.2), value: viewModel.isConnectionUnstable)
         .onChange(of: cart.justAddedMessage) {
@@ -623,9 +627,12 @@ struct HomeMenuView: View {
                         endPoint: .bottom
                     )
                     .frame(height: Spacing.spacing40)
-                    .ignoresSafeArea(edges: .bottom)
                     .allowsHitTesting(false)
                 }
+                // 그라데이션 하나에만 걸면 조상 GeometryReader/ZStack이 보고하는 크기가 세이프에리어
+                // 안쪽으로 다시 당겨질 때(OS 버전에 따라 생김) 그라데이션도 같이 위로 밀린다.
+                // 이 ZStack 전체를 기준으로 걸어야 하단 끝까지 항상 빈틈없이 붙는다.
+                .ignoresSafeArea(edges: .bottom)
                 .onAppear { listViewportHeight = listGeometry.size.height }
                 .onChange(of: listGeometry.size.height) { _, newValue in listViewportHeight = newValue }
             }
@@ -878,12 +885,13 @@ struct HomeMenuView: View {
         )
     }
 
-    // "화면 60%까지, 넘치면 패널 안에서 스크롤" — 이 앱은 iPhone 전용·세로 고정이라
-    // UIScreen.main.bounds 하나로 충분하다. 맨 아래 여백(가장 하단 주문 카드의 글자 ~ 패널
-    // 아래쪽 모서리) 20 — 패널 자체 높이 계산에도 똑같이 더해야 잘리지 않는다.
+    // "화면 60%까지, 넘치면 패널 안에서 스크롤" — screenHeight는 UIScreen.main.bounds(세이프에리어와
+    // 무관한 전역값)가 아니라 topBarHeight와 같은 로컬 GeometryReader 좌표계로 잰 값이라, 세이프에리어
+    // 처리 방식이 OS 버전마다 달라져도 항상 같은 기준으로 계산된다. 맨 아래 여백(가장 하단 주문 카드의
+    // 글자 ~ 패널 아래쪽 모서리) 20 — 패널 자체 높이 계산에도 똑같이 더해야 잘리지 않는다.
     private var livePanelHeight: CGFloat {
         let naturalHeight = CGFloat(viewModel.liveOrders.count) * Self.liveOrderBarHeight + Spacing.spacing20
-        return min(naturalHeight, UIScreen.main.bounds.height * Self.livePanelMaxHeightRatio)
+        return min(naturalHeight, screenHeight * Self.livePanelMaxHeightRatio)
     }
 
     private var livePanelContent: some View {

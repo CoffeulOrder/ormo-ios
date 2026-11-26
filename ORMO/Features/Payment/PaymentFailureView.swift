@@ -25,7 +25,7 @@ struct PaymentFailureView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(Colors.backgroundDefault.ignoresSafeArea())
         .ignoresSafeArea(.keyboard)
-        .navigationBarHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
     }
 
     private var textStack: some View {

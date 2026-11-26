@@ -36,7 +36,7 @@ struct SignUpCompletionView: View {
             .frame(width: proxy.size.width, height: proxy.size.height)
         }
         .background(Colors.backgroundDefault.ignoresSafeArea())
-        .navigationBarHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
         .onAppear(perform: playMotion)
     }
 

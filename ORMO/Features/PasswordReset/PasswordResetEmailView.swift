@@ -34,7 +34,7 @@ struct PasswordResetEmailView: View {
             }
             .ignoresSafeArea(edges: .bottom)
         }
-        .navigationBarHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
         .task {
             await viewModel.loadSchoolEmailDomainsIfNeeded()
         }
