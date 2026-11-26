@@ -35,7 +35,8 @@ final class HomeMenuViewModel {
     private(set) var isProgrammaticScrollInProgress = false
     private var programmaticScrollTimeoutTask: Task<Void, Never>?
     private static let programmaticScrollTimeout: Duration = .milliseconds(600)
-    var liveOrder: LiveOrder?
+    // 진행 중인 주문. 최대 3건, 먼저 접수된 순(대표 주문이 맨 앞).
+    var liveOrders: [LiveOrder] = []
     var isCartSnackbarVisible = false
     var cartSnackbarMessage = ""
     // 메뉴는 정상적으로 불러왔지만 부가 정보(매장 상세) 호출만 실패했을 때, 화면 전체를
@@ -174,8 +175,8 @@ final class HomeMenuViewModel {
     func observeLiveOrderIfNeeded() {
         guard liveOrderObservationTask == nil else { return }
         liveOrderObservationTask = Task { [storeName] in
-            for await order in liveOrderRepository.observeLiveOrder(storeName: storeName) {
-                liveOrder = order
+            for await orders in liveOrderRepository.observeLiveOrders(storeName: storeName) {
+                liveOrders = orders
             }
         }
     }

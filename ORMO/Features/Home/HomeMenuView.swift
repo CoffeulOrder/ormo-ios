@@ -62,15 +62,26 @@ struct HomeMenuView: View {
     // 이 거리(화면 높이의 배수)를 넘는 스크롤은 먼저 애니메이션 없이 목표 근처까지 점프한 뒤,
     // 마지막 구간만 애니메이션해서 과도하게 긴 스크롤이 "순간이동"처럼 보이지 않게 한다.
     private static let longScrollJumpThresholdInViewports: CGFloat = 2
-    // Live Section(상단 실시간 현황) 펼쳐진 높이. Figma "Live Section" 프레임 실측값(142) —
-    // 컴포넌트 설명의 134는 마스터 컴포넌트 수치이고, 실제 화면(1226:47214/47588/47776)은
-    // 전부 142로 배치돼 있다. 스크롤로 완전히 접히는 데 필요한 거리도 이 값과 같다
-    // ("현황 구역 아랫선이 헤더 아랫선에 닿는 순간" = 정확히 이만큼 스크롤했을 때).
-    private static let liveSectionHeight: CGFloat = 142
+    // Live Section(상단 실시간 현황) 펼쳐진 높이. Figma "Live Section" 프레임 실측값 —
+    // 주문 1건이면 142(1226:47214/47588/47776), 2건 이상이면 158(가로 캐러셀 + 페이지 점,
+    // 1226:51988/49033/49284) — 컴포넌트 설명의 134는 바(Bar) 자체 높이고 마스터 컴포넌트 수치다.
+    // 스크롤로 완전히 접히는 데 필요한 거리도 이 값과 같다("현황 구역 아랫선이 헤더 아랫선에
+    // 닿는 순간" = 정확히 이만큼 스크롤했을 때).
+    private static let liveSectionHeightSingle: CGFloat = 142
+    private static let liveSectionHeightMulti: CGFloat = 158
+    // Live Order Bar 한 장의 높이(Figma 컴포넌트 설명 "높이 134"). 캐러셀 페이지 너비·패널
+    // 한 줄 높이로 재사용한다.
+    private static let liveOrderBarHeight: CGFloat = 134
     // 헤더의 매장 이름 ↔ Live Order Header 전환 커브. Figma development 주석 그대로
     // (cubic-bezier(0.2, 0.9, 0.25, 1), 0.45초). 동작 줄이기 켜짐이면 0.2초 페이드로 대체한다.
     private static let liveHeaderSwapAnimation = Animation.timingCurve(0.2, 0.9, 0.25, 1, duration: 0.45)
     private static let liveHeaderSwapSlideDistance: CGFloat = 36
+    // 헤더 아래 주문 목록 패널 열기/닫기 커브. Figma development 주석 그대로
+    // ("패널 높이 0 → 줄 합계, 0.36s / 닫기 0.22s ease-out").
+    private static let livePanelOpenAnimation = Animation.easeOut(duration: 0.36)
+    private static let livePanelCloseAnimation = Animation.easeOut(duration: 0.22)
+    // "3건 이상이면 화면 60%까지, 넘치면 패널 안에서 스크롤."
+    private static let livePanelMaxHeightRatio: CGFloat = 0.6
 
     @State private var viewModel: HomeMenuViewModel
     @State private var sectionTopOffsets: [HomeMenuViewModel.Section: CGFloat] = [:]
@@ -87,6 +98,12 @@ struct HomeMenuView: View {
     @State private var programmaticScrollSettleGuardUntil: Date?
     // 0(완전히 펼침) ~ 1(완전히 접힘). Live Section 높이·투명도와 헤더 전환을 이 값 하나로 구동한다.
     @State private var liveSectionCollapseProgress: CGFloat = 0
+    // 상단 Live Section의 캐러셀이 지금 몇 번째 주문을 보여주고 있는지(페이지 점 표시용).
+    @State private var liveCarouselIndex = 0
+    // 헤더 아래 주문 목록 패널이 펼쳐져 있는지(진행 중인 주문이 2건 이상일 때만 의미가 있다).
+    @State private var isLivePanelExpanded = false
+    // topBar(매장 이름/Live Order Header 줄)의 실제 높이 — 그 바로 아래에 패널을 앉히는 데 쓴다.
+    @State private var topBarHeight: CGFloat = 0
     @State private var router = HomeRouter()
     @State private var cart = CartStore()
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -228,8 +245,10 @@ struct HomeMenuView: View {
                 .background(alignment: .top) {
                     // Figma: 상태바부터 흰색 → 하늘색(Base/Blue/Blue 50) 한 장 그라데이션.
                     // 실시간 주문이 없으면(매장 이름 줄만 있으면) 밋밋해 보이지 않도록 이 배경도 끈다.
-                    if viewModel.liveOrder != nil {
-                        LinearGradient(colors: [Colors.backgroundDefault, Colors.baseBlue50], startPoint: .top, endPoint: .bottom)
+                    // 패널이 펼쳐져 있으면 패널까지 이어지는 "한 장" 그라데이션의 앞부분만 그린다
+                    // (headerGradient 참고 — 패널이 따로 흰색에서 다시 시작하면 이음새가 보인다).
+                    if !viewModel.liveOrders.isEmpty {
+                        headerGradient
                     }
                 }
 
@@ -240,6 +259,11 @@ struct HomeMenuView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+
+            // 진행 중인 주문이 2건 이상일 때, 헤더의 "외 N건"을 눌러 펼치는 목록 패널 + 뒤 딤.
+            // topBar 바로 아래(topBarHeight만큼 내려서)에서 시작해야 해서, 이 ZStack의 다른
+            // 레이어들과 별개로 맨 위 정렬 + 패딩으로 위치를 맞춘다.
+            livePanelOverlay
 
             Group {
                 if !cart.isEmpty {
@@ -336,28 +360,89 @@ struct HomeMenuView: View {
         router.path.append(HomeRoute.cart)
     }
 
-    private func liveOrderTapped() {
-        guard let liveOrder = viewModel.liveOrder else { return }
-        router.path.append(HomeRoute.orderDetail(pickupNumber: liveOrder.pickupNumber, storeName: liveOrder.storeName))
+    private func liveOrderTapped(_ order: LiveOrder) {
+        router.path.append(HomeRoute.orderDetail(pickupNumber: order.pickupNumber, storeName: order.storeName))
+    }
+
+    // 헤더의 "외 N건"을 눌렀을 때(진행 중인 주문이 2건 이상일 때만 쓰인다). 패널을 열 때와 닫을 때
+    // 커브·시간이 서로 달라서(Figma: 열기 0.36s, 닫기 0.22s, 둘 다 ease-out) 선언적
+    // .animation(value:) 한 줄로는 양방향을 다르게 줄 수 없어 여기서 방향별로 직접 감싼다.
+    private func toggleLivePanel() {
+        if isLivePanelExpanded {
+            withAnimation(anim(Self.livePanelCloseAnimation)) { isLivePanelExpanded = false }
+        } else {
+            withAnimation(anim(Self.livePanelOpenAnimation)) { isLivePanelExpanded = true }
+        }
+    }
+
+    private func closeLivePanelIfNeeded() {
+        guard isLivePanelExpanded else { return }
+        withAnimation(anim(Self.livePanelCloseAnimation)) { isLivePanelExpanded = false }
+    }
+
+    // 주문이 1건이면 142, 2건 이상이면(가로 캐러셀 + 페이지 점) 158.
+    private var liveSectionExpandedHeight: CGFloat {
+        viewModel.liveOrders.count > 1 ? Self.liveSectionHeightMulti : Self.liveSectionHeightSingle
     }
 
     // 펼쳐진 상태(맨 위)에서는 메뉴 홈 헤더 바로 아래 자리 잡은 실시간 현황이다. 스크롤해서
     // 접히면 높이·투명도가 0으로 줄며 사라지고, 그 대신 헤더의 매장 이름 자리에
-    // LiveOrderHeaderView가 올라온다(showsLiveHeader).
+    // LiveOrderHeaderView가 올라온다(showsLiveHeader). 주문이 1건이면 바 하나, 2건 이상이면
+    // 화면 폭 한 장씩 넘기는 캐러셀 + 페이지 점(Figma "2건이면 화면 폭 한 장씩 넘기기 + 점").
     @ViewBuilder
     private var liveSection: some View {
-        if let liveOrder = viewModel.liveOrder {
-            LiveOrderBarView(order: liveOrder, action: liveOrderTapped)
-                .frame(height: Self.liveSectionHeight * (1 - liveSectionCollapseProgress), alignment: .top)
-                // 높이가 줄어드는 동안 글자·일러스트가 짓눌려 보이지 않도록 투명도를 더 빠르게 뺀다.
-                .opacity(1 - min(liveSectionCollapseProgress * 1.6, 1))
-                .clipped()
-                .allowsHitTesting(liveSectionCollapseProgress < 1)
+        if !viewModel.liveOrders.isEmpty {
+            VStack(spacing: Spacing.spacing8) {
+                if viewModel.liveOrders.count == 1 {
+                    LiveOrderBarView(order: viewModel.liveOrders[0], action: { liveOrderTapped(viewModel.liveOrders[0]) })
+                } else {
+                    liveOrderCarousel
+                    liveOrderCarouselDots
+                }
+            }
+            .frame(height: liveSectionExpandedHeight * (1 - liveSectionCollapseProgress), alignment: .top)
+            // 높이가 줄어드는 동안 글자·일러스트가 짓눌려 보이지 않도록 투명도를 더 빠르게 뺀다.
+            .opacity(1 - min(liveSectionCollapseProgress * 1.6, 1))
+            .clipped()
+            .allowsHitTesting(liveSectionCollapseProgress < 1)
         }
     }
 
+    private var liveOrderCarousel: some View {
+        TabView(selection: $liveCarouselIndex) {
+            ForEach(Array(viewModel.liveOrders.enumerated()), id: \.element) { index, order in
+                LiveOrderBarView(order: order, action: { liveOrderTapped(order) })
+                    .tag(index)
+            }
+        }
+        .tabViewStyle(.page(indexDisplayMode: .never))
+        .frame(height: Self.liveOrderBarHeight)
+        // 주문 목록이 바뀌어 지금 보던 페이지가 없어지면(예: 맨 앞 주문이 픽업 완료로 사라짐) 첫
+        // 페이지로 되돌린다.
+        .onChange(of: viewModel.liveOrders) { _, newOrders in
+            if liveCarouselIndex >= newOrders.count {
+                liveCarouselIndex = max(newOrders.count - 1, 0)
+            }
+        }
+    }
+
+    // Figma 점 인디케이터(1226:48988 "Dots") 실측: 지름 8의 원 두 개, 중심 간 14(= 모서리 간 6),
+    // 둘 다 같은 크기의 원이고 활성 점이 캡슐처럼 넓어지지 않는다. 비활성 점 색은 Figma 원본이
+    // neutral-weak(5% 불투명도)인데 실제 화면에서 거의 안 보여서, "옅지만 보이는" 용도인
+    // iconQuaternary(18%)로 한 단계 진하게 했다(사용자 피드백).
+    private var liveOrderCarouselDots: some View {
+        HStack(spacing: 6) {
+            ForEach(viewModel.liveOrders.indices, id: \.self) { index in
+                Circle()
+                    .fill(index == liveCarouselIndex ? Colors.fillBrand : Colors.iconQuaternary)
+                    .frame(width: 8, height: 8)
+            }
+        }
+        .animation(anim(.easeOut(duration: 0.15)), value: liveCarouselIndex)
+    }
+
     private var showsLiveHeader: Bool {
-        viewModel.liveOrder != nil && liveSectionCollapseProgress >= 1
+        !viewModel.liveOrders.isEmpty && liveSectionCollapseProgress >= 1
     }
 
     // 스크롤 콘텐츠 맨 위 마커의 Y좌표(0 = 맨 위, 음수 = 스크롤한 만큼)로 Live Section이
@@ -367,13 +452,13 @@ struct HomeMenuView: View {
     // "맨 위에서 얼마나 스크롤했는지"와 같다. 전용 마커 뷰를 따로 뒀던 이전 버전은 스크롤을
     // 올렸다 내렸다 해도 갱신되지 않는 문제가 있었다.
     private func updateLiveSectionProgress(_ offsets: [HomeMenuViewModel.Section: CGFloat]) {
-        guard viewModel.liveOrder != nil,
+        guard !viewModel.liveOrders.isEmpty,
               let firstSection = viewModel.sections.first,
               let topOffset = offsets[firstSection] else {
             liveSectionCollapseProgress = 0
             return
         }
-        liveSectionCollapseProgress = min(max(-topOffset / Self.liveSectionHeight, 0), 1)
+        liveSectionCollapseProgress = min(max(-topOffset / liveSectionExpandedHeight, 0), 1)
     }
 
     private var emptyMenuResultView: some View {
@@ -439,7 +524,7 @@ struct HomeMenuView: View {
 
     @ViewBuilder
     private func roundedCornerPatch(mirrored: Bool) -> some View {
-        if viewModel.liveOrder != nil {
+        if !viewModel.liveOrders.isEmpty {
             RoundedCornerWedge(mirrored: mirrored)
                 .fill(Colors.baseBlue50)
                 .frame(width: Radius.xxl, height: Radius.xxl)
@@ -653,9 +738,13 @@ struct HomeMenuView: View {
         }
         .padding(.horizontal, Spacing.spacing20)
         .padding(.vertical, Spacing.spacing8)
-        // 실시간 주문이 있으면(liveOrder != nil) 상태바부터 이어지는 하늘색 그라데이션이
-        // topBar 뒤까지 깔려야 해서, 여기서는 배경을 따로 칠하지 않는다(그라데이션은
+        // 실시간 주문이 있으면(liveOrders가 비어있지 않으면) 상태바부터 이어지는 하늘색
+        // 그라데이션이 topBar 뒤까지 깔려야 해서, 여기서는 배경을 따로 칠하지 않는다(그라데이션은
         // content의 ZStack(alignment: .top)에서 한 장으로 그린다).
+        // PreferenceKey + onPreferenceChange 조합은 이 자리에서 가장 바깥 onPreferenceChange까지
+        // 값이 전달되지 않는 문제가 실측으로 확인됐다(GeometryReader 자체는 정상 측정).
+        // onGeometryChange(iOS 17+)로 바꿔 이 뷰 자신에서 바로 topBarHeight를 갱신한다.
+        .onGeometryChange(for: CGFloat.self, of: \.size.height) { topBarHeight = $0 }
     }
 
     // 매장 이름 줄 ↔ Live Order Header. Figma 주석: "현황 구역 아랫선이 헤더 아랫선(106)에
@@ -668,10 +757,22 @@ struct HomeMenuView: View {
                 .offset(y: slideOffset(isLiveHeader: false))
                 .opacity(showsLiveHeader ? 0 : 1)
 
-            if let liveOrder = viewModel.liveOrder {
-                LiveOrderHeaderView(order: liveOrder, action: liveOrderTapped)
-                    .offset(y: slideOffset(isLiveHeader: true))
-                    .opacity(showsLiveHeader ? 1 : 0)
+            if let liveOrder = viewModel.liveOrders.first {
+                // 주문이 1건이면 그대로 상세로, 2건 이상이면("외 N건") 직접 상세로 가는 대신
+                // 바로 아래 패널을 펼친다(Figma: "Orders=2건이면 ... 누르면 헤더 아래 패널").
+                LiveOrderHeaderView(
+                    order: liveOrder,
+                    additionalCount: max(viewModel.liveOrders.count - 1, 0),
+                    action: {
+                        if viewModel.liveOrders.count > 1 {
+                            toggleLivePanel()
+                        } else {
+                            liveOrderTapped(liveOrder)
+                        }
+                    }
+                )
+                .offset(y: slideOffset(isLiveHeader: true))
+                .opacity(showsLiveHeader ? 1 : 0)
             }
         }
         .animation(headerSwapAnimation, value: showsLiveHeader)
@@ -703,6 +804,105 @@ struct HomeMenuView: View {
         guard !reduceMotion else { return 0 }
         let isVisible = isLiveHeader == showsLiveHeader
         return isVisible ? 0 : (isLiveHeader ? Self.liveHeaderSwapSlideDistance : -Self.liveHeaderSwapSlideDistance)
+    }
+
+    // 헤더의 "외 N건"을 눌러 펼치는 목록 패널 + 뒤 딤(Figma development 주석: "헤더 아래 패널
+    // 높이 0 → 줄 합계, 0.36s / 닫기 0.22s ease-out. 뒤 Dim 20%. 3건 이상이면 화면 60%까지,
+    // 넘치면 패널 안에서 스크롤. 헤더 + 패널 = 한 장 그라데이션, 줄 사이 구분선 없음, 아래
+    // 모서리 20."). 딤·패널 모두 항상 트리에 두고 투명도·높이만 바꿔서, 조건부 삽입/제거가
+    // 아니라 진짜 애니메이션으로 열리고 닫히게 한다(liveSection 접힘과 같은 방식).
+    private var livePanelOverlay: some View {
+        ZStack(alignment: .top) {
+            // 헤더(topBar)는 패널을 연 당사자이자 계속 탭 가능한 트리거라 딤 밑에 깔리면 안
+            // 된다 — 화면 전체를 덮은 뒤 topBarHeight만큼 내려서, 헤더는 밝게 남기고 그 아래
+            // 콘텐츠만 어둡게 한다(실측 확인: 전체를 덮으면 헤더 줄만 어두워지는 이음새가 보였다).
+            Colors.backgroundDim
+                .opacity(isLivePanelExpanded ? 1 : 0)
+                .ignoresSafeArea(edges: [.horizontal, .bottom])
+                .allowsHitTesting(isLivePanelExpanded)
+                .onTapGesture { closeLivePanelIfNeeded() }
+                .padding(.top, topBarHeight)
+
+            livePanelContent
+                .padding(.top, topBarHeight)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+    }
+
+    // 헤더 바로 아래, 패널이 나타나기 전 실제로 보이는 헤더 블록(topBar + 아직 안 접힌 liveSection)의
+    // 실측 높이. 패널은 항상 showsLiveHeader(완전히 접힘) 상태에서만 열리므로 보통 topBar
+    // 높이와 같지만, 강제로 펼쳐본 상태 등 liveSection이 덜 접혔을 때도 이어지는 그라데이션
+    // 계산에 정확한 값을 쓰기 위해 접힘 진행도를 그대로 반영한다.
+    private var headerBlockHeight: CGFloat {
+        topBarHeight + liveSectionExpandedHeight * (1 - liveSectionCollapseProgress)
+    }
+
+    // Figma 주석 "헤더 + 패널 = 한 장 그라데이션"을 실제로 구현한다. 헤더와 패널이 각자 독립적으로
+    // 흰색→하늘색을 처음부터 다시 그리면 그 경계에서 색이 끊기는 게 실측으로 보였다(흰색이 다시
+    // 튀어나옴). 두 그라데이션이 같은 전체 길이(헤더+패널)의 앞/뒷부분을 나눠 그리도록 stop
+    // 위치를 0~1 밖으로 넘겨, 경계에서 색이 이어지게 한다.
+    // Gradient.Stop의 location은 Apple 문서상 [0, 1] 범위를 벗어나면 동작이 정의되지 않는다
+    // (실측 확인: 1을 넘기면 그냥 무시되고 기본 2단 그라데이션으로 되돌아간다). 대신 start/end
+    // endPoint의 UnitPoint는 뷰 범위 밖 값도 그대로 지원하므로, 그 쪽으로 "전체 길이 중 이
+    // 뷰가 차지하는 구간"을 표현한다.
+    private var headerGradient: LinearGradient {
+        let header = headerBlockHeight
+        guard isLivePanelExpanded, header > 0 else {
+            return LinearGradient(colors: [Colors.backgroundDefault, Colors.baseBlue50], startPoint: .top, endPoint: .bottom)
+        }
+        let panel = livePanelHeight
+        return LinearGradient(
+            colors: [Colors.backgroundDefault, Colors.baseBlue50],
+            startPoint: UnitPoint(x: 0.5, y: 0),
+            endPoint: UnitPoint(x: 0.5, y: (header + panel) / header)
+        )
+    }
+
+    private var panelGradient: LinearGradient {
+        let panel = livePanelHeight
+        let header = headerBlockHeight
+        guard panel > 0 else {
+            return LinearGradient(colors: [Colors.backgroundDefault, Colors.baseBlue50], startPoint: .top, endPoint: .bottom)
+        }
+        return LinearGradient(
+            colors: [Colors.backgroundDefault, Colors.baseBlue50],
+            startPoint: UnitPoint(x: 0.5, y: -header / panel),
+            endPoint: UnitPoint(x: 0.5, y: 1)
+        )
+    }
+
+    // "화면 60%까지, 넘치면 패널 안에서 스크롤" — 이 앱은 iPhone 전용·세로 고정이라
+    // UIScreen.main.bounds 하나로 충분하다. Figma 실측: 줄 합계 + 맨 아래 여백 8(패널 자체
+    // 아래쪽 padding, 반올림 모서리 전).
+    private var livePanelHeight: CGFloat {
+        let naturalHeight = CGFloat(viewModel.liveOrders.count) * Self.liveOrderBarHeight + Spacing.spacing8
+        return min(naturalHeight, UIScreen.main.bounds.height * Self.livePanelMaxHeightRatio)
+    }
+
+    private var livePanelContent: some View {
+        let naturalHeight = CGFloat(viewModel.liveOrders.count) * Self.liveOrderBarHeight + Spacing.spacing8
+        let cappedHeight = livePanelHeight
+
+        return ScrollView {
+            VStack(spacing: 0) {
+                ForEach(viewModel.liveOrders, id: \.self) { order in
+                    LiveOrderBarView(order: order, action: {
+                        closeLivePanelIfNeeded()
+                        liveOrderTapped(order)
+                    })
+                }
+            }
+            .padding(.bottom, Spacing.spacing8)
+        }
+        .scrollDisabled(naturalHeight <= cappedHeight)
+        .background(panelGradient)
+        .clipShape(
+            UnevenRoundedRectangle(topLeadingRadius: 0, bottomLeadingRadius: Radius.xl, bottomTrailingRadius: Radius.xl, topTrailingRadius: 0)
+        )
+        .frame(height: isLivePanelExpanded ? cappedHeight : 0, alignment: .top)
+        .opacity(isLivePanelExpanded ? 1 : 0)
+        .clipped()
+        .allowsHitTesting(isLivePanelExpanded)
     }
 
     private var tabsBar: some View {
@@ -1111,6 +1311,33 @@ struct HomeMenuView: View {
     return HomeMenuView(viewModel: viewModel)
         .task {
             try? await Task.sleep(for: .seconds(0.6))
-            viewModel.liveOrder = LiveOrder(pickupNumber: 27, storeName: viewModel.storeName, stage: .making, queueCount: 2, pickupDeadlineText: "")
+            viewModel.liveOrders = [
+                LiveOrder(pickupNumber: 27, storeName: viewModel.storeName, stage: .making, queueCount: 2, pickupDeadlineText: "")
+            ]
+        }
+}
+
+#Preview("Live Order · 2건") {
+    let viewModel = HomeMenuViewModel()
+    return HomeMenuView(viewModel: viewModel)
+        .task {
+            try? await Task.sleep(for: .seconds(0.6))
+            viewModel.liveOrders = [
+                LiveOrder(pickupNumber: 27, storeName: viewModel.storeName, stage: .making, queueCount: 2, pickupDeadlineText: ""),
+                LiveOrder(pickupNumber: 28, storeName: viewModel.storeName, stage: .confirming, queueCount: 3, pickupDeadlineText: "")
+            ]
+        }
+}
+
+#Preview("Live Order · 3건") {
+    let viewModel = HomeMenuViewModel()
+    return HomeMenuView(viewModel: viewModel)
+        .task {
+            try? await Task.sleep(for: .seconds(0.6))
+            viewModel.liveOrders = [
+                LiveOrder(pickupNumber: 27, storeName: viewModel.storeName, stage: .making, queueCount: 2, pickupDeadlineText: ""),
+                LiveOrder(pickupNumber: 28, storeName: viewModel.storeName, stage: .confirming, queueCount: 3, pickupDeadlineText: ""),
+                LiveOrder(pickupNumber: 29, storeName: viewModel.storeName, stage: .readyForPickup, queueCount: 0, pickupDeadlineText: "13:30까지 받아주세요")
+            ]
         }
 }
