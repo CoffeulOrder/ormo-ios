@@ -43,4 +43,6 @@ enum Colors {
     static let fillInverseWeak = Color(.fillInverseWeak)
     static let shadowTiny = Color(.shadowTiny)
     static let shadowWeak = Color(.shadowWeak)
+    // Figma Base/Blue/Blue 50. 메뉴 홈 상단의 실시간 현황 영역 배경 그라데이션 끝 색으로만 쓴다.
+    static let baseBlue50 = Color(.baseBlue50)
 }

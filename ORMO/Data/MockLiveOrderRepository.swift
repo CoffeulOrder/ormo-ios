@@ -30,6 +30,10 @@ struct MockLiveOrderRepository: LiveOrderRepository {
             $0.storeName == storeName && !terminalStatuses.contains($0.status)
         }) else { return nil }
 
+        // 앱을 껐다 켰거나 주문 상세를 한 번도 안 연 경우에도 진행되도록, 홈 화면이 들여다볼 때마다
+        // 걸어준다 — 이미 진행 중이면 scheduleIfNeeded가 아무것도 하지 않는다.
+        MockOrderProgressionScheduler.shared.scheduleIfNeeded(for: order)
+
         let stage: OrderStage
         let queueCount: Int
         let pickupDeadlineText: String

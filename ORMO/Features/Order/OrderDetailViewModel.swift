@@ -7,7 +7,7 @@ final class OrderDetailViewModel {
     private let repository: OrderRepository
     private let menuRepository: MenuRepository
     private let autoProgress: Bool
-    private var progressionTask: Task<Void, Never>?
+    private var observationTask: Task<Void, Never>?
 
     init(
         pickupNumber: Int,
@@ -35,46 +35,37 @@ final class OrderDetailViewModel {
     }
 
     func start() {
-        guard autoProgress, progressionTask == nil else { return }
-        progressionTask = Task {
+        guard autoProgress, observationTask == nil else { return }
+        observationTask = Task {
             guard let fetched = try? await repository.fetchOrder(pickupNumber: order.pickupNumber, storeName: order.storeName) else { return }
             order = fetched
+            // 진행 자체는 MockOrderProgressionScheduler가 화면과 무관하게 맡는다(이미 진행 중이면
+            // 아무것도 하지 않음). 여기서는 그 결과를 1초마다 다시 읽어와 화면에 반영만 한다.
+            MockOrderProgressionScheduler.shared.scheduleIfNeeded(for: fetched)
             // 실시간 현황을 켜둔 사용자에게는 잠금 화면 Live Activity로, 꺼둔 사용자에게는
             // OrderPushNotifier의 대체 알림으로 보여준다 (둘 다 켤 일은 없다).
             await OrderLiveActivityController.start(for: order, queueCount: 3)
-            await runProgression()
+            await observeProgression()
         }
     }
 
-    // 매장이 주문을 처리하는 과정을 흉내 낸 Mock 진행: 4초마다 다음 단계로 자동 넘어간다.
-    // 실제로는 매장 POS 상태 변경을 서버가 폴링·푸시로 알려주는 자리이며, Remote Repository가 대체한다.
-    private func runProgression() async {
-        try? await Task.sleep(for: .seconds(4))
-        guard !Task.isCancelled else { return }
-        order.status = .making
-        order.madeAt = Date()
-        LocalStore.shared.updateOrder(order)
-        await OrderLiveActivityController.update(for: order, queueCount: 2)
-
-        try? await Task.sleep(for: .seconds(4))
-        guard !Task.isCancelled else { return }
-        order.status = .waitingPickup
-        order.waitingAt = Date()
-        LocalStore.shared.updateOrder(order)
-        await OrderPushNotifier.scheduleIfNeeded(for: order)
-        await OrderLiveActivityController.update(for: order)
-
-        try? await Task.sleep(for: .seconds(4))
-        guard !Task.isCancelled else { return }
-        order.status = .pickedUp
-        order.pickedUpAt = Date()
-        LocalStore.shared.updateOrder(order)
-        await OrderLiveActivityController.end(for: order)
+    // MockOrderProgressionScheduler가 화면 밖에서 바꾼 상태를 1초마다 다시 읽어와 반영한다.
+    // 실제로는 서버 푸시·웹소켓이 대체할 자리.
+    private func observeProgression() async {
+        while !Task.isCancelled {
+            if let latest = try? await repository.fetchOrder(pickupNumber: order.pickupNumber, storeName: order.storeName),
+               latest != order {
+                order = latest
+            }
+            try? await Task.sleep(for: .seconds(1))
+        }
     }
 
-    // 사용자가 "주문 취소하기"를 눌렀을 때. 자동 진행 중이었다면 멈추고 취소 상태로 바꾼다.
+    // 사용자가 "주문 취소하기"를 눌렀을 때. 화면 관찰은 멈추고 취소 상태로 바꾼다.
+    // MockOrderProgressionScheduler는 다음 단계 전환 시점에 상태가 더는 confirming/making/
+    // waitingPickup이 아님을 보고 스스로 멈춘다.
     func cancelOrder() {
-        progressionTask?.cancel()
+        observationTask?.cancel()
         order.status = .userCancelled
         order.userCancelledAt = Date()
         LocalStore.shared.updateOrder(order)
@@ -82,7 +73,7 @@ final class OrderDetailViewModel {
     }
 
     deinit {
-        progressionTask?.cancel()
+        observationTask?.cancel()
     }
 
     // 주문에 담겼던 메뉴를 장바구니에 그대로 넣을 수 있는 형태로 돌려준다. 그때 고른 옵션(optionsSummary)은

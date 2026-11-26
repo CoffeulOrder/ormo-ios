@@ -49,6 +49,8 @@ final class PaymentProcessingViewModel {
                 confirmedAt: now
             )
             LocalStore.shared.addOrder(order)
+            // 주문 상세 화면을 열어보지 않아도(홈 화면만 보고 있어도) 진행되도록, 만든 직후 바로 건다.
+            MockOrderProgressionScheduler.shared.scheduleIfNeeded(for: order)
             cart.clearAfterSuccessfulPayment()
             completedOrderPickupNumber = pickupNumber
         case .failure:
