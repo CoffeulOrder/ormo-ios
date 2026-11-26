@@ -15,6 +15,6 @@ struct LiveOrder: Hashable {
 }
 
 protocol LiveOrderRepository {
-    // 주문이 사라지면(픽업 완료 등) nil을 내보낸다.
-    func observeLiveOrder(storeName: String) -> AsyncStream<LiveOrder?>
+    // 진행 중인 주문이 없으면 빈 배열을 내보낸다. 최대 3건까지만 담는다.
+    func observeLiveOrders(storeName: String) -> AsyncStream<[LiveOrder]>
 }
