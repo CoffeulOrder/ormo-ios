@@ -2,9 +2,14 @@ import SwiftUI
 
 struct VerificationCodeView: View {
     @Environment(\.dismiss) private var dismiss
-    @State private var viewModel = VerificationCodeViewModel()
+    @State private var viewModel: VerificationCodeViewModel
     @FocusState private var isCodeFieldFocused: Bool
-    var onVerified: () -> Void = {}
+    var onVerified: (String) -> Void = { _ in }
+
+    init(email: String, purpose: VerificationPurpose, onVerified: @escaping (String) -> Void = { _ in }) {
+        _viewModel = State(initialValue: VerificationCodeViewModel(email: email, purpose: purpose))
+        self.onVerified = onVerified
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -29,7 +34,7 @@ struct VerificationCodeView: View {
         }
         .onChange(of: viewModel.isVerified) {
             if viewModel.isVerified {
-                onVerified()
+                onVerified(viewModel.consumeVerificationToken())
                 viewModel.isVerified = false
             }
         }
@@ -194,5 +199,5 @@ struct VerificationCodeView: View {
 }
 
 #Preview {
-    VerificationCodeView()
+    VerificationCodeView(email: "ormo@eulji.ac.kr", purpose: .signUp)
 }

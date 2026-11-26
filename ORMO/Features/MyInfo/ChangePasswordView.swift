@@ -2,19 +2,15 @@ import SwiftUI
 
 struct ChangePasswordView: View {
     private enum Field {
+        case currentPassword
         case newPassword
         case confirmation
     }
 
     @Environment(\.dismiss) private var dismiss
-    @State private var viewModel: ChangePasswordViewModel
+    @State private var viewModel = ChangePasswordViewModel()
     @FocusState private var focusedField: Field?
     let onLogout: (String?) -> Void
-
-    init(email: String, onLogout: @escaping (String?) -> Void) {
-        _viewModel = State(initialValue: ChangePasswordViewModel(email: email))
-        self.onLogout = onLogout
-    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -68,10 +64,58 @@ struct ChangePasswordView: View {
 
     private var fieldsView: some View {
         VStack(alignment: .leading, spacing: Spacing.spacing24) {
+            currentPasswordField
             newPasswordField
             passwordConfirmationField
         }
         .padding(Spacing.spacing20)
+    }
+
+    private var currentPasswordField: some View {
+        VStack(alignment: .leading, spacing: Spacing.spacing8) {
+            Text("현재 비밀번호")
+                .typography(Typography.bodySmSemibold)
+                .foregroundStyle(Colors.textSecondary)
+
+            HStack(spacing: Spacing.spacing8) {
+                Group {
+                    if viewModel.isCurrentPasswordVisible {
+                        TextField("", text: $viewModel.currentPassword)
+                    } else {
+                        SecureField("", text: $viewModel.currentPassword)
+                    }
+                }
+                .typography(Typography.bodyMdRegular)
+                .foregroundStyle(Colors.textPrimary)
+                .textContentType(.password)
+                .focused($focusedField, equals: .currentPassword)
+                .submitLabel(.next)
+                .onSubmit { focusedField = .newPassword }
+                .onChange(of: viewModel.currentPassword) { viewModel.currentPasswordChanged() }
+
+                Button(action: { viewModel.isCurrentPasswordVisible.toggle() }) {
+                    Image(viewModel.isCurrentPasswordVisible ? .eyeIcon : .eyeOffIcon)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 24, height: 24)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, Spacing.spacing16)
+            .frame(height: 56)
+            .overlay(
+                RoundedRectangle(cornerRadius: Radius.lg)
+                    .stroke(
+                        fieldBorderColor(isInvalid: viewModel.isCurrentPasswordInvalid),
+                        lineWidth: fieldBorderWidth(isInvalid: viewModel.isCurrentPasswordInvalid)
+                    )
+            )
+
+            if viewModel.isCurrentPasswordInvalid {
+                errorFooter("현재 비밀번호가 올바르지 않아요")
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func fieldBorderColor(isInvalid: Bool) -> Color {
@@ -242,6 +286,6 @@ struct ChangePasswordView: View {
 
 #Preview {
     NavigationStack {
-        ChangePasswordView(email: "ormo@eulji.ac.kr", onLogout: { _ in })
+        ChangePasswordView(onLogout: { _ in })
     }
 }

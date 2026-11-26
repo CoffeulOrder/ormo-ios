@@ -23,8 +23,9 @@ struct MockSignUpRepository: SignUpRepository {
         }
     }
 
-    func completeSignUp(email: String, password: String, name: String) async throws {
+    func completeSignUp(verificationToken: String, name: String, password: String) async throws {
         try? await Task.sleep(for: .seconds(0.4))
+        let email = MockVerificationCodeRepository.email(fromToken: verificationToken)
         LocalStore.shared.register(email: email, password: password, name: name, schoolName: Self.schoolName)
     }
 }

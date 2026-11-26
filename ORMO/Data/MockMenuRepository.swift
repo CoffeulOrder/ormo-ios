@@ -41,7 +41,7 @@ struct MockMenuRepository: MenuRepository {
         }
     }
 
-    func fetchItemDetail(itemId: String) async throws -> MenuItemDetail {
+    func fetchItemDetail(storeId: String, itemId: String) async throws -> MenuItemDetail {
         try? await Task.sleep(for: .seconds(0.3))
 
         let allItems = recentOrders + categories.flatMap(\.items)

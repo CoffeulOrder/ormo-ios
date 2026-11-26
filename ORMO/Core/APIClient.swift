@@ -19,20 +19,24 @@ final class APIClient {
     @discardableResult
     func send<T: Decodable>(_ endpoint: Endpoint, decodingDataAs type: T.Type) async throws -> T {
         let data = try await performWithRefresh(endpoint)
-        let envelope = try decodeEnvelope(APIEnvelope<T>.self, from: data)
+        let envelope = try decodeEnvelope(APIEnvelope<T>.self, from: data, endpoint: endpoint)
         guard envelope.code == "SUCCESS", let payload = envelope.data else {
+            log(endpoint, "\(envelope.status) \(envelope.code) — \(envelope.message)")
             throw APIError.server(code: envelope.code, message: envelope.message, status: envelope.status)
         }
+        log(endpoint, "\(envelope.status) SUCCESS")
         return payload
     }
 
     // data 필드가 없는 응답(로그아웃 등)용.
     func send(_ endpoint: Endpoint) async throws {
         let data = try await performWithRefresh(endpoint)
-        let envelope = try decodeEnvelope(APIEnvelope<EmptyAPIData>.self, from: data)
+        let envelope = try decodeEnvelope(APIEnvelope<EmptyAPIData>.self, from: data, endpoint: endpoint)
         guard envelope.code == "SUCCESS" else {
+            log(endpoint, "\(envelope.status) \(envelope.code) — \(envelope.message)")
             throw APIError.server(code: envelope.code, message: envelope.message, status: envelope.status)
         }
+        log(endpoint, "\(envelope.status) SUCCESS")
     }
 
     private func performWithRefresh(_ endpoint: Endpoint) async throws -> Data {
@@ -42,6 +46,7 @@ final class APIClient {
         guard http.statusCode == 401, endpoint.requiresAuth else { return data }
 
         guard await refreshAccessToken() else {
+            log(endpoint, "401 → 토큰 갱신도 실패, 세션 만료 처리")
             tokenStore.clear()
             throw APIError.sessionExpired
         }
@@ -75,6 +80,7 @@ final class APIClient {
         do {
             return try await session.data(for: request)
         } catch {
+            log(endpoint, "transport 실패 — \(error.localizedDescription)")
             throw APIError.transport(error)
         }
     }
@@ -96,20 +102,31 @@ final class APIClient {
 
         do {
             let (data, _) = try await perform(endpoint)
-            let envelope = try decodeEnvelope(APIEnvelope<RefreshResponseData>.self, from: data)
-            guard envelope.code == "SUCCESS", let payload = envelope.data else { return false }
+            let envelope = try decodeEnvelope(APIEnvelope<RefreshResponseData>.self, from: data, endpoint: endpoint)
+            guard envelope.code == "SUCCESS", let payload = envelope.data else {
+                log(endpoint, "\(envelope.status) \(envelope.code) — \(envelope.message)")
+                return false
+            }
             tokenStore.save(accessToken: payload.accessToken, refreshToken: payload.refreshToken)
+            log(endpoint, "\(envelope.status) SUCCESS")
             return true
         } catch {
+            log(endpoint, "토큰 갱신 실패 — \(error)")
             return false
         }
     }
 
-    private func decodeEnvelope<T: Decodable>(_ type: T.Type, from data: Data) throws -> T {
+    private func decodeEnvelope<T: Decodable>(_ type: T.Type, from data: Data, endpoint: Endpoint) throws -> T {
         do {
             return try JSONDecoder().decode(type, from: data)
         } catch {
+            log(endpoint, "응답 디코딩 실패 — \(error)")
             throw APIError.decoding(error)
         }
+    }
+
+    // 요청 바디는 비밀번호·인증코드가 섞여 있어 남기지 않는다. 메서드·경로·결과만 찍는다.
+    private func log(_ endpoint: Endpoint, _ message: String) {
+        print("[API] \(endpoint.method.rawValue) \(endpoint.path) → \(message)")
     }
 }

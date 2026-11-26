@@ -33,7 +33,10 @@ struct MyInfoView: View {
                 secondaryAction: { viewModel.isLogoutDialogVisible = false },
                 primaryAction: {
                     viewModel.isLogoutDialogVisible = false
-                    onLogout(nil)
+                    Task {
+                        await viewModel.logout()
+                        onLogout(nil)
+                    }
                 }
             )
         }
@@ -129,7 +132,7 @@ struct MyInfoView: View {
     }
 
     private func changePasswordTapped() {
-        router.path.append(HomeRoute.changePassword(email: viewModel.profile?.email ?? ""))
+        router.path.append(HomeRoute.changePassword)
     }
 
     private func notificationSettingsTapped() {

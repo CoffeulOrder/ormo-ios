@@ -47,7 +47,9 @@ final class HomeMenuViewModel {
 
     var hasNoMenu: Bool { recentOrders.isEmpty && categories.isEmpty }
 
-    private var currentStoreId = "beomseokgwan"
+    // 서버 storeId를 아직 모르는 초기 상태. loadIfNeeded()가 실제 매장 목록에서 첫 매장을
+    // 받아와 채운다(예전 Mock 전용 고정 슬러그를 쓰면 실서버가 숫자 id만 받아 500으로 거절한다).
+    private(set) var currentStoreId = ""
     private var hasStartedInitialLoad = false
     private let menuRepository: MenuRepository
     private let liveOrderRepository: LiveOrderRepository
@@ -85,11 +87,38 @@ final class HomeMenuViewModel {
     func loadIfNeeded() async {
         guard !hasStartedInitialLoad else { return }
         hasStartedInitialLoad = true
-        await load(storeId: currentStoreId)
+        await loadDefaultStoreThenMenu()
     }
 
     func retryLoadTapped() {
-        Task { await load(storeId: currentStoreId) }
+        Task {
+            if currentStoreId.isEmpty {
+                await loadDefaultStoreThenMenu()
+            } else {
+                await load(storeId: currentStoreId)
+            }
+        }
+    }
+
+    // 아직 매장을 고른 적 없는 첫 진입: 학교 매장 목록에서 첫 번째 매장을 기본값으로 연다.
+    private func loadDefaultStoreThenMenu() async {
+        loadState = .loading
+        do {
+            guard let defaultStore = try await cafeRepository.fetchStores().first else {
+                loadState = .serviceUnavailable
+                return
+            }
+            currentStoreId = defaultStore.id
+            currentStore = defaultStore
+            storeName = defaultStore.name
+            await load(storeId: defaultStore.id)
+        } catch MenuLoadError.network {
+            loadState = .networkError
+        } catch MenuLoadError.sessionExpired {
+            loadState = .sessionExpired
+        } catch {
+            loadState = .serviceUnavailable
+        }
     }
 
     func applySelectedStore(_ store: Store) async {

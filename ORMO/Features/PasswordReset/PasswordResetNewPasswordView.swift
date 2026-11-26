@@ -8,8 +8,8 @@ struct PasswordResetNewPasswordView: View {
     @State private var isBottomCTAVisible = false
     @FocusState private var isFieldFocused: Bool
 
-    init(email: String) {
-        _viewModel = State(initialValue: PasswordResetNewPasswordViewModel(email: email))
+    init(verificationToken: String) {
+        _viewModel = State(initialValue: PasswordResetNewPasswordViewModel(verificationToken: verificationToken))
     }
 
     var body: some View {
@@ -116,18 +116,14 @@ struct PasswordResetNewPasswordView: View {
                 .overlay(
                     RoundedRectangle(cornerRadius: Radius.lg)
                         .stroke(
-                            fieldBorderColor(isActive: isActive, isInvalid: isActive && viewModel.isSameAsCurrentPassword),
-                            lineWidth: fieldBorderWidth(isActive: isActive, isInvalid: isActive && viewModel.isSameAsCurrentPassword)
+                            fieldBorderColor(isActive: isActive, isInvalid: false),
+                            lineWidth: fieldBorderWidth(isActive: isActive, isInvalid: false)
                         )
                 )
 
-            if isActive && viewModel.isSameAsCurrentPassword {
-                errorFooter("기존 비밀번호와 다른 비밀번호를 입력해 주세요")
-            } else {
-                HStack(spacing: Spacing.spacing12) {
-                    passwordRuleRow(title: "8자 이상", isSatisfied: viewModel.hasMinLength)
-                    passwordRuleRow(title: "영문과 숫자 포함", isSatisfied: viewModel.hasLetterAndDigit)
-                }
+            HStack(spacing: Spacing.spacing12) {
+                passwordRuleRow(title: "8자 이상", isSatisfied: viewModel.hasMinLength)
+                passwordRuleRow(title: "영문과 숫자 포함", isSatisfied: viewModel.hasLetterAndDigit)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -284,7 +280,7 @@ struct PasswordResetNewPasswordView: View {
     private func confirmTapped() {
         switch viewModel.step {
         case .password:
-            Task { await viewModel.confirmPasswordTapped() }
+            viewModel.confirmPasswordTapped()
         case .passwordConfirmation:
             Task { await viewModel.submitTapped() }
         }
@@ -292,6 +288,6 @@ struct PasswordResetNewPasswordView: View {
 }
 
 #Preview {
-    PasswordResetNewPasswordView(email: "ormo@eulji.ac.kr")
+    PasswordResetNewPasswordView(verificationToken: "preview-token")
         .environment(SignUpRouter())
 }

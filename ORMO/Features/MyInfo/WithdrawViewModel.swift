@@ -9,18 +9,25 @@ final class WithdrawViewModel {
 
     var isFormValid: Bool { !password.isEmpty && !isSubmitting }
 
+    private let repository: UserProfileRepository
+
+    init(repository: UserProfileRepository = AppContainer.shared.userProfileRepository) {
+        self.repository = repository
+    }
+
     func withdrawTapped() async -> Bool {
         guard isFormValid else { return false }
         isSubmitting = true
         defer { isSubmitting = false }
-        try? await Task.sleep(for: .seconds(0.3))
 
-        guard let account = LocalStore.shared.currentAccount, account.password == password else {
+        do {
+            try await repository.withdraw(password: password)
+            return true
+        } catch let failure as WithdrawFailure where failure.isPasswordInvalid {
             isPasswordInvalid = true
             return false
+        } catch {
+            return false
         }
-
-        LocalStore.shared.deleteAccount(email: account.email)
-        return true
     }
 }

@@ -32,7 +32,7 @@ struct StoreMenu {
 
 protocol MenuRepository {
     func fetchStoreMenu(storeId: String) async throws -> StoreMenu
-    func fetchItemDetail(itemId: String) async throws -> MenuItemDetail
+    func fetchItemDetail(storeId: String, itemId: String) async throws -> MenuItemDetail
 }
 
 // 메뉴를 불러오다 생길 수 있는 예외 상황. 서버가 실제로 구분해 내려주기 전까지는
