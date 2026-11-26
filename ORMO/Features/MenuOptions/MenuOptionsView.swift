@@ -3,7 +3,6 @@ import SwiftUI
 struct MenuOptionsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(HomeRouter.self) private var router
-    @Environment(\.colorScheme) private var colorScheme
     @State private var viewModel: MenuOptionsViewModel
 
     let searchableMenuItems: [MenuItem]
@@ -163,9 +162,7 @@ struct MenuOptionsView: View {
         .frame(height: 40)
         .overlay(
             RoundedRectangle(cornerRadius: Radius.md)
-                // 다크모드에서는 BorderDefault가 배경과 거의 같은 색이라 경계가 안 보여서 흰색으로 바꾼다.
-                // 라이트모드는 원래 테두리(BorderDefault) 그대로 유지한다.
-                .strokeBorder(colorScheme == .dark ? .white : Colors.borderDefault, lineWidth: 1)
+                .strokeBorder(Colors.borderDefault, lineWidth: 1)
         )
         .clipShape(RoundedRectangle(cornerRadius: Radius.md))
     }
