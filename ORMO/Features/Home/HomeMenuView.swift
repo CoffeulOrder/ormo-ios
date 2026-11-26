@@ -67,8 +67,11 @@ struct HomeMenuView: View {
     // 1226:51988/49033/49284) — 컴포넌트 설명의 134는 바(Bar) 자체 높이고 마스터 컴포넌트 수치다.
     // 스크롤로 완전히 접히는 데 필요한 거리도 이 값과 같다("현황 구역 아랫선이 헤더 아랫선에
     // 닿는 순간" = 정확히 이만큼 스크롤했을 때).
+    // 2건 이상(페이지 점)은 점 아래 여백을 14로 키우면서 134+8+8+14=164로 다시 맞췄다 — 이
+    // 값을 그대로 안 늘리면 바깥 VStack의 고정 높이+clipped() 때문에 여백이 그대로 잘려 보이지
+    // 않는다.
     private static let liveSectionHeightSingle: CGFloat = 142
-    private static let liveSectionHeightMulti: CGFloat = 158
+    private static let liveSectionHeightMulti: CGFloat = 164
     // Live Order Bar 한 장의 높이(Figma 컴포넌트 설명 "높이 134"). 캐러셀 페이지 너비·패널
     // 한 줄 높이로 재사용한다.
     private static let liveOrderBarHeight: CGFloat = 134
@@ -439,6 +442,8 @@ struct HomeMenuView: View {
             }
         }
         .animation(anim(.easeOut(duration: 0.15)), value: liveCarouselIndex)
+        // Figma 원본값 14 — 간격 스케일(8/16)에는 안 맞는 한 번뿐인 값이라 리터럴로 둔다.
+        .padding(.bottom, 14)
     }
 
     private var showsLiveHeader: Bool {
@@ -872,15 +877,15 @@ struct HomeMenuView: View {
     }
 
     // "화면 60%까지, 넘치면 패널 안에서 스크롤" — 이 앱은 iPhone 전용·세로 고정이라
-    // UIScreen.main.bounds 하나로 충분하다. Figma 실측: 줄 합계 + 맨 아래 여백 8(패널 자체
-    // 아래쪽 padding, 반올림 모서리 전).
+    // UIScreen.main.bounds 하나로 충분하다. 맨 아래 여백(가장 하단 주문 카드의 글자 ~ 패널
+    // 아래쪽 모서리) 20 — 패널 자체 높이 계산에도 똑같이 더해야 잘리지 않는다.
     private var livePanelHeight: CGFloat {
-        let naturalHeight = CGFloat(viewModel.liveOrders.count) * Self.liveOrderBarHeight + Spacing.spacing8
+        let naturalHeight = CGFloat(viewModel.liveOrders.count) * Self.liveOrderBarHeight + Spacing.spacing20
         return min(naturalHeight, UIScreen.main.bounds.height * Self.livePanelMaxHeightRatio)
     }
 
     private var livePanelContent: some View {
-        let naturalHeight = CGFloat(viewModel.liveOrders.count) * Self.liveOrderBarHeight + Spacing.spacing8
+        let naturalHeight = CGFloat(viewModel.liveOrders.count) * Self.liveOrderBarHeight + Spacing.spacing20
         let cappedHeight = livePanelHeight
 
         return ScrollView {
@@ -892,7 +897,7 @@ struct HomeMenuView: View {
                     })
                 }
             }
-            .padding(.bottom, Spacing.spacing8)
+            .padding(.bottom, Spacing.spacing20)
         }
         .scrollDisabled(naturalHeight <= cappedHeight)
         .background(panelGradient)
