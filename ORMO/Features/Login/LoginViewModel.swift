@@ -40,8 +40,8 @@ final class LoginViewModel {
     private var snackbarTask: Task<Void, Never>?
 
     init(
-        authRepository: AuthRepository = MockAuthRepository(),
-        schoolEmailDomainRepository: SchoolEmailDomainRepository = MockSchoolEmailDomainRepository()
+        authRepository: AuthRepository = AppContainer.shared.authRepository,
+        schoolEmailDomainRepository: SchoolEmailDomainRepository = AppContainer.shared.schoolEmailDomainRepository
     ) {
         self.authRepository = authRepository
         self.schoolEmailDomainRepository = schoolEmailDomainRepository

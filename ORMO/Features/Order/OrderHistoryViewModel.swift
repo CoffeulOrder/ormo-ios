@@ -10,8 +10,8 @@ final class OrderHistoryViewModel {
     private let menuRepository: MenuRepository
 
     init(
-        orderHistoryRepository: OrderHistoryRepository = MockOrderHistoryRepository(),
-        menuRepository: MenuRepository = MockMenuRepository()
+        orderHistoryRepository: OrderHistoryRepository = AppContainer.shared.orderHistoryRepository,
+        menuRepository: MenuRepository = AppContainer.shared.menuRepository
     ) {
         self.orderHistoryRepository = orderHistoryRepository
         self.menuRepository = menuRepository

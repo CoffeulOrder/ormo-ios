@@ -18,7 +18,7 @@ struct MenuOptionsView: View {
         item: MenuItem,
         cart: CartStore,
         searchableMenuItems: [MenuItem] = [],
-        menuRepository: MenuRepository = MockMenuRepository(),
+        menuRepository: MenuRepository = AppContainer.shared.menuRepository,
         onAddedToCart: @escaping () -> Void,
         onOrderNow: @escaping () -> Void
     ) {

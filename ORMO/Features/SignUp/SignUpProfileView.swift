@@ -4,7 +4,7 @@ struct SignUpProfileView: View {
     @Environment(SignUpRouter.self) private var router
     @State private var viewModel = SignUpProfileViewModel()
     @State private var termsViewModel = TermsAgreementViewModel()
-    private let signUpRepository: SignUpRepository = MockSignUpRepository()
+    private let signUpRepository: SignUpRepository = AppContainer.shared.signUpRepository
     @State private var isTermsSheetVisible = false
     @State private var isTitleVisible = false
     @State private var isBottomCTAVisible = false

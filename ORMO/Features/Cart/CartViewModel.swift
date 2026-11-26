@@ -22,7 +22,7 @@ final class CartViewModel {
 
     private let cafeRepository: CafeRepository
 
-    init(cart: CartStore, store: Store?, cafeRepository: CafeRepository = MockCafeRepository()) {
+    init(cart: CartStore, store: Store?, cafeRepository: CafeRepository = AppContainer.shared.cafeRepository) {
         self.cart = cart
         self.store = store
         self.cafeRepository = cafeRepository

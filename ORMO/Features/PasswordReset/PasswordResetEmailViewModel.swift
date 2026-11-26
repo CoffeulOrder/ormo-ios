@@ -12,7 +12,7 @@ final class PasswordResetEmailViewModel {
 
     private let schoolEmailDomainRepository: SchoolEmailDomainRepository
 
-    init(schoolEmailDomainRepository: SchoolEmailDomainRepository = MockSchoolEmailDomainRepository()) {
+    init(schoolEmailDomainRepository: SchoolEmailDomainRepository = AppContainer.shared.schoolEmailDomainRepository) {
         self.schoolEmailDomainRepository = schoolEmailDomainRepository
     }
 

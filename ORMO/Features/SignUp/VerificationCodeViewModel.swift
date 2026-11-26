@@ -40,7 +40,7 @@ final class VerificationCodeViewModel {
     private var countdownTask: Task<Void, Never>?
     private var resendCooldownTask: Task<Void, Never>?
 
-    init(repository: VerificationCodeRepository = MockVerificationCodeRepository()) {
+    init(repository: VerificationCodeRepository = AppContainer.shared.verificationCodeRepository) {
         self.repository = repository
         startCountdown()
         startResendCooldown()
