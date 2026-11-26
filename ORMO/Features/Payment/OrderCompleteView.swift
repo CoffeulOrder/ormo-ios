@@ -208,13 +208,34 @@ struct OrderCompleteView: View {
         }
     }
 
-    // 지금은 재주문(첫 주문 아님) 판별 로직이 없어, 항상 첫 주문으로 가정하고 4.5.1 알림 권한
-    // 시트를 먼저 보여준다.
+    // Figma 4.5.1 알림 권한 시트 — 최초 1회만, 그리고 알림 권한이 이미 켜져 있지 않을 때만
+    // 보여준다. 이미 떴던 적이 있거나(hasShownNotificationPromptBefore) 권한이 이미
+    // authorized·provisional·ephemeral이면 바로 주문 상세로 넘어간다. "이미 켜져 있는지"는
+    // 앱이 따로 저장한 값이 아니라 OS 실제 권한(UNUserNotificationCenter)을 그 자리에서 확인한다.
     private func orderStatusTapped() {
-        showNotificationSheet = true
+        guard !Self.hasShownNotificationPromptBefore else {
+            router.path.append(HomeRoute.orderDetail(pickupNumber: pickupNumber, storeName: storeName))
+            return
+        }
+        Task {
+            let settings = await UNUserNotificationCenter.current().notificationSettings()
+            let isAlreadyOn: Bool
+            switch settings.authorizationStatus {
+            case .authorized, .provisional, .ephemeral: isAlreadyOn = true
+            case .notDetermined, .denied: isAlreadyOn = false
+            @unknown default: isAlreadyOn = false
+            }
+            guard !isAlreadyOn else {
+                Self.markNotificationPromptShown()
+                router.path.append(HomeRoute.orderDetail(pickupNumber: pickupNumber, storeName: storeName))
+                return
+            }
+            showNotificationSheet = true
+        }
     }
 
     private func notificationSheetSkipTapped() {
+        Self.markNotificationPromptShown()
         showNotificationSheet = false
         router.path.append(HomeRoute.orderDetail(pickupNumber: pickupNumber, storeName: storeName))
     }
@@ -223,9 +244,20 @@ struct OrderCompleteView: View {
     private func notificationSheetAllowTapped() {
         Task {
             _ = try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge])
+            Self.markNotificationPromptShown()
             showNotificationSheet = false
             router.path.append(HomeRoute.orderDetail(pickupNumber: pickupNumber, storeName: storeName))
         }
+    }
+
+    private static let hasShownNotificationPromptKey = "orderComplete.hasShownNotificationPrompt"
+
+    private static var hasShownNotificationPromptBefore: Bool {
+        UserDefaults.standard.bool(forKey: hasShownNotificationPromptKey)
+    }
+
+    private static func markNotificationPromptShown() {
+        UserDefaults.standard.set(true, forKey: hasShownNotificationPromptKey)
     }
 
     private func addMoreOrderTapped() {
