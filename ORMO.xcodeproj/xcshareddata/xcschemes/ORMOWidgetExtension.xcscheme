@@ -18,6 +18,7 @@
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "34F9179130B534FD002A3FC4"
                BuildableName = "ORMOWidgetExtension.appex"
+               BlueprintName = "ORMOWidgetExtension"
                ReferencedContainer = "container:ORMO.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -63,6 +64,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "34F9179130B534FD002A3FC4"
             BuildableName = "ORMOWidgetExtension.appex"
+            BlueprintName = "ORMOWidgetExtension"
             ReferencedContainer = "container:ORMO.xcodeproj">
          </BuildableReference>
       </RemoteRunnable>
