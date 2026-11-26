@@ -26,14 +26,6 @@ private struct TabsContentFrameKey: PreferenceKey {
     }
 }
 
-// 탭 바(뷰포트) 자체의 너비. 스크롤 콘텐츠 프레임과 비교해 오른쪽 끝에 닿았는지 판단한다.
-private struct TabsViewportWidthKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = nextValue()
-    }
-}
-
 // 각 섹션 전체의 높이(첫 카드만이 아니라). 마지막 섹션이 리스트 뷰포트보다 짧을 때
 // 하단 여백을 얼마나 둬야 "탭 바로 아래"까지 스크롤할 수 있는지 계산하는 데 쓴다.
 private struct SectionHeightKey: PreferenceKey {
@@ -52,8 +44,7 @@ private struct NoticeHeightKey: PreferenceKey {
     }
 }
 
-// 메뉴 리스트 위에 떠 있는 하단 바(장바구니 바·실시간 주문 바)의 높이. 0이면 아무것도
-// 떠 있지 않다는 뜻이다.
+// 메뉴 리스트 위에 떠 있는 하단 바(장바구니 바)의 높이. 0이면 아무것도 떠 있지 않다는 뜻이다.
 private struct BottomOverlayBarHeightKey: PreferenceKey {
     static var defaultValue: CGFloat = 0
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
@@ -71,13 +62,22 @@ struct HomeMenuView: View {
     // 이 거리(화면 높이의 배수)를 넘는 스크롤은 먼저 애니메이션 없이 목표 근처까지 점프한 뒤,
     // 마지막 구간만 애니메이션해서 과도하게 긴 스크롤이 "순간이동"처럼 보이지 않게 한다.
     private static let longScrollJumpThresholdInViewports: CGFloat = 2
+    // Live Section(상단 실시간 현황) 펼쳐진 높이. Figma "Live Section" 프레임 실측값(142) —
+    // 컴포넌트 설명의 134는 마스터 컴포넌트 수치이고, 실제 화면(1226:47214/47588/47776)은
+    // 전부 142로 배치돼 있다. 스크롤로 완전히 접히는 데 필요한 거리도 이 값과 같다
+    // ("현황 구역 아랫선이 헤더 아랫선에 닿는 순간" = 정확히 이만큼 스크롤했을 때).
+    private static let liveSectionHeight: CGFloat = 142
+    // 헤더의 매장 이름 ↔ Live Order Header 전환 커브. Figma development 주석 그대로
+    // (cubic-bezier(0.2, 0.9, 0.25, 1), 0.45초). 동작 줄이기 켜짐이면 0.2초 페이드로 대체한다.
+    private static let liveHeaderSwapAnimation = Animation.timingCurve(0.2, 0.9, 0.25, 1, duration: 0.45)
+    private static let liveHeaderSwapSlideDistance: CGFloat = 36
 
     @State private var viewModel: HomeMenuViewModel
     @State private var sectionTopOffsets: [HomeMenuViewModel.Section: CGFloat] = [:]
     @State private var sectionHeights: [HomeMenuViewModel.Section: CGFloat] = [:]
     @State private var tabFrames: [HomeMenuViewModel.Section: CGRect] = [:]
-    @State private var tabsContentFrame: CGRect = .zero
-    @State private var tabsViewportWidth: CGFloat = 0
+    @State private var tabsContentGlobalFrame: CGRect = .zero
+    @State private var tabsViewportGlobalFrame: CGRect = .zero
     @State private var listViewportHeight: CGFloat = 0
     @State private var bottomOverlayBarHeight: CGFloat = 0
     @State private var noticeHeight: CGFloat = 0
@@ -85,6 +85,8 @@ struct HomeMenuView: View {
     // 프로그램 스크롤 보호(isProgrammaticScrollInProgress)가 풀린 시각 + settleWindow.
     // 이 시각 이전이면 아직 관성이 남아있을 수 있는 구간으로 보고 디바운스를 적용한다.
     @State private var programmaticScrollSettleGuardUntil: Date?
+    // 0(완전히 펼침) ~ 1(완전히 접힘). Live Section 높이·투명도와 헤더 전환을 이 값 하나로 구동한다.
+    @State private var liveSectionCollapseProgress: CGFloat = 0
     @State private var router = HomeRouter()
     @State private var cart = CartStore()
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -214,7 +216,23 @@ struct HomeMenuView: View {
     private var content: some View {
         ZStack(alignment: .bottom) {
             VStack(spacing: 0) {
-                topBar
+                VStack(spacing: 0) {
+                    topBar
+                    liveSection
+                }
+                // LinearGradient는 크기 제약이 없으면 부모가 제안하는 공간을 끝없이 채우려 든다.
+                // 이걸 ZStack의 형제로 두면(이전 버전), 위쪽 VStack(바깥쪽)이 받는 maxHeight: .infinity가
+                // 그라데이션까지 전달되어 그라데이션이 화면 전체 높이를 요구하고, 그 바람에 이 블록 전체가
+                // 실제 내용(topBar+liveSection)보다 훨씬 커져서 메뉴 리스트가 아래로 크게 밀려났다.
+                // .background로 붙이면 그라데이션이 이 VStack의 실측 크기에 맞춰져 이 문제가 없다.
+                .background(alignment: .top) {
+                    // Figma: 상태바부터 흰색 → 하늘색(Base/Blue/Blue 50) 한 장 그라데이션.
+                    // 실시간 주문이 없으면(매장 이름 줄만 있으면) 밋밋해 보이지 않도록 이 배경도 끈다.
+                    if viewModel.liveOrder != nil {
+                        LinearGradient(colors: [Colors.backgroundDefault, Colors.baseBlue50], startPoint: .top, endPoint: .bottom)
+                    }
+                }
+
                 if viewModel.hasNoMenu {
                     emptyMenuResultView
                 } else {
@@ -224,11 +242,7 @@ struct HomeMenuView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
 
             Group {
-                if let liveOrder = viewModel.liveOrder {
-                    LiveOrderBarView(order: liveOrder, action: liveOrderTapped)
-                        .padding(.horizontal, Spacing.spacing16)
-                        .padding(.bottom, Spacing.spacing8)
-                } else if !cart.isEmpty {
+                if !cart.isEmpty {
                     cartBar
                 } else {
                     Color.clear.frame(height: 0)
@@ -327,6 +341,41 @@ struct HomeMenuView: View {
         router.path.append(HomeRoute.orderDetail(pickupNumber: liveOrder.pickupNumber, storeName: liveOrder.storeName))
     }
 
+    // 펼쳐진 상태(맨 위)에서는 메뉴 홈 헤더 바로 아래 자리 잡은 실시간 현황이다. 스크롤해서
+    // 접히면 높이·투명도가 0으로 줄며 사라지고, 그 대신 헤더의 매장 이름 자리에
+    // LiveOrderHeaderView가 올라온다(showsLiveHeader).
+    @ViewBuilder
+    private var liveSection: some View {
+        if let liveOrder = viewModel.liveOrder {
+            LiveOrderBarView(order: liveOrder, action: liveOrderTapped)
+                .frame(height: Self.liveSectionHeight * (1 - liveSectionCollapseProgress), alignment: .top)
+                // 높이가 줄어드는 동안 글자·일러스트가 짓눌려 보이지 않도록 투명도를 더 빠르게 뺀다.
+                .opacity(1 - min(liveSectionCollapseProgress * 1.6, 1))
+                .clipped()
+                .allowsHitTesting(liveSectionCollapseProgress < 1)
+        }
+    }
+
+    private var showsLiveHeader: Bool {
+        viewModel.liveOrder != nil && liveSectionCollapseProgress >= 1
+    }
+
+    // 스크롤 콘텐츠 맨 위 마커의 Y좌표(0 = 맨 위, 음수 = 스크롤한 만큼)로 Live Section이
+    // 얼마나 접혔는지를 계산한다.
+    // 별도 마커 대신, 이미 양방향으로(올리고 내리고 전부) 검증된 SectionTopOffsetKey 값을 그대로
+    // 쓴다 — 첫 섹션은 스크롤 콘텐츠 맨 위에 간격 없이 바로 붙어 있어서, 그 상단 좌표가 곧
+    // "맨 위에서 얼마나 스크롤했는지"와 같다. 전용 마커 뷰를 따로 뒀던 이전 버전은 스크롤을
+    // 올렸다 내렸다 해도 갱신되지 않는 문제가 있었다.
+    private func updateLiveSectionProgress(_ offsets: [HomeMenuViewModel.Section: CGFloat]) {
+        guard viewModel.liveOrder != nil,
+              let firstSection = viewModel.sections.first,
+              let topOffset = offsets[firstSection] else {
+            liveSectionCollapseProgress = 0
+            return
+        }
+        liveSectionCollapseProgress = min(max(-topOffset / Self.liveSectionHeight, 0), 1)
+    }
+
     private var emptyMenuResultView: some View {
         ResultView(
             icon: .coffeeIcon,
@@ -346,6 +395,59 @@ struct HomeMenuView: View {
             if let notice = viewModel.unavailableNotice {
                 unavailableNoticeBanner(notice)
             }
+            menuScrollArea
+        }
+        // Figma: 실시간 주문이 떠 있을 때만 "최근 주문" 구역 전체(탭 포함)가 위 하늘색 그라데이션
+        // 위에 얹힌 흰 시트처럼 위쪽 두 모서리가 둥글다(Section · 최근 주문, radius-2xl = 24).
+        // 주문이 없을 때는 각지게 그대로 둔다.
+        //
+        // clipShape(+compositingGroup)로 이 블록 전체를 둥글게 깎는 방식은 두 가지 문제가 있었다:
+        // 1) tabsBar 안 가로 스크롤(UIKit 레이어)이 clipShape를 무시해서 compositingGroup이
+        //    필요했는데, 2) compositingGroup을 걸면 tabsBar가 자기 안의 가로 스크롤 위치를 재는
+        //    GeometryReader 값(TabsContentFrameKey 등)을 더는 제대로 못 읽어서, 끝에 닿았는지
+        //    보여주는 좌우 Fog가 항상 안 보이게 돼버렸다.
+        // 그 다음 시도(흰 원 + 하늘색 배경 patch)는 tabsBar 위에 "불투명한 흰 원"을 overlay로
+        // 덮어서, 탭 글자가 그 24×24 모서리 칸 안에 걸리면 그 위를 그대로 덮어 가려버렸다
+        // (overlay는 clipShape와 달리 "지우는" 게 아니라 "그 위에 덧칠"하는 것이라 당연한 결과였다).
+        // 지금은 실제로 깎여 나가야 하는 작은 쐐기 모양(사각형 - 원)만 Path로 직접 그려서 그
+        // 부분에만 하늘색을 칠한다 — 쐐기는 진짜 모서리 꼭짓점 쪽으로 좁아지는 작은 조각이라
+        // 안쪽의 탭 글자(패딩 16pt 뒤에서 시작)를 덮을 일이 없다. tabsBar 자체는 여전히 전혀
+        // 건드리지 않는다.
+        .overlay(alignment: .topLeading) { roundedCornerPatch(mirrored: false) }
+        .overlay(alignment: .topTrailing) { roundedCornerPatch(mirrored: true) }
+    }
+
+    // 사각형(모서리 patch 전체)에서 안쪽 둥근 원을 뺀 나머지 — 즉 실제로 "깎여 나가는" 쐐기
+    // 모양만 그린다. mirrored == false면 top-leading(왼쪽 위), true면 top-trailing(오른쪽 위).
+    private struct RoundedCornerWedge: Shape {
+        let mirrored: Bool
+
+        func path(in rect: CGRect) -> Path {
+            let square = Path(rect)
+            let circleOriginX = mirrored ? rect.minX - rect.width : rect.maxX - rect.width
+            let circle = Path(
+                ellipseIn: CGRect(
+                    x: circleOriginX,
+                    y: rect.maxY - rect.height,
+                    width: rect.width * 2,
+                    height: rect.height * 2
+                )
+            )
+            return square.subtracting(circle)
+        }
+    }
+
+    @ViewBuilder
+    private func roundedCornerPatch(mirrored: Bool) -> some View {
+        if viewModel.liveOrder != nil {
+            RoundedCornerWedge(mirrored: mirrored)
+                .fill(Colors.baseBlue50)
+                .frame(width: Radius.xxl, height: Radius.xxl)
+                .allowsHitTesting(false)
+        }
+    }
+
+    private var menuScrollArea: some View {
             // .background(GeometryReader{...})를 ScrollView에 붙이는 방식은 이 화면에서
             // 뷰포트 크기를 0으로 보고하는 경우가 있었다(레이아웃 해석 순서 문제로 추정).
             // GeometryReader를 ScrollView의 직계 부모로 직접 감싸면 제안받은 크기를
@@ -403,6 +505,7 @@ struct HomeMenuView: View {
                         .onPreferenceChange(SectionTopOffsetKey.self) { offsets in
                             sectionTopOffsets = offsets
                             updateCurrentSectionFromScroll()
+                            updateLiveSectionProgress(offsets)
                         }
                         .onPreferenceChange(SectionHeightKey.self) { sectionHeights = $0 }
                         .onPreferenceChange(NoticeHeightKey.self) { noticeHeight = $0 }
@@ -434,7 +537,6 @@ struct HomeMenuView: View {
                 .onAppear { listViewportHeight = listGeometry.size.height }
                 .onChange(of: listGeometry.size.height) { _, newValue in listViewportHeight = newValue }
             }
-        }
     }
 
     // 마지막 섹션이 리스트 뷰포트보다 짧을 때만, 그 차이만큼 하단 여백을 둔다.
@@ -525,20 +627,7 @@ struct HomeMenuView: View {
 
     private var topBar: some View {
         HStack {
-            Button(action: storeSelectionTapped) {
-                HStack(spacing: Spacing.spacing8) {
-                    Text(viewModel.storeName)
-                        .typography(Typography.bodyXlSemibold)
-                        .foregroundStyle(Colors.textPrimary)
-                        .lineLimit(1)
-
-                    Image(.chevronDown)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 24, height: 24)
-                }
-            }
-            .buttonStyle(.plain)
+            storeNameAndLiveHeaderSwap
 
             Spacer()
 
@@ -564,94 +653,151 @@ struct HomeMenuView: View {
         }
         .padding(.horizontal, Spacing.spacing20)
         .padding(.vertical, Spacing.spacing8)
-        .background(Colors.backgroundDefault)
+        // 실시간 주문이 있으면(liveOrder != nil) 상태바부터 이어지는 하늘색 그라데이션이
+        // topBar 뒤까지 깔려야 해서, 여기서는 배경을 따로 칠하지 않는다(그라데이션은
+        // content의 ZStack(alignment: .top)에서 한 장으로 그린다).
+    }
+
+    // 매장 이름 줄 ↔ Live Order Header. Figma 주석: "현황 구역 아랫선이 헤더 아랫선(106)에
+    // 닿는 순간 매장 이름 올라가고 Live Order Header 올라온다. 0.45s, cubic(0.2, 0.9, 0.25, 1).
+    // 다시 올리면 반대로." 둘을 같은 자리에 겹쳐 두고 오프셋+투명도로 바꿔치기해서, 전환
+    // 중에도 옆의 검색·내 정보 아이콘 위치가 흔들리지 않게 한다.
+    private var storeNameAndLiveHeaderSwap: some View {
+        ZStack(alignment: .leading) {
+            storeNameButton
+                .offset(y: slideOffset(isLiveHeader: false))
+                .opacity(showsLiveHeader ? 0 : 1)
+
+            if let liveOrder = viewModel.liveOrder {
+                LiveOrderHeaderView(order: liveOrder, action: liveOrderTapped)
+                    .offset(y: slideOffset(isLiveHeader: true))
+                    .opacity(showsLiveHeader ? 1 : 0)
+            }
+        }
+        .animation(headerSwapAnimation, value: showsLiveHeader)
+    }
+
+    private var storeNameButton: some View {
+        Button(action: storeSelectionTapped) {
+            HStack(spacing: Spacing.spacing8) {
+                Text(viewModel.storeName)
+                    .typography(Typography.bodyXlSemibold)
+                    .foregroundStyle(Colors.textPrimary)
+                    .lineLimit(1)
+
+                Image(.chevronDown)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 24, height: 24)
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    // 동작 줄이기가 켜져 있으면 슬라이드 대신 0.2초 페이드만 쓴다(Figma 주석: "움직임 줄이기 = 페이드 0.2s").
+    private var headerSwapAnimation: Animation {
+        reduceMotion ? .easeInOut(duration: 0.2) : Self.liveHeaderSwapAnimation
+    }
+
+    private func slideOffset(isLiveHeader: Bool) -> CGFloat {
+        guard !reduceMotion else { return 0 }
+        let isVisible = isLiveHeader == showsLiveHeader
+        return isVisible ? 0 : (isLiveHeader ? Self.liveHeaderSwapSlideDistance : -Self.liveHeaderSwapSlideDistance)
     }
 
     private var tabsBar: some View {
-        ZStack {
-            ScrollViewReader { proxy in
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 0) {
-                        ForEach(viewModel.sections, id: \.self) { section in
-                            tabButton(section)
-                                .id(section)
+        // .background(GeometryReader{...})를 가로 ScrollView에 붙이는 방식은(TabsViewportWidthKey가
+        // 쓰던 이전 방식) 이 뷰포트 크기를 0으로 보고해서 좌우 Fog가 항상 안 보였다
+        // (menuScrollArea 쪽에 이미 있는 것과 같은 문제 — 주석 참고). GeometryReader를
+        // ScrollView의 직계 부모로 직접 감싸면 제안받은 크기를 그대로, 안정적으로 읽는다.
+        GeometryReader { viewportGeometry in
+            ZStack {
+                ScrollViewReader { proxy in
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 0) {
+                            ForEach(viewModel.sections, id: \.self) { section in
+                                tabButton(section)
+                                    .id(section)
+                            }
+                        }
+                        // 탭 줄 양 끝에 최소 16pt를 둬서, 마지막 탭도 스크롤로 중앙까지 끌어올 여지를 준다.
+                        .padding(.horizontal, Spacing.spacing16)
+                        .coordinateSpace(name: "tabsRow")
+                        // Figma: Indicator는 탭 바닥(bottom-0)에 틈 없이 붙고, 좌우 12px은 탭 자체 패딩과 같다.
+                        // 두께는 사용자 요청으로 Figma 원본 2px의 1.5배인 3px을 쓴다.
+                        // matchedGeometryEffect는 스크롤 중 조건부 렌더링과 섞이면 다른 탭으로 튀어 보이는
+                        // 버그가 있어, 각 탭의 실측 프레임을 직접 추적해 하나의 밑줄만 위치·너비를 옮긴다.
+                        .overlay(alignment: .bottomLeading) {
+                            if let section = viewModel.selectedSection, let frame = tabFrames[section] {
+                                Capsule()
+                                    .fill(Colors.textPrimary)
+                                    .frame(width: max(frame.width - Spacing.spacing12 * 2, 0), height: 3)
+                                    .offset(x: frame.minX + Spacing.spacing12)
+                                    // 밑줄의 위치·너비만 여기서 따로 애니메이션한다(라벨 폰트 교체는
+                                    // 즉시 반영돼야 가변 폰트 보간으로 인한 깜빡임이 없다). section이
+                                    // 아니라 frame 값 자체를 기준으로 걸어서, 탭 전환이 아니더라도
+                                    // 프레임이 바뀌면(측정 잡음 포함) 스냅 없이 항상 부드럽게 보간한다.
+                                    .animation(anim(Self.indicatorAnimation), value: frame)
+                            }
+                        }
+                        // 가로 스크롤 중에는 같은 탭이라도 GeometryReader가 미세하게(소수점 단위로)
+                        // 다른 값을 계속 보고해서, 그 값을 그대로 밑줄에 쓰면 좌우로 떨리는 것처럼
+                        // 보였다. 정수 pt로 반올림해 그 잡음을 걸러낸다.
+                        .onPreferenceChange(TabFrameKey.self) { newFrames in
+                            tabFrames = newFrames.mapValues {
+                                CGRect(x: $0.minX.rounded(), y: $0.minY.rounded(), width: $0.width.rounded(), height: $0.height.rounded())
+                            }
+                        }
+                        // 이 HStack 전체(가로 스크롤 콘텐츠)의 크기를 재는 GeometryReader는
+                        // .background로 붙이면 이 가로 ScrollView 안에서는 계속 (0,0,0,0)만
+                        // 보고했다(실측 확인 — named 좌표계든 .global이든 동일). 개별 탭 버튼
+                        // 하나하나를 재는 TabFrameKey(.background 그대로, 같은 ScrollView 안)는
+                        // 멀쩡히 되는 걸 보면 "콘텐츠 전체 크기"를 .background로 재는 경우에만
+                        // 생기는 문제로 보인다. .overlay로 바꾸니 정상적으로 측정된다.
+                        .overlay(
+                            GeometryReader { geometry in
+                                // 뷰포트의 global 프레임과 직접 뺄셈해 "뷰포트 기준 상대 위치"를 구한다.
+                                Color.clear.preference(
+                                    key: TabsContentFrameKey.self,
+                                    value: geometry.frame(in: .global)
+                                )
+                            }
+                        )
+                    }
+                    .onPreferenceChange(TabsContentFrameKey.self) { tabsContentGlobalFrame = $0 }
+                    .onChange(of: viewModel.selectedSection) {
+                        guard let section = viewModel.selectedSection else { return }
+                        withAnimation(anim(Self.indicatorAnimation)) {
+                            proxy.scrollTo(section, anchor: .center)
                         }
                     }
-                    // 탭 줄 양 끝에 최소 16pt를 둬서, 마지막 탭도 스크롤로 중앙까지 끌어올 여지를 준다.
-                    .padding(.horizontal, Spacing.spacing16)
-                    .coordinateSpace(name: "tabsRow")
-                    // Figma: Indicator는 탭 바닥(bottom-0)에 틈 없이 붙고, 좌우 12px은 탭 자체 패딩과 같다.
-                    // 두께는 사용자 요청으로 Figma 원본 2px의 1.5배인 3px을 쓴다.
-                    // matchedGeometryEffect는 스크롤 중 조건부 렌더링과 섞이면 다른 탭으로 튀어 보이는
-                    // 버그가 있어, 각 탭의 실측 프레임을 직접 추적해 하나의 밑줄만 위치·너비를 옮긴다.
-                    .overlay(alignment: .bottomLeading) {
-                        if let section = viewModel.selectedSection, let frame = tabFrames[section] {
-                            Capsule()
-                                .fill(Colors.textPrimary)
-                                .frame(width: max(frame.width - Spacing.spacing12 * 2, 0), height: 3)
-                                .offset(x: frame.minX + Spacing.spacing12)
-                                // 밑줄의 위치·너비만 여기서 따로 애니메이션한다(라벨 폰트 교체는
-                                // 즉시 반영돼야 가변 폰트 보간으로 인한 깜빡임이 없다). section이
-                                // 아니라 frame 값 자체를 기준으로 걸어서, 탭 전환이 아니더라도
-                                // 프레임이 바뀌면(측정 잡음 포함) 스냅 없이 항상 부드럽게 보간한다.
-                                .animation(anim(Self.indicatorAnimation), value: frame)
-                        }
-                    }
-                    // 가로 스크롤 중에는 같은 탭이라도 GeometryReader가 미세하게(소수점 단위로)
-                    // 다른 값을 계속 보고해서, 그 값을 그대로 밑줄에 쓰면 좌우로 떨리는 것처럼
-                    // 보였다. 정수 pt로 반올림해 그 잡음을 걸러낸다.
-                    .onPreferenceChange(TabFrameKey.self) { newFrames in
-                        tabFrames = newFrames.mapValues {
-                            CGRect(x: $0.minX.rounded(), y: $0.minY.rounded(), width: $0.width.rounded(), height: $0.height.rounded())
-                        }
-                    }
-                    .background(
-                        GeometryReader { geometry in
-                            Color.clear.preference(
-                                key: TabsContentFrameKey.self,
-                                value: geometry.frame(in: .named("tabsViewport"))
-                            )
-                        }
+                }
+
+                HStack(spacing: 0) {
+                    LinearGradient(
+                        colors: [Colors.backgroundDefault, Colors.backgroundDefault.opacity(0)],
+                        startPoint: .leading,
+                        endPoint: .trailing
                     )
+                    .frame(width: Spacing.spacing40)
+                    .opacity(isTabsLeadingFadeVisible ? 1 : 0)
+
+                    Spacer(minLength: 0)
+
+                    LinearGradient(
+                        colors: [Colors.backgroundDefault.opacity(0), Colors.backgroundDefault],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                    .frame(width: Spacing.spacing40)
+                    .opacity(isTabsTrailingFadeVisible ? 1 : 0)
                 }
-                .coordinateSpace(name: "tabsViewport")
-                .background(
-                    GeometryReader { geometry in
-                        Color.clear.preference(key: TabsViewportWidthKey.self, value: geometry.size.width)
-                    }
-                )
-                .onPreferenceChange(TabsContentFrameKey.self) { tabsContentFrame = $0 }
-                .onPreferenceChange(TabsViewportWidthKey.self) { tabsViewportWidth = $0 }
-                .onChange(of: viewModel.selectedSection) {
-                    guard let section = viewModel.selectedSection else { return }
-                    withAnimation(anim(Self.indicatorAnimation)) {
-                        proxy.scrollTo(section, anchor: .center)
-                    }
-                }
+                .animation(anim(.easeOut(duration: 0.15)), value: isTabsLeadingFadeVisible)
+                .animation(anim(.easeOut(duration: 0.15)), value: isTabsTrailingFadeVisible)
+                .allowsHitTesting(false)
             }
-
-            HStack(spacing: 0) {
-                LinearGradient(
-                    colors: [Colors.backgroundDefault, Colors.backgroundDefault.opacity(0)],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
-                .frame(width: Spacing.spacing40)
-                .opacity(isTabsLeadingFadeVisible ? 1 : 0)
-
-                Spacer(minLength: 0)
-
-                LinearGradient(
-                    colors: [Colors.backgroundDefault.opacity(0), Colors.backgroundDefault],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
-                .frame(width: Spacing.spacing40)
-                .opacity(isTabsTrailingFadeVisible ? 1 : 0)
-            }
-            .animation(anim(.easeOut(duration: 0.15)), value: isTabsLeadingFadeVisible)
-            .animation(anim(.easeOut(duration: 0.15)), value: isTabsTrailingFadeVisible)
-            .allowsHitTesting(false)
+            .onAppear { tabsViewportGlobalFrame = viewportGeometry.frame(in: .global) }
+            .onChange(of: viewportGeometry.frame(in: .global)) { _, newValue in tabsViewportGlobalFrame = newValue }
         }
         .frame(height: 51)
         .background(Colors.backgroundDefault)
@@ -663,13 +809,14 @@ struct HomeMenuView: View {
     }
 
     // 탭 줄을 왼쪽으로 더 스크롤할 내용이 남아 있을 때만 왼쪽 페이드를 보여준다.
+    // (둘 다 .global 좌표계라서, 콘텐츠 시작이 뷰포트 시작보다 왼쪽에 있으면 = 오른쪽으로 스크롤된 상태)
     private var isTabsLeadingFadeVisible: Bool {
-        tabsContentFrame.minX < -1
+        tabsContentGlobalFrame.minX < tabsViewportGlobalFrame.minX - 1
     }
 
     // 탭 줄을 오른쪽으로 더 스크롤할 내용이 남아 있을 때만 오른쪽 페이드를 보여준다.
     private var isTabsTrailingFadeVisible: Bool {
-        tabsContentFrame.maxX > tabsViewportWidth + 1
+        tabsContentGlobalFrame.maxX > tabsViewportGlobalFrame.maxX + 1
     }
 
     private func tabButton(_ section: HomeMenuViewModel.Section) -> some View {
@@ -956,5 +1103,14 @@ struct HomeMenuView: View {
         .task {
             try? await Task.sleep(for: .seconds(0.6))
             viewModel.isConnectionUnstable = true
+        }
+}
+
+#Preview("Live Order") {
+    let viewModel = HomeMenuViewModel()
+    return HomeMenuView(viewModel: viewModel)
+        .task {
+            try? await Task.sleep(for: .seconds(0.6))
+            viewModel.liveOrder = LiveOrder(pickupNumber: 27, storeName: viewModel.storeName, stage: .making, queueCount: 2, pickupDeadlineText: "")
         }
 }

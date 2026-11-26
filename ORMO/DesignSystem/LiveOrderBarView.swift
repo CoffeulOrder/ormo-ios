@@ -1,31 +1,53 @@
 import SwiftUI
 
-// Live Order Bar — 결제한 주문이 픽업될 때까지 메뉴 홈 아래에 떠 있는 실시간 주문 현황.
-// 닫기(X) 없음. 전체가 하나의 버튼으로 주문 상세로 이동한다. 단계는 색 + 글자로 함께 보여준다(WCAG 1.4.1).
+// Live Order Bar(Flat) — 메뉴 홈 맨 위, 헤더 바로 아래 떠 있던 자리를 대신해 스크롤 콘텐츠
+// 맨 위에 자리 잡는 실시간 주문 현황. 카드·그림자 없이 배경에 바로 얹힌다(전체가 버튼).
+// 끝까지 내리면 이 영역은 사라지고 헤더의 매장 이름 자리에 LiveOrderHeaderView가 대신 뜬다.
 struct LiveOrderBarView: View {
     let order: LiveOrder
     let action: () -> Void
 
-    private var isReady: Bool { order.stage == .readyForPickup }
-
     var body: some View {
         Button(action: action) {
-            VStack(alignment: .leading, spacing: Spacing.spacing12) {
-                topRow
+            VStack(alignment: .leading, spacing: Spacing.spacing20) {
+                row
                 stepsView
             }
-            .padding(Spacing.spacing16)
+            .padding(.horizontal, Spacing.spacing20)
+            .padding(.vertical, Spacing.spacing16)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(isReady ? Colors.fillBrand : Colors.backgroundDefault)
-            .clipShape(RoundedRectangle(cornerRadius: Radius.xl))
-            .shadow(color: Colors.shadowMedium, radius: 16, x: 0, y: 8)
-            // 단계가 바뀔 때 배경·글자색·게이지가 한 번에 툭 끊기지 않고 같이 부드럽게 전환되도록.
-            .animation(.easeInOut(duration: 0.45), value: order.stage)
         }
         .buttonStyle(.plain)
+        .animation(.easeInOut(duration: 0.45), value: order.stage)
     }
 
-    private var titleText: String {
+    private var row: some View {
+        HStack(spacing: Spacing.spacing16) {
+            VStack(alignment: .leading, spacing: Spacing.spacing2) {
+                titleText
+                    .typography(Typography.bodyLgSemibold)
+                Text(subtitleText)
+                    .typography(Typography.bodySmRegular)
+                    .foregroundStyle(Colors.textSecondary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        // 글자 영역은 오른쪽에 80pt를 비워 둔다(일러스트 72 + 간격 8).
+        .padding(.trailing, 80)
+        .overlay(alignment: .trailing) {
+            // 디자인 상자(72)보다 12pt 더 큰 96 뷰라, 오른쪽으로 12pt 더 밀어야
+            // 96 뷰의 가운데가 72 상자의 가운데(= 오른쪽 내용 끝)와 맞는다.
+            LiveOrderIllustrationView(stage: order.stage)
+                .offset(x: 12)
+        }
+    }
+
+    private var titleText: Text {
+        Text("\(order.pickupNumber)번").foregroundStyle(Colors.textBrand)
+            + Text(" \(titleSuffix)").foregroundStyle(Colors.textPrimary)
+    }
+
+    private var titleSuffix: String {
         switch order.stage {
         case .confirming: "주문 확인 중이에요"
         case .making: "음료를 만들고 있어요"
@@ -42,36 +64,6 @@ struct LiveOrderBarView: View {
         }
     }
 
-    private var topRow: some View {
-        HStack(spacing: Spacing.spacing12) {
-            ZStack {
-                RoundedRectangle(cornerRadius: Radius.lg)
-                    .fill(isReady ? Colors.backgroundDefault : Colors.fillBrandWeak)
-                Text("\(order.pickupNumber)")
-                    .typography(Typography.bodyXlBold)
-                    .foregroundStyle(Colors.textBrand)
-            }
-            .frame(width: 48, height: 48)
-
-            VStack(alignment: .leading, spacing: 0) {
-                Text(titleText)
-                    .typography(Typography.bodyLgSemibold)
-                    .foregroundStyle(isReady ? Colors.textOnFill : Colors.textPrimary)
-                Text(subtitleText)
-                    .typography(Typography.bodySmRegular)
-                    .foregroundStyle(isReady ? Colors.textOnFill.opacity(0.85) : Colors.textSecondary)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-
-            Image(.chevronRight)
-                .renderingMode(.template)
-                .resizable()
-                .scaledToFit()
-                .frame(width: 20, height: 20)
-                .foregroundStyle(isReady ? Colors.textOnFill : Colors.textTertiary)
-        }
-    }
-
     private var stepsView: some View {
         VStack(alignment: .leading, spacing: Spacing.spacing8) {
             HStack(spacing: 4) {
@@ -79,6 +71,7 @@ struct LiveOrderBarView: View {
                 segment(stepIndex: 1, corners: .none)
                 segment(stepIndex: 2, corners: .trailing)
             }
+            .frame(height: 8)
 
             HStack(spacing: Spacing.spacing8) {
                 stepLabel("주문 확인", stepIndex: 0)
@@ -86,14 +79,13 @@ struct LiveOrderBarView: View {
                 stepLabel("픽업 대기", stepIndex: 2)
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private enum SegmentCorners { case leading, trailing, none }
 
     private func segment(stepIndex: Int, corners: SegmentCorners) -> some View {
-        let isFilled = isReady || stepIndex <= order.stage.rawValue
-        let fillColor = isReady ? Colors.backgroundDefault : Colors.fillBrand
-        let trackColor = isReady ? Colors.backgroundDefault.opacity(0.3) : Colors.fillNeutralWeak
+        let isFilled = stepIndex <= order.stage.rawValue
         let shape = UnevenRoundedRectangle(
             topLeadingRadius: corners == .leading ? Radius.full : 0,
             bottomLeadingRadius: corners == .leading ? Radius.full : 0,
@@ -102,27 +94,15 @@ struct LiveOrderBarView: View {
         )
 
         return shape
-            .fill(trackColor)
-            .overlay(alignment: .leading) {
-                shape
-                    .fill(fillColor)
-                    .scaleEffect(x: isFilled ? 1 : 0, anchor: .leading)
-            }
-            .frame(height: 8)
+            .fill(isFilled ? Colors.fillBrand : Colors.fillNeutralWeak)
             .frame(maxWidth: .infinity)
     }
 
     private func stepLabel(_ title: String, stepIndex: Int) -> some View {
         let isActive = stepIndex == order.stage.rawValue
-        let color: Color = if isReady {
-            isActive ? Colors.textOnFill : Colors.textOnFill.opacity(0.7)
-        } else {
-            isActive ? Colors.textBrand : Colors.textTertiary
-        }
-
         return Text(title)
-            .typography(isActive ? Typography.bodyXsSemibold : Typography.bodyXsMedium)
-            .foregroundStyle(color)
+            .typography(isActive ? Typography.bodySmSemibold : Typography.bodySmMedium)
+            .foregroundStyle(isActive ? Colors.textBrand : Colors.textTertiary)
             .frame(maxWidth: .infinity)
     }
 }
@@ -143,5 +123,7 @@ struct LiveOrderBarView: View {
         )
     }
     .padding()
-    .background(Colors.backgroundLower)
+    .background(
+        LinearGradient(colors: [Colors.backgroundDefault, Colors.baseBlue50], startPoint: .top, endPoint: .bottom)
+    )
 }
