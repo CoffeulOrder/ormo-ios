@@ -55,7 +55,7 @@ struct PaymentProcessingView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Colors.backgroundDefault.ignoresSafeArea())
-        .navigationBarHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
         .task {
             await viewModel.submit()
         }

@@ -65,7 +65,7 @@ struct MenuOptionsView: View {
         }
         .background(Colors.backgroundDefault.ignoresSafeArea())
         .ignoresSafeArea(.keyboard)
-        .navigationBarHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
         .animation(.easeOut(duration: 0.2), value: viewModel.isSnackbarVisible)
         .task {
             await viewModel.load()

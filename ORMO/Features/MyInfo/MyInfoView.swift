@@ -22,7 +22,7 @@ struct MyInfoView: View {
             }
         }
         .background(Colors.backgroundDefault.ignoresSafeArea())
-        .navigationBarHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
         .task { await viewModel.loadProfileIfNeeded() }
         .alertDialogOverlay(isPresented: $viewModel.isLogoutDialogVisible) {
             AlertDialog(

@@ -20,7 +20,7 @@ struct VerificationCodeView: View {
             hiddenCodeField
         )
         .background(Colors.backgroundDefault.ignoresSafeArea())
-        .navigationBarHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
         .onAppear {
             isCodeFieldFocused = true
         }

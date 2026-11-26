@@ -65,7 +65,7 @@ struct CartView: View {
         .animation(.easeOut(duration: 0.2), value: viewModel.cart.removedItemMessage)
         .background(Colors.backgroundDefault.ignoresSafeArea())
         .ignoresSafeArea(.keyboard)
-        .navigationBarHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
         .onChange(of: viewModel.orderUnavailableAlert) {
             if viewModel.orderUnavailableAlert != nil {
                 // Figma smart-animate 타이밍: Dim 0~10%(200ms), Dialog 2.5~15%(지연 50ms, scale 250ms·opacity 200ms)

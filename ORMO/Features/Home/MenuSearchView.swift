@@ -37,7 +37,7 @@ struct MenuSearchView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(Colors.backgroundDefault.ignoresSafeArea())
-        .navigationBarHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
         .onAppear { isSearchFieldFocused = true }
     }
 

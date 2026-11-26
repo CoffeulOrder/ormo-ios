@@ -119,7 +119,7 @@ struct OrderDetailView: View {
         }
         .background(Colors.backgroundDefault.ignoresSafeArea())
         .ignoresSafeArea(.keyboard)
-        .navigationBarHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
         .task { viewModel.start() }
     }
 

@@ -53,7 +53,7 @@ struct OrderCompleteView: View {
                 NotificationPermissionSheet(onSkip: notificationSheetSkipTapped, onAllow: notificationSheetAllowTapped)
             }
         }
-        .navigationBarHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
         .onAppear { appeared = true }
     }
 
