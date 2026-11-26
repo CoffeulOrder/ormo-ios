@@ -31,7 +31,10 @@ struct LoginView: View {
                             signUpRouter.path = NavigationPath()
                         })
                     case .verificationCode:
-                        VerificationCodeView(onVerified: { signUpRouter.push(.profile) })
+                        VerificationCodeView(email: signUpRouter.signUpEmail, purpose: .signUp, onVerified: { token in
+                            signUpRouter.signUpVerificationToken = token
+                            signUpRouter.push(.profile)
+                        })
                     case .profile:
                         SignUpProfileView()
                     case .termsFullText(let document):
@@ -45,9 +48,12 @@ struct LoginView: View {
                     case .emailInput:
                         PasswordResetEmailView()
                     case .verificationCode:
-                        VerificationCodeView(onVerified: { signUpRouter.path.append(PasswordResetRoute.newPassword) })
+                        VerificationCodeView(email: signUpRouter.resetEmail, purpose: .passwordReset, onVerified: { token in
+                            signUpRouter.resetVerificationToken = token
+                            signUpRouter.path.append(PasswordResetRoute.newPassword)
+                        })
                     case .newPassword:
-                        PasswordResetNewPasswordView(email: signUpRouter.resetEmail)
+                        PasswordResetNewPasswordView(verificationToken: signUpRouter.resetVerificationToken)
                     case .completion:
                         PasswordResetCompletionView(onLoginTapped: {
                             viewModel.passwordResetCompleted(email: signUpRouter.resetEmail)

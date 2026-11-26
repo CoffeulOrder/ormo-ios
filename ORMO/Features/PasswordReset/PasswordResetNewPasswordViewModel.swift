@@ -11,21 +11,18 @@ final class PasswordResetNewPasswordViewModel {
 
     var step: Step = .password
 
-    let email: String
-    var password: String = "" {
-        didSet { isSameAsCurrentPassword = false }
-    }
+    let verificationToken: String
+    var password: String = ""
     var passwordConfirmation: String = ""
     var isPasswordVisible = false
     var isPasswordConfirmationVisible = false
-    var isSameAsCurrentPassword = false
     var isSubmitting = false
     var isCompleted = false
 
     private let passwordResetRepository: PasswordResetRepository
 
-    init(email: String, passwordResetRepository: PasswordResetRepository = AppContainer.shared.passwordResetRepository) {
-        self.email = email
+    init(verificationToken: String, passwordResetRepository: PasswordResetRepository = AppContainer.shared.passwordResetRepository) {
+        self.verificationToken = verificationToken
         self.passwordResetRepository = passwordResetRepository
     }
 
@@ -45,26 +42,16 @@ final class PasswordResetNewPasswordViewModel {
 
     var isCurrentStepValid: Bool {
         switch step {
-        case .password: isPasswordRulesSatisfied && !isSameAsCurrentPassword && !isSubmitting
+        case .password: isPasswordRulesSatisfied && !isSubmitting
         case .passwordConfirmation: isPasswordConfirmationValid && !isSubmitting
         }
     }
 
-    // 지금 쓰는 비밀번호와 같은지는 서버만 알 수 있어서, 1단계에서 확인을 누르는 시점에 비동기로 확인한다.
-    func confirmPasswordTapped() async {
-        guard isPasswordRulesSatisfied, !isSubmitting else { return }
-        isSubmitting = true
-        defer { isSubmitting = false }
-
-        do {
-            try await passwordResetRepository.validateNewPassword(email: email, newPassword: password)
-            isSameAsCurrentPassword = false
-            step = .passwordConfirmation
-        } catch let failure as PasswordResetFailure where failure.isSameAsCurrentPassword {
-            isSameAsCurrentPassword = true
-        } catch {
-            // 그 외 오류는 현재 디자인에 정의되어 있지 않아 별도 처리하지 않는다.
-        }
+    // 서버에는 "지금 비밀번호와 같은지"를 미리 물어볼 방법이 없어(verificationToken만으로는
+    // 현재 비밀번호를 알 수 없음), 형식만 맞으면 바로 다음 단계로 넘어간다.
+    func confirmPasswordTapped() {
+        guard isPasswordRulesSatisfied else { return }
+        step = .passwordConfirmation
     }
 
     func submitTapped() async {
@@ -73,7 +60,7 @@ final class PasswordResetNewPasswordViewModel {
         defer { isSubmitting = false }
 
         do {
-            try await passwordResetRepository.resetPassword(email: email, newPassword: password)
+            try await passwordResetRepository.resetPassword(verificationToken: verificationToken, newPassword: password)
             isCompleted = true
         } catch {
             // 그 외 오류는 현재 디자인에 정의되어 있지 않아 별도 처리하지 않는다.

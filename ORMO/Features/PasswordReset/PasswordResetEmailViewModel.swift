@@ -11,9 +11,20 @@ final class PasswordResetEmailViewModel {
     var hasMultipleSchoolEmailDomains: Bool { schoolEmailDomains.count > 1 }
 
     private let schoolEmailDomainRepository: SchoolEmailDomainRepository
+    private let verificationCodeRepository: VerificationCodeRepository
 
-    init(schoolEmailDomainRepository: SchoolEmailDomainRepository = AppContainer.shared.schoolEmailDomainRepository) {
+    init(
+        schoolEmailDomainRepository: SchoolEmailDomainRepository = AppContainer.shared.schoolEmailDomainRepository,
+        verificationCodeRepository: VerificationCodeRepository = AppContainer.shared.verificationCodeRepository
+    ) {
         self.schoolEmailDomainRepository = schoolEmailDomainRepository
+        self.verificationCodeRepository = verificationCodeRepository
+    }
+
+    // 가입 여부와 무관하게 같은 안내를 보여줘야 해서(계정 노출 방지), 실패해도 화면에 따로
+    // 알리지 않고 그대로 다음 화면으로 넘어간다.
+    func requestCode(email: String) async {
+        try? await verificationCodeRepository.requestCode(email: email, purpose: .passwordReset)
     }
 
     func loadSchoolEmailDomainsIfNeeded() async {

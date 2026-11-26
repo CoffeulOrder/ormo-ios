@@ -20,4 +20,8 @@ struct MockAuthRepository: AuthRepository {
 
         LocalStore.shared.login(email: account.email)
     }
+
+    func logout() async throws {
+        LocalStore.shared.logout()
+    }
 }

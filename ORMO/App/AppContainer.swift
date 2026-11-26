@@ -23,13 +23,18 @@ final class AppContainer {
     let paymentRepository: PaymentRepository
 
     private init() {
-        authRepository = MockAuthRepository()
-        signUpRepository = MockSignUpRepository()
-        verificationCodeRepository = MockVerificationCodeRepository()
-        passwordResetRepository = MockPasswordResetRepository()
-        userProfileRepository = MockUserProfileRepository()
+        let useMock = AppConfig.useMock
+
+        // Phase 1: 인증·회원 5종은 실서버 연동 완료.
+        authRepository = useMock ? MockAuthRepository() : RemoteAuthRepository()
+        signUpRepository = useMock ? MockSignUpRepository() : RemoteSignUpRepository()
+        verificationCodeRepository = useMock ? MockVerificationCodeRepository() : RemoteVerificationCodeRepository()
+        passwordResetRepository = useMock ? MockPasswordResetRepository() : RemotePasswordResetRepository()
+        userProfileRepository = useMock ? MockUserProfileRepository() : RemoteUserProfileRepository()
+        // 백엔드에 대응 API가 없어(명세서 43개 중 없음) 당분간 Mock 고정.
         schoolEmailDomainRepository = MockSchoolEmailDomainRepository()
 
+        // 아직 연동 전(Phase 2 이후) — 항상 Mock.
         cafeRepository = MockCafeRepository()
         menuRepository = MockMenuRepository()
 

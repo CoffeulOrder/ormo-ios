@@ -158,7 +158,9 @@ struct PasswordResetEmailView: View {
 
     private func requestVerificationCode() {
         // 가입하지 않은 메일이어도 같은 안내를 보여줘야 한다(계정 노출 방지).
-        router.resetEmail = "\(viewModel.emailLocalPart)@\(viewModel.selectedSchoolEmailDomain)"
+        let email = "\(viewModel.emailLocalPart)@\(viewModel.selectedSchoolEmailDomain)"
+        router.resetEmail = email
+        Task { await viewModel.requestCode(email: email) }
         router.path.append(PasswordResetRoute.verificationCode)
     }
 }

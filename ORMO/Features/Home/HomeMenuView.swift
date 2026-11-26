@@ -171,8 +171,8 @@ struct HomeMenuView: View {
                         MyInfoView(onLogout: onLogout)
                     case .orderHistory:
                         OrderHistoryView(cart: cart)
-                    case .changePassword(let email):
-                        ChangePasswordView(email: email, onLogout: onLogout)
+                    case .changePassword:
+                        ChangePasswordView(onLogout: onLogout)
                     case .notificationSettings:
                         NotificationSettingsView()
                     case .termsAndPolicy:

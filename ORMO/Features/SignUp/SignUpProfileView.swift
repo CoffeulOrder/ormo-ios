@@ -48,9 +48,9 @@ struct SignUpProfileView: View {
                 termsViewModel.isCompleted = false
                 Task {
                     try? await signUpRepository.completeSignUp(
-                        email: router.signUpEmail,
-                        password: router.signUpPassword,
-                        name: router.userName
+                        verificationToken: router.signUpVerificationToken,
+                        name: router.userName,
+                        password: router.signUpPassword
                     )
                     router.push(.completion)
                 }
