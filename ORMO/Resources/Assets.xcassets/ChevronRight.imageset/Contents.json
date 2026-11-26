@@ -1,15 +1,25 @@
 {
-  "images" : [
+  "images": [
     {
-      "filename" : "chevron-right.svg",
-      "idiom" : "universal"
+      "filename": "chevron-right.svg",
+      "idiom": "universal"
+    },
+    {
+      "appearances": [
+        {
+          "appearance": "luminosity",
+          "value": "dark"
+        }
+      ],
+      "filename": "chevron-right-dark.svg",
+      "idiom": "universal"
     }
   ],
-  "info" : {
-    "author" : "xcode",
-    "version" : 1
+  "info": {
+    "author": "xcode",
+    "version": 1
   },
-  "properties" : {
-    "preserves-vector-representation" : true
+  "properties": {
+    "preserves-vector-representation": true
   }
 }
