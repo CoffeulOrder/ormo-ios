@@ -87,11 +87,13 @@ struct CartView: View {
             }
         }
         .onChange(of: viewModel.didStartPayment) {
-            guard viewModel.didStartPayment else { return }
+            guard viewModel.didStartPayment, let createdOrder = viewModel.createdOrder else { return }
             viewModel.didStartPayment = false
             router.path.append(
                 HomeRoute.paymentProcessing(
                     attemptId: UUID(),
+                    orderId: createdOrder.orderId,
+                    pgOrderId: createdOrder.pgOrderId,
                     paymentMethod: viewModel.paymentMethod,
                     totalPrice: viewModel.checkoutTotalPrice,
                     storeName: viewModel.store?.name ?? ""

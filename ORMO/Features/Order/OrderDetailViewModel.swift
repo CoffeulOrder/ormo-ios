@@ -10,14 +10,13 @@ final class OrderDetailViewModel {
     private var observationTask: Task<Void, Never>?
 
     init(
-        pickupNumber: Int,
-        storeName: String,
-        repository: OrderRepository = MockOrderRepository(),
-        menuRepository: MenuRepository = MockMenuRepository()
+        orderId: Int,
+        repository: OrderRepository = AppContainer.shared.orderRepository,
+        menuRepository: MenuRepository = AppContainer.shared.menuRepository
     ) {
         self.repository = repository
         self.menuRepository = menuRepository
-        self.order = .mock(pickupNumber: pickupNumber, storeName: storeName)
+        self.order = .mock(orderId: orderId, storeName: "")
         self.autoProgress = true
     }
 
@@ -25,8 +24,8 @@ final class OrderDetailViewModel {
     // 자동 진행 Task는 걸지 않는다 — 특정 상태를 고정해서 보는 게 목적이라서.
     init(
         order: Order,
-        repository: OrderRepository = MockOrderRepository(),
-        menuRepository: MenuRepository = MockMenuRepository()
+        repository: OrderRepository = AppContainer.shared.orderRepository,
+        menuRepository: MenuRepository = AppContainer.shared.menuRepository
     ) {
         self.repository = repository
         self.menuRepository = menuRepository
@@ -34,14 +33,16 @@ final class OrderDetailViewModel {
         self.autoProgress = false
     }
 
+    // Mock에서는 MockOrderRepository.fetchOrder 안에서 MockOrderProgressionScheduler가 알아서
+    // 진행을 걸어준다(화면과 무관하게). 실서버는 그런 흉내가 필요 없으니 여기서는 저장소 구현이
+    // 뭐든 그냥 fetch → 반영만 반복한다.
+    private static var pollInterval: Duration { AppConfig.useMock ? .seconds(1) : .seconds(3) }
+
     func start() {
         guard autoProgress, observationTask == nil else { return }
         observationTask = Task {
-            guard let fetched = try? await repository.fetchOrder(pickupNumber: order.pickupNumber, storeName: order.storeName) else { return }
+            guard let fetched = try? await repository.fetchOrder(orderId: order.orderId) else { return }
             order = fetched
-            // 진행 자체는 MockOrderProgressionScheduler가 화면과 무관하게 맡는다(이미 진행 중이면
-            // 아무것도 하지 않음). 여기서는 그 결과를 1초마다 다시 읽어와 화면에 반영만 한다.
-            MockOrderProgressionScheduler.shared.scheduleIfNeeded(for: fetched)
             // 실시간 현황을 켜둔 사용자에게는 잠금 화면 Live Activity로, 꺼둔 사용자에게는
             // OrderPushNotifier의 대체 알림으로 보여준다 (둘 다 켤 일은 없다).
             await OrderLiveActivityController.start(for: order, queueCount: 3)
@@ -49,15 +50,15 @@ final class OrderDetailViewModel {
         }
     }
 
-    // MockOrderProgressionScheduler가 화면 밖에서 바꾼 상태를 1초마다 다시 읽어와 반영한다.
+    // 화면 밖에서 바뀐 상태를 주기적으로 다시 읽어와 반영한다.
     // 실제로는 서버 푸시·웹소켓이 대체할 자리.
     private func observeProgression() async {
         while !Task.isCancelled {
-            if let latest = try? await repository.fetchOrder(pickupNumber: order.pickupNumber, storeName: order.storeName),
+            if let latest = try? await repository.fetchOrder(orderId: order.orderId),
                latest != order {
                 order = latest
             }
-            try? await Task.sleep(for: .seconds(1))
+            try? await Task.sleep(for: Self.pollInterval)
         }
     }
 
@@ -68,8 +69,10 @@ final class OrderDetailViewModel {
         observationTask?.cancel()
         order.status = .userCancelled
         order.userCancelledAt = Date()
-        LocalStore.shared.updateOrder(order)
-        Task { await OrderLiveActivityController.end(for: order) }
+        Task {
+            try? await repository.cancelOrder(orderId: order.orderId, reason: nil)
+            await OrderLiveActivityController.end(for: order)
+        }
     }
 
     deinit {
@@ -80,7 +83,7 @@ final class OrderDetailViewModel {
     // 그대로 가져가고, 가격·현재 품절 여부만 지금 메뉴에서 이름으로 맞춰 다시 확인한다(OrderHistoryViewModel과 동일한 방식).
     // 담긴 메뉴가 전부 품절이면 nil을 돌려준다.
     func reorderLineItems() async -> [CartLineItem]? {
-        guard let menu = try? await menuRepository.fetchStoreMenu(storeId: "beomseokgwan") else {
+        guard let menu = try? await menuRepository.fetchStoreMenu(storeId: order.storeId) else {
             return order.items.map { orderItem in
                 CartLineItem(
                     id: UUID().uuidString,

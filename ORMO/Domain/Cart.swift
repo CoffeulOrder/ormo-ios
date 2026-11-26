@@ -28,6 +28,10 @@ struct CartLineItem: Identifiable, Hashable {
     var quantity: Int
     let unitPrice: Int
     let optionsSummary: String
+    // 주문 생성 API(POST /orders)가 요구하는 실제 옵션 항목 ID. 재주문처럼 옵션을 다시 고른 적
+    // 없는 경로에서는 빈 배열로 둔다(그런 주문은 어차피 서버에 새로 만들지 않거나, 옵션 없이도
+    // 되는 메뉴를 가정한다).
+    var optionItemIds: [String] = []
     // 담은 뒤 매장에서 품절 처리했을 때 true가 된다. 장바구니에는 남지만 결제 금액에서 빠진다.
     var isSoldOut: Bool = false
 

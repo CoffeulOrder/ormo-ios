@@ -38,10 +38,11 @@ final class AppContainer {
         cafeRepository = useMock ? MockCafeRepository() : RemoteCafeRepository()
         menuRepository = useMock ? MockMenuRepository() : RemoteMenuRepository()
 
-        orderRepository = MockOrderRepository()
-        orderHistoryRepository = MockOrderHistoryRepository()
-        liveOrderRepository = MockLiveOrderRepository()
+        // Phase 3: 주문·결제 실서버 연동 완료.
+        orderRepository = useMock ? MockOrderRepository() : RemoteOrderRepository()
+        orderHistoryRepository = useMock ? MockOrderHistoryRepository() : RemoteOrderHistoryRepository()
+        liveOrderRepository = useMock ? MockLiveOrderRepository() : RemoteLiveOrderRepository()
 
-        paymentRepository = MockPaymentRepository()
+        paymentRepository = useMock ? MockPaymentRepository() : RemotePaymentRepository()
     }
 }

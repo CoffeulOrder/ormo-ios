@@ -4,7 +4,13 @@ import Foundation
 // 실제로 테스트할 수 있게 한다. 실패·만료 화면(PaymentFailureView·PaymentExpiredView) 자체는 그대로
 // 남아있고 Preview로 확인할 수 있다.
 struct MockPaymentRepository: PaymentRepository {
-    func submitPayment(method: PaymentMethod, totalPrice: Int, previousFailureCount: Int) async throws -> PaymentOutcome {
+    func confirmPayment(
+        orderId: Int,
+        pgOrderId: String,
+        method: PaymentMethod,
+        totalPrice: Int,
+        previousFailureCount: Int
+    ) async throws -> PaymentOutcome {
         try? await Task.sleep(for: .seconds(1.2))
         return .success
     }

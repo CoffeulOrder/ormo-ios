@@ -154,16 +154,16 @@ struct HomeMenuView: View {
                             store: viewModel.currentStore,
                             onOrderUnavailable: { router.path = NavigationPath() }
                         )
-                    case .paymentProcessing(_, let method, let total, let storeName):
-                        PaymentProcessingView(paymentMethod: method, totalPrice: total, storeName: storeName, cart: cart)
-                    case .paymentFailure(_, let method, let total, let storeName):
-                        PaymentFailureView(cart: cart, paymentMethod: method, totalPrice: total, storeName: storeName)
+                    case .paymentProcessing(_, let orderId, let pgOrderId, let method, let total, let storeName):
+                        PaymentProcessingView(orderId: orderId, pgOrderId: pgOrderId, paymentMethod: method, totalPrice: total, storeName: storeName, cart: cart)
+                    case .paymentFailure(_, let orderId, let pgOrderId, let method, let total, let storeName):
+                        PaymentFailureView(cart: cart, orderId: orderId, pgOrderId: pgOrderId, paymentMethod: method, totalPrice: total, storeName: storeName)
                     case .paymentExpired:
                         PaymentExpiredView()
-                    case .orderComplete(let pickupNumber, let storeName, let queueCount):
-                        OrderCompleteView(pickupNumber: pickupNumber, storeName: storeName, queueCount: queueCount)
-                    case .orderDetail(let pickupNumber, let storeName):
-                        OrderDetailView(pickupNumber: pickupNumber, storeName: storeName, cart: cart)
+                    case .orderComplete(let orderId, let pickupNumber, let storeName, let queueCount):
+                        OrderCompleteView(orderId: orderId, pickupNumber: pickupNumber, storeName: storeName, queueCount: queueCount)
+                    case .orderDetail(let orderId):
+                        OrderDetailView(orderId: orderId, cart: cart)
                     case .orderDetailHistory(let order):
                         OrderDetailView(order: order, cart: cart)
                     case .receipt(let pickupNumber, let storeName, let totalPrice, let paidAt):
@@ -374,7 +374,7 @@ struct HomeMenuView: View {
     }
 
     private func liveOrderTapped(_ order: LiveOrder) {
-        router.path.append(HomeRoute.orderDetail(pickupNumber: order.pickupNumber, storeName: order.storeName))
+        router.path.append(HomeRoute.orderDetail(orderId: order.orderId))
     }
 
     // 헤더의 "외 N건"을 눌렀을 때(진행 중인 주문이 2건 이상일 때만 쓰인다). 패널을 열 때와 닫을 때
@@ -1331,7 +1331,7 @@ struct HomeMenuView: View {
         .task {
             try? await Task.sleep(for: .seconds(0.6))
             viewModel.liveOrders = [
-                LiveOrder(pickupNumber: 27, storeName: viewModel.storeName, stage: .making, queueCount: 2, pickupDeadlineText: "")
+                LiveOrder(orderId: 1, pickupNumber: 27, storeName: viewModel.storeName, stage: .making, queueCount: 2, pickupDeadlineText: "")
             ]
         }
 }
@@ -1342,8 +1342,8 @@ struct HomeMenuView: View {
         .task {
             try? await Task.sleep(for: .seconds(0.6))
             viewModel.liveOrders = [
-                LiveOrder(pickupNumber: 27, storeName: viewModel.storeName, stage: .making, queueCount: 2, pickupDeadlineText: ""),
-                LiveOrder(pickupNumber: 28, storeName: viewModel.storeName, stage: .confirming, queueCount: 3, pickupDeadlineText: "")
+                LiveOrder(orderId: 1, pickupNumber: 27, storeName: viewModel.storeName, stage: .making, queueCount: 2, pickupDeadlineText: ""),
+                LiveOrder(orderId: 2, pickupNumber: 28, storeName: viewModel.storeName, stage: .confirming, queueCount: 3, pickupDeadlineText: "")
             ]
         }
 }
@@ -1354,9 +1354,9 @@ struct HomeMenuView: View {
         .task {
             try? await Task.sleep(for: .seconds(0.6))
             viewModel.liveOrders = [
-                LiveOrder(pickupNumber: 27, storeName: viewModel.storeName, stage: .making, queueCount: 2, pickupDeadlineText: ""),
-                LiveOrder(pickupNumber: 28, storeName: viewModel.storeName, stage: .confirming, queueCount: 3, pickupDeadlineText: ""),
-                LiveOrder(pickupNumber: 29, storeName: viewModel.storeName, stage: .readyForPickup, queueCount: 0, pickupDeadlineText: "13:30까지 받아주세요")
+                LiveOrder(orderId: 1, pickupNumber: 27, storeName: viewModel.storeName, stage: .making, queueCount: 2, pickupDeadlineText: ""),
+                LiveOrder(orderId: 2, pickupNumber: 28, storeName: viewModel.storeName, stage: .confirming, queueCount: 3, pickupDeadlineText: ""),
+                LiveOrder(orderId: 3, pickupNumber: 29, storeName: viewModel.storeName, stage: .readyForPickup, queueCount: 0, pickupDeadlineText: "13:30까지 받아주세요")
             ]
         }
 }

@@ -96,18 +96,22 @@ final class LocalStore {
         persist()
     }
 
-    func order(pickupNumber: Int, storeName: String) -> Order? {
-        orders.first { $0.pickupNumber == pickupNumber && $0.storeName == storeName }
+    func order(orderId: Int) -> Order? {
+        orders.first { $0.orderId == orderId }
     }
 
     func updateOrder(_ order: Order) {
-        guard let index = orders.firstIndex(where: { $0.pickupNumber == order.pickupNumber && $0.storeName == order.storeName }) else { return }
+        guard let index = orders.firstIndex(where: { $0.orderId == order.orderId }) else { return }
         orders[index] = order
         persist()
     }
 
     func nextPickupNumber() -> Int {
         (orders.map(\.pickupNumber).max() ?? 0) + 1
+    }
+
+    func nextOrderId() -> Int {
+        (orders.map(\.orderId).max() ?? 0) + 1
     }
 
     // MARK: Persistence
