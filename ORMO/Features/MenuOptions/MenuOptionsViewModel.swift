@@ -25,7 +25,7 @@ final class MenuOptionsViewModel {
     init(
         item: MenuItem,
         cart: CartStore,
-        menuRepository: MenuRepository = MockMenuRepository()
+        menuRepository: MenuRepository = AppContainer.shared.menuRepository
     ) {
         self.item = item
         self.cart = cart

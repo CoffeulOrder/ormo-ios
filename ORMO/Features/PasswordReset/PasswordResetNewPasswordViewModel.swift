@@ -24,7 +24,7 @@ final class PasswordResetNewPasswordViewModel {
 
     private let passwordResetRepository: PasswordResetRepository
 
-    init(email: String, passwordResetRepository: PasswordResetRepository = MockPasswordResetRepository()) {
+    init(email: String, passwordResetRepository: PasswordResetRepository = AppContainer.shared.passwordResetRepository) {
         self.email = email
         self.passwordResetRepository = passwordResetRepository
     }

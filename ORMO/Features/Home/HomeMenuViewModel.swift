@@ -57,9 +57,9 @@ final class HomeMenuViewModel {
     private var connectionUnstableTask: Task<Void, Never>?
 
     init(
-        menuRepository: MenuRepository = MockMenuRepository(),
-        liveOrderRepository: LiveOrderRepository = MockLiveOrderRepository(),
-        cafeRepository: CafeRepository = MockCafeRepository()
+        menuRepository: MenuRepository = AppContainer.shared.menuRepository,
+        liveOrderRepository: LiveOrderRepository = AppContainer.shared.liveOrderRepository,
+        cafeRepository: CafeRepository = AppContainer.shared.cafeRepository
     ) {
         self.menuRepository = menuRepository
         self.liveOrderRepository = liveOrderRepository

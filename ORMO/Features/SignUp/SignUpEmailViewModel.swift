@@ -35,8 +35,8 @@ final class SignUpEmailViewModel {
     private let signUpRepository: SignUpRepository
 
     init(
-        schoolEmailDomainRepository: SchoolEmailDomainRepository = MockSchoolEmailDomainRepository(),
-        signUpRepository: SignUpRepository = MockSignUpRepository()
+        schoolEmailDomainRepository: SchoolEmailDomainRepository = AppContainer.shared.schoolEmailDomainRepository,
+        signUpRepository: SignUpRepository = AppContainer.shared.signUpRepository
     ) {
         self.schoolEmailDomainRepository = schoolEmailDomainRepository
         self.signUpRepository = signUpRepository

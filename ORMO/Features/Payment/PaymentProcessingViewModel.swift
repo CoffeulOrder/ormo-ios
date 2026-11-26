@@ -17,7 +17,7 @@ final class PaymentProcessingViewModel {
         totalPrice: Int,
         storeName: String,
         cart: CartStore,
-        paymentRepository: PaymentRepository = MockPaymentRepository()
+        paymentRepository: PaymentRepository = AppContainer.shared.paymentRepository
     ) {
         self.paymentMethod = paymentMethod
         self.totalPrice = totalPrice

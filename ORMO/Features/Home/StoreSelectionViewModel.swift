@@ -9,7 +9,7 @@ final class StoreSelectionViewModel {
 
     private let cafeRepository: CafeRepository
 
-    init(cafeRepository: CafeRepository = MockCafeRepository()) {
+    init(cafeRepository: CafeRepository = AppContainer.shared.cafeRepository) {
         self.cafeRepository = cafeRepository
     }
 

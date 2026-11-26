@@ -16,7 +16,7 @@ final class MyInfoViewModel {
 
     private let repository: UserProfileRepository
 
-    init(repository: UserProfileRepository = MockUserProfileRepository()) {
+    init(repository: UserProfileRepository = AppContainer.shared.userProfileRepository) {
         self.repository = repository
     }
 
