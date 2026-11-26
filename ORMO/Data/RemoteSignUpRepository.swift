@@ -61,7 +61,15 @@ struct RemoteSignUpRepository: SignUpRepository {
             ]
         )
         let endpoint = Endpoint(method: .post, path: "/api/v1/members", body: body, requiresAuth: false)
-        let data: CompleteSignUpResponseData = try await APIClient.shared.send(endpoint, decodingDataAs: CompleteSignUpResponseData.self)
-        TokenStore.shared.save(accessToken: data.accessToken, refreshToken: data.refreshToken)
+
+        do {
+            let data: CompleteSignUpResponseData = try await APIClient.shared.send(endpoint, decodingDataAs: CompleteSignUpResponseData.self)
+            TokenStore.shared.save(accessToken: data.accessToken, refreshToken: data.refreshToken)
+        } catch let error as APIError {
+            if error.serverCode == "EV008" {
+                throw SignUpCompletionFailure(requiresReverification: true)
+            }
+            throw error
+        }
     }
 }
