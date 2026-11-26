@@ -1,85 +1,66 @@
+import ActivityKit
 import UIKit
 import UserNotifications
 
+// 이 화면의 토글 3개는 더 이상 앱이 따로 값을 저장하지 않는다 — 기기(OS)의 실제 권한 상태가
+// 유일한 진실이다. 예전에는 UserDefaults에 "켜짐/꺼짐"을 따로 저장해서, OS 권한을 꺼도 앱은
+// 계속 "알림을 보내도 되는 상태"로 착각하거나 반대로 OS에서 다시 켜도 앱이 따로 꺼둔 값 때문에
+// 안 보내는 식으로 둘이 어긋날 수 있었다. 지금은 토글을 탭하면: 아직 한 번도 물어본 적 없으면
+// (.notDetermined) 그 자리에서 OS 권한 팝업을 띄우고, 이미 한 번이라도 답한 뒤라면(허용·거부
+// 어느 쪽이든 OS가 다시 묻지 않으므로) 설정 앱으로 보낸다. 설정 앱에서 바꾸고 돌아오면
+// scenePhase가 .active로 바뀔 때 다시 읽어서 화면에 바로 반영된다.
 @Observable
 final class NotificationSettingsViewModel {
-    private enum DefaultsKey {
-        static let isOrderNotificationEnabled = "notificationSettings.isOrderNotificationEnabled"
-        static let isLockScreenLiveStatusEnabled = "notificationSettings.isLockScreenLiveStatusEnabled"
-        static let isLocationEnabled = "notificationSettings.isLocationEnabled"
-    }
+    private(set) var notificationAuthorizationStatus: UNAuthorizationStatus = .notDetermined
 
-    // 주문 상태가 바뀔 때 알림을 보내야 하는 다른 코드(OrderPushNotifier 등)가, 화면을 띄우지 않고도
-    // 저장된 알림 설정을 바로 읽을 수 있도록 하는 정적 접근자.
-    static var isOrderNotificationEnabledSetting: Bool {
-        UserDefaults.standard.object(forKey: DefaultsKey.isOrderNotificationEnabled) as? Bool ?? true
+    var isNotificationOn: Bool {
+        switch notificationAuthorizationStatus {
+        case .authorized, .provisional, .ephemeral: true
+        case .notDetermined, .denied: false
+        @unknown default: false
+        }
     }
-    static var isLockScreenLiveStatusEnabledSetting: Bool {
-        UserDefaults.standard.object(forKey: DefaultsKey.isLockScreenLiveStatusEnabled) as? Bool ?? true
-    }
+    var isNotificationDenied: Bool { notificationAuthorizationStatus == .denied }
 
-    // Switch는 저장 버튼 없이 바로 반영돼야 하므로, 바뀔 때마다 즉시 UserDefaults에 적는다.
-    var isOrderNotificationEnabled: Bool {
-        didSet { UserDefaults.standard.set(isOrderNotificationEnabled, forKey: DefaultsKey.isOrderNotificationEnabled) }
-    }
-    var isLockScreenLiveStatusEnabled: Bool {
-        didSet { UserDefaults.standard.set(isLockScreenLiveStatusEnabled, forKey: DefaultsKey.isLockScreenLiveStatusEnabled) }
-    }
-    var isLocationEnabled: Bool {
-        didSet { UserDefaults.standard.set(isLocationEnabled, forKey: DefaultsKey.isLocationEnabled) }
-    }
-    // 설치 직후(알림 권한을 아직 한 번도 물어본 적 없는 .notDetermined) 상태는 "꺼져 있다"가
-    // 아니라 "아직 안 물어봤다"이므로 배너를 띄우지 않는다. 실제로 사용자가 거부(.denied)했을 때만
-    // 설정 앱으로 안내한다.
-    private(set) var isSystemNotificationDenied = false
-    private(set) var isSystemLocationDenied = false
+    // Live Activity는 OS에 "권한을 물어보는" API 자체가 없다 — 기기 설정 앱에서만 켜고 끌 수
+    // 있어서, 요청 로직 없이 항상 이 값을 그대로 보여주기만 한다.
+    var isLiveActivityOn: Bool { ActivityAuthorizationInfo().areActivitiesEnabled }
 
-    // 토글의 실제 on/off 표시는 사용자가 마지막으로 설정한 값과 OS 권한 상태를 함께 반영한다.
-    // OS에서 꺼져 있으면 사용자가 예전에 켜뒀던 값과 상관없이 기기 실제 상태대로 꺼진 채로 보여준다.
-    var isOrderNotificationEffectivelyOn: Bool { isOrderNotificationEnabled && !isSystemNotificationDenied }
-    var isLockScreenLiveStatusEffectivelyOn: Bool { isLockScreenLiveStatusEnabled && !isSystemNotificationDenied }
-    var isLocationEffectivelyOn: Bool { isLocationEnabled && !isSystemLocationDenied }
-
-    private let defaults: UserDefaults
-
-    init(defaults: UserDefaults = .standard) {
-        self.defaults = defaults
-        isOrderNotificationEnabled = defaults.object(forKey: DefaultsKey.isOrderNotificationEnabled) as? Bool ?? true
-        isLockScreenLiveStatusEnabled = defaults.object(forKey: DefaultsKey.isLockScreenLiveStatusEnabled) as? Bool ?? true
-        isLocationEnabled = defaults.object(forKey: DefaultsKey.isLocationEnabled) as? Bool ?? true
+    var isLocationOn: Bool {
+        let status = LocationPermissionManager.shared.authorizationStatus
+        return status == .authorizedWhenInUse || status == .authorizedAlways
     }
+    var isLocationDenied: Bool { LocationPermissionManager.shared.isDenied }
 
     func refreshSystemNotificationStatus() async {
         let settings = await UNUserNotificationCenter.current().notificationSettings()
-        isSystemNotificationDenied = settings.authorizationStatus == .denied
+        notificationAuthorizationStatus = settings.authorizationStatus
     }
 
-    func refreshSystemLocationStatus() {
-        isSystemLocationDenied = LocationPermissionManager.shared.isDenied
-    }
-
-    // 주문 알림을 켤 때 OS 권한을 아직 묻지 않은 상태라면, 토글이 실제로 알림을 받을 수 있도록
-    // 바로 권한 요청까지 이어준다. 이미 거부된 상태라면 토글만 켜두고(값은 보존) 안내 배너로 설정 앱을
-    // 유도한다.
-    func orderNotificationToggled(to isEnabled: Bool) {
-        isOrderNotificationEnabled = isEnabled
-        guard isEnabled else { return }
+    // 주문 알림 토글: 아직 안 물어봤으면 그 자리에서 OS 권한 팝업, 이미 답한 뒤라면 설정 앱으로.
+    func notificationToggled() {
+        guard notificationAuthorizationStatus == .notDetermined else {
+            openSystemSettingsTapped()
+            return
+        }
         Task {
-            let settings = await UNUserNotificationCenter.current().notificationSettings()
-            if settings.authorizationStatus == .notDetermined {
-                _ = try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge])
-            }
+            _ = try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge])
             await refreshSystemNotificationStatus()
         }
     }
 
-    // 위치 사용을 켤 때 OS 권한을 아직 묻지 않은 상태라면 iOS 기본 위치 접근 동의 팝업으로 이어준다.
-    // 이미 거부된 상태라면 토글만 켜두고(값은 보존) 안내 배너로 설정 앱을 유도한다.
-    func locationToggled(to isEnabled: Bool) {
-        isLocationEnabled = isEnabled
-        guard isEnabled else { return }
+    // Live Activity는 항상 설정 앱으로 보낸다(요청 팝업이 없으므로).
+    func liveActivityToggled() {
+        openSystemSettingsTapped()
+    }
+
+    // 위치 토글: 아직 안 물어봤으면 iOS 기본 위치 접근 동의 팝업, 이미 답한 뒤라면 설정 앱으로.
+    func locationToggled() {
+        guard LocationPermissionManager.shared.authorizationStatus == .notDetermined else {
+            openSystemSettingsTapped()
+            return
+        }
         LocationPermissionManager.shared.requestAuthorizationIfNeeded()
-        refreshSystemLocationStatus()
     }
 
     func openSystemSettingsTapped() {

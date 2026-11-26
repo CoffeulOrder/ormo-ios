@@ -1,8 +1,9 @@
 import UserNotifications
 
-// Figma "4.5.2 푸시 알림 4종 · 실시간 현황을 끈 경우" — 잠금 화면 실시간 현황(Live Activity)을 꺼둔
-// 사용자에게 주문 상태 변화를 대신 알려주는 일반 푸시 알림. 실시간 현황을 켜둔 사용자는 Live Activity
-// 카드로 이미 보고 있으니 중복으로 울리지 않는다.
+// Figma "4.5.2 푸시 알림 4종 · 실시간 현황을 끈 경우" — 잠금 화면 실시간 현황(Live Activity)이 없는
+// 사용자에게 주문 상태 변화를 대신 알려주는 일반 푸시 알림. 이 주문을 이미 Live Activity 카드로
+// 보여주고 있으면 중복으로 울리지 않는다. 알림을 실제로 보낼 수 있는지는 앱이 따로 저장한 값이
+// 아니라 OS의 실제 알림 권한(UNUserNotificationCenter)만 본다.
 enum OrderPushNotifier {
     private static let pickupWindowMinutes = 20
 
@@ -13,8 +14,13 @@ enum OrderPushNotifier {
     }()
 
     static func scheduleIfNeeded(for order: Order) async {
-        guard NotificationSettingsViewModel.isOrderNotificationEnabledSetting,
-              !NotificationSettingsViewModel.isLockScreenLiveStatusEnabledSetting else { return }
+        guard !OrderLiveActivityController.isActive(pickupNumber: order.pickupNumber) else { return }
+        let settings = await UNUserNotificationCenter.current().notificationSettings()
+        switch settings.authorizationStatus {
+        case .authorized, .provisional, .ephemeral: break
+        case .notDetermined, .denied: return
+        @unknown default: return
+        }
         guard let content = content(for: order) else { return }
 
         let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
