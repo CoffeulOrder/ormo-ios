@@ -4,10 +4,29 @@ struct PaymentFailureView: View {
     @Environment(HomeRouter.self) private var router
     let cart: CartStore
     let orderId: Int
-    let pgOrderId: String
     let paymentMethod: PaymentMethod
     let totalPrice: Int
     let storeName: String
+    let screensToClear: Int
+    let orderRepository: OrderRepository
+
+    init(
+        cart: CartStore,
+        orderId: Int,
+        paymentMethod: PaymentMethod,
+        totalPrice: Int,
+        storeName: String,
+        screensToClear: Int,
+        orderRepository: OrderRepository = AppContainer.shared.orderRepository
+    ) {
+        self.cart = cart
+        self.orderId = orderId
+        self.paymentMethod = paymentMethod
+        self.totalPrice = totalPrice
+        self.storeName = storeName
+        self.screensToClear = screensToClear
+        self.orderRepository = orderRepository
+    }
 
     private var isLimitExceeded: Bool { cart.isPaymentFailureLimitExceeded }
 
@@ -94,26 +113,38 @@ struct PaymentFailureView: View {
         .buttonStyle(.plain)
     }
 
-    // 이 화면은 항상 "... → 장바구니 → 결제 확인 중 → 결제 실패" 순서로 들어온다.
-    // router.path를 통째로 새 값으로 바꾸면 NavigationStack이 전환을 제대로 못 그려서
-    // 결제 확인 중 화면이 멈춰 보이는 문제가 있었다. 그래서 끝에서 2개(결제 확인 중·결제 실패)만
-    // 지우고 그 자리에 새 시도를 이어 붙인다 — 장바구니 화면은 새로 만들지 않고 그대로 둔다.
+    // router.path를 통째로 새 값으로 바꾸면 NavigationStack이 전환을 제대로 못 그려서 결제 확인
+    // 중 화면이 멈춰 보이는 문제가 있었다. 그래서 장바구니까지 이어지는 화면들(screensToClear개,
+    // 결제창 유무에 따라 2~3개)만 지우고 그 자리에 새 시도를 이어 붙인다 — 장바구니 화면은 새로
+    // 만들지 않고 그대로 둔다. 재시도는 같은 paymentId를 재사용하지 않고, 서버에 새 결제 시도를
+    // 받아온다(POST /orders/{orderId}/payment-attempts).
     private func retryTapped() {
-        router.path.removeLast(2)
-        router.path.append(
-            HomeRoute.paymentProcessing(attemptId: UUID(), orderId: orderId, pgOrderId: pgOrderId, paymentMethod: paymentMethod, totalPrice: totalPrice, storeName: storeName)
-        )
+        router.path.removeLast(screensToClear)
+        Task {
+            guard let fresh = try? await orderRepository.retryPaymentAttempt(orderId: orderId) else {
+                return
+            }
+            if AppConfig.useMock {
+                router.path.append(
+                    HomeRoute.paymentProcessing(attemptId: UUID(), orderId: fresh.orderId, paymentId: fresh.paymentId, paymentMethod: paymentMethod, totalPrice: totalPrice, storeName: storeName)
+                )
+            } else {
+                router.path.append(
+                    HomeRoute.paymentCheckout(attemptId: UUID(), checkout: fresh, paymentMethod: paymentMethod, totalPrice: totalPrice, storeName: storeName)
+                )
+            }
+        }
     }
 
     private func backToCartTapped() {
         if isLimitExceeded {
             cart.resetPaymentFailureCount()
         }
-        router.path.removeLast(2)
+        router.path.removeLast(screensToClear)
     }
 }
 
 #Preview {
-    PaymentFailureView(cart: CartStore(), orderId: 1, pgOrderId: "mock-pg-1", paymentMethod: .card, totalPrice: 12000, storeName: "을지대학교 범석관 카페")
+    PaymentFailureView(cart: CartStore(), orderId: 1, paymentMethod: .card, totalPrice: 12000, storeName: "을지대학교 범석관 카페", screensToClear: 2)
         .environment(HomeRouter())
 }

@@ -1,6 +1,15 @@
 {
-  "originHash" : "2689f9e2586b55228eed3965e4be842c098dfc484978323bb9dc0de25d79665c",
+  "originHash" : "676696564025fbdc53d74b76efb9aed80873f437c30a93d8dc19de79041262aa",
   "pins" : [
+    {
+      "identity" : "ios-sdk",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/portone-io/ios-sdk.git",
+      "state" : {
+        "revision" : "77697e3d8c2382699d413f354f6a72d45cc6c707",
+        "version" : "0.2.2"
+      }
+    },
     {
       "identity" : "lottie-spm",
       "kind" : "remoteSourceControl",

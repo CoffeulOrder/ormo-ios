@@ -17,6 +17,12 @@
       "version": {
         "up-to-next-major-version": "4.6.1",
       },
+    }, {
+      "kind": "remote",
+      "repository": "https://github.com/portone-io/ios-sdk.git",
+      "version": {
+        "up-to-next-major-version": "0.2.2",
+      },
     },
   ],
   "files": [
@@ -104,6 +110,10 @@
       ],
       "package-product-members": [
         {
+          "package": "ios-sdk",
+          "product-name": "PortOneSdk",
+          "build-phase": { "build-phase": "frameworks" },
+        }, {
           "package": "lottie-spm",
           "product-name": "Lottie",
           "build-phase": { "build-phase": "frameworks" },

@@ -11,7 +11,7 @@ protocol PaymentRepository {
     // 달리 보여주는 데 쓴다(예: 카드가 처음엔 실패하지만 재시도하면 성공하는 Mock 시나리오).
     func confirmPayment(
         orderId: Int,
-        pgOrderId: String,
+        paymentId: String,
         method: PaymentMethod,
         totalPrice: Int,
         previousFailureCount: Int

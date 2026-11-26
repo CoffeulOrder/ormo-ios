@@ -4,10 +4,10 @@ struct PaymentProcessingView: View {
     @Environment(HomeRouter.self) private var router
     @State private var viewModel: PaymentProcessingViewModel
 
-    init(orderId: Int, pgOrderId: String, paymentMethod: PaymentMethod, totalPrice: Int, storeName: String, cart: CartStore) {
+    init(orderId: Int, paymentId: String, paymentMethod: PaymentMethod, totalPrice: Int, storeName: String, cart: CartStore) {
         _viewModel = State(initialValue: PaymentProcessingViewModel(
             orderId: orderId,
-            pgOrderId: pgOrderId,
+            paymentId: paymentId,
             paymentMethod: paymentMethod,
             totalPrice: totalPrice,
             storeName: storeName,
@@ -74,10 +74,10 @@ struct PaymentProcessingView: View {
                     HomeRoute.paymentFailure(
                         attemptId: UUID(),
                         orderId: viewModel.orderId,
-                        pgOrderId: viewModel.pgOrderId,
                         paymentMethod: viewModel.paymentMethod,
                         totalPrice: viewModel.totalPrice,
-                        storeName: viewModel.storeName
+                        storeName: viewModel.storeName,
+                        screensToClear: AppConfig.useMock ? 2 : 3
                     )
                 )
             case .expired:
@@ -225,6 +225,6 @@ struct PaymentProcessingView: View {
 }
 
 #Preview {
-    PaymentProcessingView(orderId: 1, pgOrderId: "mock-pg-1", paymentMethod: .tossPay, totalPrice: 12000, storeName: "을지대학교 범석관 카페", cart: CartStore())
+    PaymentProcessingView(orderId: 1, paymentId: "mock-payment-1", paymentMethod: .tossPay, totalPrice: 12000, storeName: "을지대학교 범석관 카페", cart: CartStore())
         .environment(HomeRouter())
 }

@@ -10,14 +10,14 @@ final class PaymentProcessingViewModel {
     // 결제 성공 시 받아온 주문의 픽업 번호. 주문 완료 화면에 넘겨준다.
     private(set) var completedOrderPickupNumber: Int?
 
-    let pgOrderId: String
+    let paymentId: String
     private let cart: CartStore
     private let orderRepository: OrderRepository
     private let paymentRepository: PaymentRepository
 
     init(
         orderId: Int,
-        pgOrderId: String,
+        paymentId: String,
         paymentMethod: PaymentMethod,
         totalPrice: Int,
         storeName: String,
@@ -26,7 +26,7 @@ final class PaymentProcessingViewModel {
         paymentRepository: PaymentRepository = AppContainer.shared.paymentRepository
     ) {
         self.orderId = orderId
-        self.pgOrderId = pgOrderId
+        self.paymentId = paymentId
         self.paymentMethod = paymentMethod
         self.totalPrice = totalPrice
         self.storeName = storeName
@@ -39,7 +39,7 @@ final class PaymentProcessingViewModel {
         let previousFailureCount = cart.paymentFailureCount
         let result = (try? await paymentRepository.confirmPayment(
             orderId: orderId,
-            pgOrderId: pgOrderId,
+            paymentId: paymentId,
             method: paymentMethod,
             totalPrice: totalPrice,
             previousFailureCount: previousFailureCount

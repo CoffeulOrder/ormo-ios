@@ -154,10 +154,12 @@ struct HomeMenuView: View {
                             store: viewModel.currentStore,
                             onOrderUnavailable: { router.path = NavigationPath() }
                         )
-                    case .paymentProcessing(_, let orderId, let pgOrderId, let method, let total, let storeName):
-                        PaymentProcessingView(orderId: orderId, pgOrderId: pgOrderId, paymentMethod: method, totalPrice: total, storeName: storeName, cart: cart)
-                    case .paymentFailure(_, let orderId, let pgOrderId, let method, let total, let storeName):
-                        PaymentFailureView(cart: cart, orderId: orderId, pgOrderId: pgOrderId, paymentMethod: method, totalPrice: total, storeName: storeName)
+                    case .paymentCheckout(_, let checkout, let method, let total, let storeName):
+                        PaymentCheckoutView(checkout: checkout, paymentMethod: method, totalPrice: total, storeName: storeName)
+                    case .paymentProcessing(_, let orderId, let paymentId, let method, let total, let storeName):
+                        PaymentProcessingView(orderId: orderId, paymentId: paymentId, paymentMethod: method, totalPrice: total, storeName: storeName, cart: cart)
+                    case .paymentFailure(_, let orderId, let method, let total, let storeName, let screensToClear):
+                        PaymentFailureView(cart: cart, orderId: orderId, paymentMethod: method, totalPrice: total, storeName: storeName, screensToClear: screensToClear)
                     case .paymentExpired:
                         PaymentExpiredView()
                     case .orderComplete(let orderId, let pickupNumber, let storeName, let queueCount):

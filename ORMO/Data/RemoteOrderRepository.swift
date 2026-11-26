@@ -25,10 +25,20 @@ struct RemoteOrderRepository: OrderRepository {
         let withdrawalLimitAgreed: Bool
     }
 
-    private struct PaymentData: Decodable {
-        let pgOrderId: String
+    private struct PortOneCheckoutData: Decodable {
+        let storeId: String
+        let channelKey: String
+        let paymentId: String
+        let currency: String
     }
 
+    private struct PaymentData: Decodable {
+        let orderName: String
+        let amount: Int
+        let portOne: PortOneCheckoutData
+    }
+
+    // POST /orders와 POST /orders/{orderId}/payment-attempts(재시도) 둘 다 이 모양으로 응답한다.
     private struct CreateOrderResponseData: Decodable {
         let orderId: Int
         let payment: PaymentData
@@ -115,7 +125,25 @@ struct RemoteOrderRepository: OrderRepository {
         let data: CreateOrderResponseData = try await APIClient.shared.send(endpoint, decodingDataAs: CreateOrderResponseData.self)
         IdempotencyKeyProvider.shared.discard()
         OrderPaymentMethodMemory.shared.set(paymentMethod, for: data.orderId)
-        return CreatedOrder(orderId: data.orderId, pgOrderId: data.payment.pgOrderId)
+        return Self.mapToCreatedOrder(data)
+    }
+
+    func retryPaymentAttempt(orderId: Int) async throws -> CreatedOrder {
+        let endpoint = Endpoint(method: .post, path: "/api/v1/orders/\(orderId)/payment-attempts")
+        let data: CreateOrderResponseData = try await APIClient.shared.send(endpoint, decodingDataAs: CreateOrderResponseData.self)
+        return Self.mapToCreatedOrder(data)
+    }
+
+    private static func mapToCreatedOrder(_ data: CreateOrderResponseData) -> CreatedOrder {
+        CreatedOrder(
+            orderId: data.orderId,
+            portOneStoreId: data.payment.portOne.storeId,
+            channelKey: data.payment.portOne.channelKey,
+            paymentId: data.payment.portOne.paymentId,
+            currency: data.payment.portOne.currency,
+            orderName: data.payment.orderName,
+            amount: data.payment.amount
+        )
     }
 
     func fetchOrder(orderId: Int) async throws -> Order {
