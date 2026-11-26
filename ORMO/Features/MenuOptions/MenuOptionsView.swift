@@ -162,7 +162,7 @@ struct MenuOptionsView: View {
         .frame(height: 40)
         .overlay(
             RoundedRectangle(cornerRadius: Radius.md)
-                .strokeBorder(Colors.borderDefault, lineWidth: 1)
+                .strokeBorder(Colors.fieldBorder, lineWidth: 1)
         )
         .clipShape(RoundedRectangle(cornerRadius: Radius.md))
     }
