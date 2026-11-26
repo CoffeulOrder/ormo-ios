@@ -120,7 +120,8 @@ final class APIClient {
         do {
             return try JSONDecoder().decode(type, from: data)
         } catch {
-            log(endpoint, "응답 디코딩 실패 — \(error)")
+            let rawBody = String(data: data, encoding: .utf8) ?? "<decoding 실패>"
+            log(endpoint, "응답 디코딩 실패 — \(error)\n[API] 원본 응답 바디 — \(rawBody)")
             throw APIError.decoding(error)
         }
     }
