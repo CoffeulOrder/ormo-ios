@@ -1,5 +1,25 @@
 {
-  "images" : [ { "filename" : "build.svg", "idiom" : "universal" } ],
-  "info" : { "author" : "xcode", "version" : 1 },
-  "properties" : { "preserves-vector-representation" : true }
+  "images": [
+    {
+      "filename": "build.svg",
+      "idiom": "universal"
+    },
+    {
+      "appearances": [
+        {
+          "appearance": "luminosity",
+          "value": "dark"
+        }
+      ],
+      "filename": "build-dark.svg",
+      "idiom": "universal"
+    }
+  ],
+  "info": {
+    "author": "xcode",
+    "version": 1
+  },
+  "properties": {
+    "preserves-vector-representation": true
+  }
 }
