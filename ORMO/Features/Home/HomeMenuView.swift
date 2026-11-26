@@ -110,7 +110,6 @@ struct HomeMenuView: View {
     @State private var router = HomeRouter()
     @State private var cart = CartStore()
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.colorScheme) private var colorScheme
     var onLogout: (String?) -> Void = { _ in }
 
     // Reduce Motion이 켜져 있으면 nil(=애니메이션 없이 즉시 반영)을 돌려준다.
@@ -325,12 +324,13 @@ struct HomeMenuView: View {
 
                 Text("\(cart.totalQuantity)")
                     .typography(Typography.bodySmBold)
-                    // 라이트모드는 흰 배지+파란 숫자, 다크모드는 배지 자체가 어두워져 파란 숫자가 거의 안 보여서 흰색으로 바꾼다.
-                    .foregroundStyle(colorScheme == .dark ? Colors.textOnFill : Colors.textBrand)
+                    .foregroundStyle(Colors.textBrand)
                     .padding(.horizontal, Spacing.spacing8)
                     .frame(minWidth: 24)
                     .frame(height: 24)
-                    .background(Colors.backgroundDefault)
+                    // 배지는 다크모드에서도 항상 흰색이어야 해서, 모드에 따라 어두워지는
+                    // backgroundDefault 대신 다크 배리언트가 없는 고정 흰색 fillInverse를 쓴다.
+                    .background(Colors.fillInverse)
                     .clipShape(Capsule())
             }
             .frame(maxWidth: .infinity)
