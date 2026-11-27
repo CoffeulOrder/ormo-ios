@@ -8,8 +8,8 @@ final class SignUpProfileViewModel {
         case passwordConfirmation
     }
 
-    // 상태·문구: 닉네임 없음 · 이름만 받아요 · 1~20자
-    static let nameMaxLength = 20
+    // 상태·문구: 닉네임 없음 · 이름만 받아요 · 1~10자
+    static let nameMaxLength = 10
     static let passwordMinLength = 8
 
     var step: Step = .name
