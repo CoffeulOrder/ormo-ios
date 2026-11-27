@@ -19,7 +19,11 @@ struct APIEnvelope<T: Decodable>: Decodable {
         timestamp = try container.decode(String.self, forKey: .timestamp)
         code = try container.decode(String.self, forKey: .code)
         message = try container.decode(String.self, forKey: .message)
-        data = try container.decodeIfPresent(T.self, forKey: .data)
+        // 오류 응답의 data는 성공 응답과 모양이 다를 수 있다(예: AUTH_002 계정 잠김은
+        // {lockedUntil}을 돌려준다). SUCCESS가 아닐 때 T로 디코딩을 시도하면 그 모양 차이
+        // 때문에 디코딩 자체가 실패해서, 진짜 원인(AUTH_002 등)이 "응답 디코딩 실패"로
+        // 가려져 버린다. 실패 응답의 data는 어차피 호출하는 쪽에서 쓰지 않으니 무시한다.
+        data = code == "SUCCESS" ? try container.decodeIfPresent(T.self, forKey: .data) : nil
         errors = try container.decodeIfPresent([APIFieldError].self, forKey: .errors)
 
         if let statusString = try? container.decode(String.self, forKey: .status) {

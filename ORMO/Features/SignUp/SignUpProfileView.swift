@@ -8,6 +8,8 @@ struct SignUpProfileView: View {
     @State private var isTermsSheetVisible = false
     @State private var isTitleVisible = false
     @State private var isBottomCTAVisible = false
+    @State private var isReverificationRequired = false
+    @State private var isSignUpFailed = false
     @FocusState private var isFieldFocused: Bool
 
     var body: some View {
@@ -47,14 +49,33 @@ struct SignUpProfileView: View {
                 isTermsSheetVisible = false
                 termsViewModel.isCompleted = false
                 Task {
-                    try? await signUpRepository.completeSignUp(
-                        verificationToken: router.signUpVerificationToken,
-                        name: router.userName,
-                        password: router.signUpPassword
-                    )
-                    router.push(.completion)
+                    do {
+                        try await signUpRepository.completeSignUp(
+                            verificationToken: router.signUpVerificationToken,
+                            name: router.userName,
+                            password: router.signUpPassword
+                        )
+                        router.push(.completion)
+                    } catch let failure as SignUpCompletionFailure where failure.requiresReverification {
+                        isReverificationRequired = true
+                    } catch {
+                        isSignUpFailed = true
+                    }
                 }
             }
+        }
+        // EV008: 인증 토큰이 만료·폐기된 경우. 이메일 인증부터 다시 받아야 해서 처음 화면으로 보낸다.
+        .alert("인증이 만료됐어요", isPresented: $isReverificationRequired) {
+            Button("처음부터 다시 하기") {
+                router.path = NavigationPath([SignUpRoute.email])
+            }
+        } message: {
+            Text("이메일 인증을 다시 진행해주세요")
+        }
+        .alert("가입에 실패했어요", isPresented: $isSignUpFailed) {
+            Button("확인", role: .cancel) {}
+        } message: {
+            Text("잠시 후 다시 시도해주세요")
         }
     }
 

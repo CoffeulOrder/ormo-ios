@@ -71,9 +71,16 @@ extension Order {
 
 // 주문을 만들면(POST /orders) 결제 확인 전까지는 픽업번호 등이 아직 없는 PENDING_PAYMENT
 // 상태라, 그 짧은 구간만 이 가벼운 값으로 들고 다닌다. 결제가 확인된 뒤에야 진짜 Order가 된다.
+// PortOne 결제창(PaymentCheckoutView)을 띄우는 데 필요한 값을 전부 담고 있다.
 struct CreatedOrder: Hashable {
     let orderId: Int
-    let pgOrderId: String
+    // PortOne 쪽 상점 ID. 우리 내부 숫자 storeId와는 다른 값이다.
+    let portOneStoreId: String
+    let channelKey: String
+    let paymentId: String
+    let currency: String
+    let orderName: String
+    let amount: Int
 }
 
 protocol OrderRepository {
@@ -86,6 +93,8 @@ protocol OrderRepository {
         paymentMethod: PaymentMethod,
         withdrawalLimitAgreed: Bool
     ) async throws -> CreatedOrder
+    // 결제(PortOne 결제창)가 실패·취소된 뒤 같은 주문으로 다시 시도할 때, 새 paymentId를 받아온다.
+    func retryPaymentAttempt(orderId: Int) async throws -> CreatedOrder
     func fetchOrder(orderId: Int) async throws -> Order
     func cancelOrder(orderId: Int, reason: String?) async throws
     // 마이페이지 탈퇴 전 "진행 중인 주문" 확인에 쓴다.

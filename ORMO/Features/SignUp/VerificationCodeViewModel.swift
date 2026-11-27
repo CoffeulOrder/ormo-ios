@@ -41,6 +41,11 @@ final class VerificationCodeViewModel {
     }
 
     private var wrongAttemptCount = 0
+    // 메일 앱 등의 원타임코드 자동완성이 같은 6자리를 두 번 연속 밀어넣는 경우가 있어, 같은 코드로
+    // /confirm을 중복 호출하지 않게 막는다. 서버가 확인마다 새 verificationToken을 발급하면서
+    // 이전 토큰을 폐기하므로, 중복 호출 시 늦게 도착한 응답이 먼저 도착한 유효한 토큰을 덮어써
+    // 가입 단계에서 "이미 폐기된 토큰"이 쓰이는 문제로 이어질 수 있다.
+    private var isVerifying = false
     private let repository: VerificationCodeRepository
     private var countdownTask: Task<Void, Never>?
     private var resendCooldownTask: Task<Void, Never>?
@@ -92,9 +97,11 @@ final class VerificationCodeViewModel {
     }
 
     private func verify() {
-        guard !isLocked else { return }
+        guard !isLocked, !isVerifying, !isVerified else { return }
+        isVerifying = true
 
         Task {
+            defer { isVerifying = false }
             do {
                 let token = try await repository.verify(email: email, purpose: purpose, code: code)
                 countdownTask?.cancel()

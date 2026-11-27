@@ -4,6 +4,19 @@
 <dict>
 	<key>API_BASE_URL</key>
 	<string>$(API_BASE_URL)</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.orso.ormo.payment</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com-orso-ormo-payment</string>
+			</array>
+		</dict>
+	</array>
 	<key>USE_MOCK</key>
 	<string>$(USE_MOCK)</string>
 </dict>

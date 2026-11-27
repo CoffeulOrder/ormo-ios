@@ -89,16 +89,30 @@ struct CartView: View {
         .onChange(of: viewModel.didStartPayment) {
             guard viewModel.didStartPayment, let createdOrder = viewModel.createdOrder else { return }
             viewModel.didStartPayment = false
-            router.path.append(
-                HomeRoute.paymentProcessing(
-                    attemptId: UUID(),
-                    orderId: createdOrder.orderId,
-                    pgOrderId: createdOrder.pgOrderId,
-                    paymentMethod: viewModel.paymentMethod,
-                    totalPrice: viewModel.checkoutTotalPrice,
-                    storeName: viewModel.store?.name ?? ""
+            // Mock은 진짜 PortOne 결제창이 필요 없어 바로 결제 확인 화면으로 간다. 실서버는
+            // 먼저 결제창(PaymentCheckoutView)을 띄워 실제 결제를 끝내야 한다.
+            if AppConfig.useMock {
+                router.path.append(
+                    HomeRoute.paymentProcessing(
+                        attemptId: UUID(),
+                        orderId: createdOrder.orderId,
+                        paymentId: createdOrder.paymentId,
+                        paymentMethod: viewModel.paymentMethod,
+                        totalPrice: viewModel.checkoutTotalPrice,
+                        storeName: viewModel.store?.name ?? ""
+                    )
                 )
-            )
+            } else {
+                router.path.append(
+                    HomeRoute.paymentCheckout(
+                        attemptId: UUID(),
+                        checkout: createdOrder,
+                        paymentMethod: viewModel.paymentMethod,
+                        totalPrice: viewModel.checkoutTotalPrice,
+                        storeName: viewModel.store?.name ?? ""
+                    )
+                )
+            }
         }
     }
 

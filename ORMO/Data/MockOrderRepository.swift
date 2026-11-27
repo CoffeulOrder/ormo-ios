@@ -30,7 +30,28 @@ struct MockOrderRepository: OrderRepository {
             confirmedAt: now
         )
         LocalStore.shared.addOrder(order)
-        return CreatedOrder(orderId: orderId, pgOrderId: "mock-pg-\(orderId)")
+        return Self.mockCreatedOrder(orderId: orderId, amount: order.subtotalPrice)
+    }
+
+    // Mock은 실제 PortOne 결제창을 띄우지 않아(AppConfig.useMock이면 CartView가 바로
+    // paymentProcessing으로 보낸다) 이 값들은 실제로 쓰이지 않는다. 타입만 맞춰준다.
+    private static func mockCreatedOrder(orderId: Int, amount: Int) -> CreatedOrder {
+        CreatedOrder(
+            orderId: orderId,
+            portOneStoreId: "mock-store",
+            channelKey: "mock-channel",
+            paymentId: "mock-payment-\(orderId)",
+            currency: "KRW",
+            orderName: "Mock 주문",
+            amount: amount
+        )
+    }
+
+    func retryPaymentAttempt(orderId: Int) async throws -> CreatedOrder {
+        guard let order = LocalStore.shared.order(orderId: orderId) else {
+            throw OrderNotFoundError()
+        }
+        return Self.mockCreatedOrder(orderId: orderId, amount: order.subtotalPrice)
     }
 
     func fetchOrder(orderId: Int) async throws -> Order {

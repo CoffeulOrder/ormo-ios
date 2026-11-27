@@ -6,7 +6,7 @@ import Foundation
 struct MockPaymentRepository: PaymentRepository {
     func confirmPayment(
         orderId: Int,
-        pgOrderId: String,
+        paymentId: String,
         method: PaymentMethod,
         totalPrice: Int,
         previousFailureCount: Int
