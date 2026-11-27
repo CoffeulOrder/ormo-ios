@@ -55,17 +55,9 @@ struct PaymentFailureView: View {
                 .typography(Typography.displayXsSemibold)
                 .foregroundStyle(Colors.textPrimary)
 
-            Group {
-                if isLimitExceeded {
-                    Text("결제를 5번 실패했어요")
-                    Text("장바구니에서 다시 주문해주세요")
-                } else {
-                    Text("카드 상태를 확인하거나")
-                    Text("다른 결제수단을 선택해주세요")
-                }
-            }
-            .typography(Typography.bodyMdMedium)
-            .foregroundStyle(Colors.textSecondary)
+            Text(isLimitExceeded ? "결제를 5번 실패했어요\n장바구니에서 다시 주문해주세요" : "카드 상태를 확인하거나\n다른 결제수단을 선택해주세요")
+                .typography(Typography.bodyMdMedium)
+                .foregroundStyle(Colors.textSecondary)
         }
         .multilineTextAlignment(.center)
     }
