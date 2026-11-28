@@ -34,4 +34,7 @@ enum HomeRoute: Hashable {
 @Observable
 final class HomeRouter {
     var path = NavigationPath()
+    // 활성 주문이 없으면 홈의 실시간 현황 폴링이 스스로 멈춘다(RemoteLiveOrderRepository).
+    // 결제가 끝나 새 활성 주문이 생겼을 때 이 값을 올려서 폴링을 다시 깨운다.
+    var liveOrderRefreshTrigger = 0
 }

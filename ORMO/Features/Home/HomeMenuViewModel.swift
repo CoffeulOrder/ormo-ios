@@ -207,6 +207,9 @@ final class HomeMenuViewModel {
             for await orders in liveOrderRepository.observeLiveOrders(storeName: storeName) {
                 liveOrders = orders
             }
+            // 활성 주문이 없어 리포지토리 쪽 폴링이 스스로 끝낸 경우. nil로 돌려놔야
+            // 다음 observeLiveOrderIfNeeded() 호출(새 주문 발생 시)이 다시 시작할 수 있다.
+            liveOrderObservationTask = nil
         }
     }
 

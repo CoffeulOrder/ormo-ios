@@ -213,6 +213,9 @@ struct HomeMenuView: View {
             viewModel.observeLiveOrderIfNeeded()
             LocationPermissionManager.shared.requestAuthorizationIfNeeded()
         }
+        .onChange(of: router.liveOrderRefreshTrigger) {
+            viewModel.observeLiveOrderIfNeeded()
+        }
     }
 
     // 이 두 화면은(networkError·serviceUnavailable) 상단 바까지 전부 교체해 보여줄 게 아무것도
