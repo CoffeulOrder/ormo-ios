@@ -55,7 +55,10 @@ struct OrderCompleteView: View {
             }
         }
         .toolbar(.hidden, for: .navigationBar)
-        .onAppear { appeared = true }
+        .onAppear {
+            appeared = true
+            router.liveOrderRefreshTrigger += 1
+        }
     }
 
     private var topNavigationBar: some View {

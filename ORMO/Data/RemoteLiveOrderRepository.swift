@@ -47,6 +47,9 @@ struct RemoteLiveOrderRepository: LiveOrderRepository {
                         continuation.yield(liveOrders)
                         lastSignature = signature
                     }
+                    // 활성 주문이 없으면 더 폴링할 이유가 없어 여기서 멈춘다. 결제가 끝나 새
+                    // 활성 주문이 생기면 HomeRouter.liveOrderRefreshTrigger로 다시 시작된다.
+                    guard !liveOrders.isEmpty else { break }
                     try? await Task.sleep(for: .seconds(Self.pollIntervalSeconds))
                 }
                 continuation.finish()
